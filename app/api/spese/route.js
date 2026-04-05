@@ -1,3 +1,9 @@
+/**
+ * @fileoverview API route — /api/spese
+ * GET  — paginated, filtered list of expenses/incomes.
+ * POST — create a new expense/income record.
+ */
+
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';

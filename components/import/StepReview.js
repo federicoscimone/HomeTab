@@ -37,6 +37,7 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
       categoryId: r.categoryId || null,
       subCategory1Id: r.subCategory1Id || null,
       subCategory2Id: null,
+      excludeFromAnalysis: !!r.excludeFromAnalysis,
     }));
 
     const res = await fetch('/api/import/save', {
@@ -125,6 +126,7 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                 <th>Metodo</th>
                 <th>Categoria</th>
                 <th className="text-right">Importo</th>
+                <th className="text-center hidden sm:table-cell" title="Escludi dalle analisi">Escludi</th>
                 <th className="w-8"></th>
               </tr>
             </thead>
@@ -198,6 +200,15 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                       </td>
                       <td className={`text-right font-semibold whitespace-nowrap ${row.type === 'income' ? 'text-success' : ''}`}>
                         {row.type === 'income' ? '+' : ''}{formatAmount(row.amount)}
+                      </td>
+                      <td className="text-center hidden sm:table-cell">
+                        <input
+                          type="checkbox"
+                          className="checkbox checkbox-xs"
+                          checked={!!row.excludeFromAnalysis}
+                          onChange={() => updateRow(i, 'excludeFromAnalysis', !row.excludeFromAnalysis)}
+                          title="Escludi dalle analisi mensili"
+                        />
                       </td>
                       <td>
                         <button className="btn btn-ghost btn-xs" title="Modifica dettagli"

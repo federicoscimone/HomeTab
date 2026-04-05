@@ -1,10 +1,31 @@
+/**
+ * @fileoverview Application sidebar — navigation, theme toggle, user info.
+ * On mobile it is rendered inside a drawer managed by DashboardLayout.
+ */
+
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 
-const navItems = [
+/**
+ * @typedef {Object} NavChild
+ * @property {string} href  - Destination URL.
+ * @property {string} label - Display label.
+ */
+
+/**
+ * @typedef {Object} NavItem
+ * @property {string}          [href]     - URL (leaf items only).
+ * @property {string}          label      - Display label.
+ * @property {React.ReactNode} icon       - SVG icon element.
+ * @property {NavChild[]}      [children] - Sub-items (section group).
+ */
+
+/** @type {NavItem[]} */
+const NAV_ITEMS = [
   {
     href: '/',
     label: 'Dashboard',
@@ -40,9 +61,9 @@ const navItems = [
       </svg>
     ),
     children: [
-      { href: '/report', label: 'Pivot Mensile' },
+      { href: '/report',           label: 'Pivot Mensile' },
       { href: '/report/categorie', label: 'Per Categoria' },
-      { href: '/report/analisi', label: 'Analisi Avanzata' },
+      { href: '/report/analisi',   label: 'Analisi Avanzata' },
     ],
   },
   {
@@ -54,22 +75,67 @@ const navItems = [
       </svg>
     ),
     children: [
-      { href: '/impostazioni/categorie', label: 'Categorie' },
-      { href: '/impostazioni/metodi-pagamento', label: 'Metodi Pagamento' },
-      { href: '/impostazioni/template-import', label: 'Template Import' },
-      { href: '/impostazioni/keyword-mapping', label: 'Keyword Mapping' },
+      { href: '/impostazioni',                  label: 'Account & Sicurezza' },
+      { href: '/impostazioni/categorie',         label: 'Categorie' },
+      { href: '/impostazioni/metodi-pagamento',  label: 'Metodi Pagamento' },
+      { href: '/impostazioni/template-import',   label: 'Template Import' },
+      { href: '/impostazioni/keyword-mapping',   label: 'Keyword Mapping' },
     ],
   },
 ];
 
-export default function Sidebar() {
-  const pathname = usePathname();
-  const { data: session } = useSession();
+/**
+ * Paths that require an exact pathname match to be considered "active".
+ * All others use `startsWith`.
+ */
+// Paths where startsWith would cause false positives:
+// - '/'          → matches every route
+// - '/report'    → matches /report/categorie, /report/analisi
+// - '/impostazioni' → matches all settings sub-pages
+const EXACT_MATCH_PATHS = ['/', '/impostazioni', '/report'];
 
-  const isActive = (href) => {
-    if (href === '/') return pathname === '/';
-    return pathname.startsWith(href);
-  };
+/**
+ * Application sidebar component.
+ *
+ * @param {{ onNavigate?: () => void }} props
+ *   `onNavigate` — optional callback invoked after a nav link is clicked
+ *   (used by the mobile drawer to close itself on navigation).
+ */
+export default function Sidebar({ onNavigate }) {
+  const pathname           = usePathname();
+  const { data: session }  = useSession();
+  const [theme, setTheme]  = useState('light');
+
+  useEffect(() => {
+    const stored  = localStorage.getItem('homebi-theme');
+    const initial = stored
+      || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    setTheme(initial);
+  }, []);
+
+  /**
+   * Toggles between light and dark DaisyUI themes and persists the choice.
+   */
+  const toggleTheme = useCallback(() => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('homebi-theme', next);
+    setTheme(next);
+  }, [theme]);
+
+  /**
+   * Returns whether a nav item href is the currently active route.
+   *
+   * @param {string} href
+   * @returns {boolean}
+   */
+  const isActive = useCallback(
+    (href) => {
+      if (EXACT_MATCH_PATHS.includes(href)) return pathname === href;
+      return pathname.startsWith(href);
+    },
+    [pathname],
+  );
 
   return (
     <aside className="w-64 min-h-screen bg-base-200 flex flex-col">
@@ -79,9 +145,9 @@ export default function Sidebar() {
         <p className="text-xs text-base-content/60 mt-0.5">Spese Personali</p>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) =>
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1" aria-label="Navigazione principale">
+        {NAV_ITEMS.map((item) =>
           item.children ? (
             <div key={item.label}>
               <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-base-content/50 uppercase tracking-wider mt-3 mb-1">
@@ -92,7 +158,8 @@ export default function Sidebar() {
                 <Link
                   key={child.href}
                   href={child.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ml-2 ${
+                  onClick={onNavigate}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm transition-colors ml-2 ${
                     isActive(child.href)
                       ? 'bg-primary text-primary-content font-medium'
                       : 'hover:bg-base-300 text-base-content'
@@ -106,7 +173,8 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+              onClick={onNavigate}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
                 isActive(item.href)
                   ? 'bg-primary text-primary-content font-medium'
                   : 'hover:bg-base-300 text-base-content'
@@ -115,9 +183,34 @@ export default function Sidebar() {
               {item.icon}
               {item.label}
             </Link>
-          )
+          ),
         )}
       </nav>
+
+      {/* Theme toggle */}
+      <div className="px-4 py-3 border-t border-base-300">
+        <button
+          onClick={toggleTheme}
+          className="btn btn-ghost btn-sm w-full justify-start gap-2 text-base-content/50"
+          aria-label={theme === 'light' ? 'Passa al tema scuro' : 'Passa al tema chiaro'}
+        >
+          {theme === 'light' ? (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+              Tema scuro
+            </>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              Tema chiaro
+            </>
+          )}
+        </button>
+      </div>
 
       {/* User + logout */}
       <div className="px-4 py-4 border-t border-base-300">
@@ -136,7 +229,8 @@ export default function Sidebar() {
         )}
         <button
           onClick={() => signOut({ callbackUrl: '/login' })}
-          className="btn btn-ghost btn-xs w-full justify-start text-base-content/50"
+          className="btn btn-ghost btn-sm w-full justify-start text-base-content/50 gap-2"
+          aria-label="Disconnetti"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

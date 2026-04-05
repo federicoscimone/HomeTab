@@ -17,6 +17,7 @@ const EMPTY_FORM = {
   categoryId: '',
   subCategory1Id: '',
   subCategory2Id: '',
+  excludeFromAnalysis: false,
 };
 
 export default function ExpenseForm({ initial = null, expenseId = null }) {
@@ -271,6 +272,20 @@ export default function ExpenseForm({ initial = null, expenseId = null }) {
           value={form.notes}
           onChange={(e) => set('notes', e.target.value)}
         />
+      </label>
+
+      {/* Escludi da analisi */}
+      <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-base-300 hover:bg-base-200 transition-colors">
+        <input
+          type="checkbox"
+          className="checkbox checkbox-sm mt-0.5"
+          checked={!!form.excludeFromAnalysis}
+          onChange={(e) => set('excludeFromAnalysis', e.target.checked)}
+        />
+        <div>
+          <p className="text-sm font-medium">Escludi dalle analisi</p>
+          <p className="text-xs text-base-content/50">Questo movimento non verrà conteggiato nel dashboard e nei report (es. vendita casa, auto)</p>
+        </div>
       </label>
 
       {/* Azioni */}

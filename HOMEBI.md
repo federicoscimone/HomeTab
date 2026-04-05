@@ -245,19 +245,19 @@ homebi/
 - [x] 4.6 Salvataggio batch con gestione duplicati
 
 ### FASE 5 — Dashboard
-- [ ] 5.1 Riepilogo mese corrente: totale, top categorie, metodi pagamento
-- [ ] 5.2 Grafico uscite per categoria (torta/barre)
-- [ ] 5.3 Confronto mese corrente vs mese precedente
-- [ ] 5.4 Widget separato: tradizionale vs alternativo
+- [x] 5.1 Riepilogo mese corrente: totale, top categorie, metodi pagamento
+- [x] 5.2 Grafico uscite/entrate per categoria (torta)
+- [x] 5.3 Confronto mese corrente vs mese precedente
+- [x] 5.4 Widget separato: tradizionale vs alternativo
 
 ### FASE 6 — Report e Analisi
-- [ ] 6.1 Tabella pivot mensile (categoria × mese) con totali
-- [ ] 6.2 Filtri pivot: anno, metodo pagamento, gruppo pagamento
-- [ ] 6.3 Sezione per categoria: media mensile + grafico andamento
-- [ ] 6.4 Grafico andamento annuale per categoria
-- [ ] 6.5 Analisi range date custom con confronto anno precedente
-- [ ] 6.6 Proiezioni fine anno basate su media storica
-- [ ] 6.7 Export report in CSV/Excel
+- [x] 6.1 Tabella pivot mensile (categoria × mese) con totali
+- [x] 6.2 Filtri pivot: anno, metodo pagamento, gruppo pagamento
+- [x] 6.3 Sezione per categoria: media mensile + grafico andamento
+- [x] 6.4 Grafico andamento annuale per categoria
+- [x] 6.5 Analisi range date custom con confronto anno precedente
+- [x] 6.6 Proiezioni fine anno basate su media storica
+- [x] 6.7 Export report in CSV/Excel
 
 ### FASE AUTH — Autenticazione e Sicurezza (completata)
 - [x] Auth.1 Auth.js v5 con Credentials provider (email + password)
@@ -272,10 +272,10 @@ homebi/
 - [x] Auth.10 Cambio password da impostazioni (con verifica password attuale)
 - [x] Auth.11 Avatar utente + logout nella sidebar
 
-### FASE 7 — Rifinitura e UX (futuro)
-- [ ] 7.1 Modalità scura
+### FASE 7 — Rifinitura e UX
+- [x] 7.1 Modalità scura (DaisyUI light/dark, toggle sidebar, FOUC prevention, preferenza OS)
 - [ ] 7.2 Multi-utente / famiglie
-- [ ] 7.3 App mobile (PWA)
+- [x] 7.3 App mobile (PWA: manifest, service worker, icone, pagina offline, shortcuts)
 - [ ] 7.4 Import automatico via API bancarie (PSD2)
 
 ---

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="round">
+      <rect width="180" height="180" rx="36"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="180" height="180" rx="36" fill="url(#bg)"/>
+  <rect width="180" height="90" rx="36" fill="url(#shine)" clip-path="url(#round)"/>
+
+  <!-- Roof -->
+  <polygon points="90,42 145,96 35,96" fill="white"/>
+
+  <!-- Body -->
+  <rect x="41" y="94" width="98" height="52" fill="white"/>
+
+  <!-- Door -->
+  <rect x="77" y="111" width="26" height="35" rx="5" fill="url(#bg)"/>
+
+  <!-- Bars LEFT -->
+  <rect x="48"  y="130" width="8"  height="11" rx="2.5" fill="url(#bg)"/>
+  <rect x="58"  y="124" width="8"  height="17" rx="2.5" fill="url(#bg)"/>
+  <rect x="68"  y="118" width="7"  height="23" rx="2.5" fill="url(#bg)"/>
+
+  <!-- Bars RIGHT (mirror) -->
+  <rect x="105" y="118" width="7"  height="23" rx="2.5" fill="url(#bg)"/>
+  <rect x="114" y="124" width="8"  height="17" rx="2.5" fill="url(#bg)"/>
+  <rect x="124" y="130" width="8"  height="11" rx="2.5" fill="url(#bg)"/>
+</svg>
