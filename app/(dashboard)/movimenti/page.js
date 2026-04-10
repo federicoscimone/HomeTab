@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import PaymentBadge from '@/components/movimenti/PaymentBadge';
+import MappingModal from '@/components/shared/MappingModal';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
 import { fmtFull } from '@/lib/utils/format';
 
@@ -73,6 +74,8 @@ export default function SpesePage() {
   const [deleting,        setDeleting]        = useState(false);
   const [incompleteCount, setIncompleteCount] = useState(0);
   const [exporting,       setExporting]       = useState(false);
+  const [mappingModal,    setMappingModal]    = useState(null); // { keyword, categoryId, subCategory1Id, priority, caseSensitive }
+  const [mappingError,    setMappingError]    = useState('');
 
   useEffect(() => {
     fetch('/api/movimenti?incomplete=1&limit=1')
@@ -84,7 +87,7 @@ export default function SpesePage() {
   useEffect(() => {
     fetch('/api/categorie')
       .then(r => r.json())
-      .then(data => setCategories(data.filter(c => c.level === 1)))
+      .then(data => setCategories(data))
       .catch(err => console.error('[spese] categorie fetch error:', err));
   }, []);
 
@@ -210,6 +213,53 @@ export default function SpesePage() {
     }
   }, [activeFilters]);
 
+  const level1 = categories.filter(c => c.level === 1);
+  const level2of = (catId) => categories.filter(c => c.level === 2 && c.parentId?.toString() === catId);
+
+  const openMappingModal = (exp) => {
+    setMappingError('');
+    setMappingModal({
+      keyword:        exp.payee || exp.description || '',
+      categoryId:     '',
+      subCategory1Id: '',
+      priority:       10,
+      caseSensitive:  false,
+    });
+  };
+
+  const handleMappingConfirm = async () => {
+    if (!mappingModal.keyword.trim()) { setMappingError('La keyword è obbligatoria.'); return; }
+    if (!mappingModal.categoryId)     { setMappingError('Seleziona una categoria.');   return; }
+    setMappingError('');
+
+    const body = {
+      keyword:        mappingModal.keyword.trim(),
+      categoryId:     mappingModal.categoryId,
+      subCategory1Id: mappingModal.subCategory1Id || null,
+      priority:       Number(mappingModal.priority) || 10,
+      caseSensitive:  !!mappingModal.caseSensitive,
+    };
+
+    // 1. Save the keyword mapping rule
+    const r1 = await fetch('/api/impostazioni/keyword-mapping', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    if (!r1.ok) { setMappingError('Errore durante il salvataggio. Riprova.'); return; }
+
+    // 2. Bulk-categorize matching movements already in the DB
+    await fetch('/api/movimenti/bulk-categorize', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+
+    setMappingModal(null);
+    // Refresh table and incomplete counter
+    fetchExpenses(activeFilters, page, sort, sortDir);
+    fetch('/api/movimenti?incomplete=1&limit=1')
+      .then(r => r.json())
+      .then(d => setIncompleteCount(d.total ?? 0))
+      .catch(() => {});
+  };
+
   const hasActiveFilters = Object.values(activeFilters).some(Boolean);
 
   return (
@@ -303,7 +353,7 @@ export default function SpesePage() {
               aria-label="Categoria"
             >
               <option value="">Tutte le categorie</option>
-              {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+              {categories.filter(c => c.level === 1).map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
             </select>
             <select
               className="select select-bordered select-sm"
@@ -386,6 +436,17 @@ export default function SpesePage() {
                         {exp.excludeFromAnalysis && (
                           <span className="badge badge-ghost badge-xs flex-shrink-0" title="Escluso dalle analisi">escluso</span>
                         )}
+                        {!exp.categoryId && (
+                          <button
+                            className="btn btn-ghost btn-xs p-0 h-4 min-h-0 w-4 opacity-30 hover:opacity-80 flex-shrink-0"
+                            title="Crea mapping keyword → categoria"
+                            onClick={() => openMappingModal(exp)}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a2 2 0 012-2z" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                       {exp.payee && exp.description && (
                         <p className="text-xs text-base-content/50 truncate">{exp.description}</p>
@@ -464,6 +525,17 @@ export default function SpesePage() {
                           <p className="font-medium text-sm truncate">{exp.payee || exp.description || '—'}</p>
                           {exp.excludeFromAnalysis && (
                             <span className="badge badge-ghost badge-xs flex-shrink-0" title="Escluso dalle analisi">escluso</span>
+                          )}
+                          {!exp.categoryId && (
+                            <button
+                              className="btn btn-ghost btn-xs p-0 h-4 min-h-0 w-4 opacity-30 hover:opacity-80 flex-shrink-0"
+                              title="Crea mapping keyword → categoria"
+                              onClick={() => openMappingModal(exp)}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a2 2 0 012-2z" />
+                              </svg>
+                            </button>
                           )}
                         </div>
                         {exp.payee && exp.description && (
@@ -560,6 +632,19 @@ export default function SpesePage() {
               onClick={() => setPage(p => p + 1)} aria-label="Pagina successiva">»</button>
           </div>
         </div>
+      )}
+
+      {/* ── Mapping modal ───────────────────────────────────────────── */}
+      {mappingModal && (
+        <MappingModal
+          modal={mappingModal}
+          onChange={patch => setMappingModal(m => ({ ...m, ...patch }))}
+          onConfirm={handleMappingConfirm}
+          onClose={() => setMappingModal(null)}
+          level1={level1}
+          level2of={level2of}
+          error={mappingError}
+        />
       )}
 
       {/* ── Delete modal ────────────────────────────────────────────── */}

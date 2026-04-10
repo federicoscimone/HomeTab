@@ -1,5 +1,5 @@
 import './globals.css';
-import Script from 'next/script';
+import { auth } from '@/auth';
 import SessionProvider from '@/components/layout/SessionProvider';
 import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistration';
 
@@ -44,13 +44,14 @@ const themeScript = `
   } catch(e) {}
 `;
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const session = await auth();
   return (
     <html lang="it" suppressHydrationWarning>
       <body>
         {/* Must run before paint — sets data-theme to prevent FOUC */}
-        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <SessionProvider>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <SessionProvider session={session}>
           {children}
           <ServiceWorkerRegistration />
         </SessionProvider>

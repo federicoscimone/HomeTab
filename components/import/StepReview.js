@@ -3,9 +3,14 @@
 import { useState } from 'react';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
 import PaymentBadge from '@/components/movimenti/PaymentBadge';
+import MappingModal from '@/components/shared/MappingModal';
 
 function formatAmount(n) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
+}
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export default function StepReview({ rows: initialRows, categories, onSaved, onBack }) {
@@ -14,15 +19,17 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
   const [editingRow, setEditingRow] = useState(null); // indice riga in modifica
+  const [mappingModal, setMappingModal] = useState(null); // { keyword, categoryId, subCategory1Id, priority, caseSensitive }
+  const [mappingError, setMappingError] = useState('');
 
   const level1 = categories.filter(c => c.level === 1);
   const level2of = (catId) => categories.filter(c => c.level === 2 && c.parentId?.toString() === catId);
 
   const selected         = rows.filter(r => r.selected);
   const autocat          = rows.filter(r => r._autocat).length;
-  // Righe selezionate senza metodo di pagamento (non rilevato E non impostato manualmente)
+  const duplicatesCount  = rows.filter(r => r._isDuplicate).length;
   const missingMethod    = rows.filter(r => r.selected && !r.paymentMethod).length;
-  const undetectedMethod = missingMethod; // alias usato nell'alert
+  const undetectedMethod = missingMethod;
 
   const toggleAll = (val) => setRows(rs => rs.map(r => ({ ...r, selected: val })));
   const toggleRow = (i) => setRows(rs => rs.map((r, idx) => idx === i ? { ...r, selected: !r.selected } : r));
@@ -30,8 +37,74 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
   const updateRow = (i, field, value) =>
     setRows(rs => rs.map((r, idx) => idx === i ? { ...r, [field]: value } : r));
 
+  // Category changes are always manual — protect from future mapping re-applies
+  const updateCategory = (i, field, value) =>
+    setRows(rs => rs.map((r, idx) => idx === i ? { ...r, [field]: value, _catManual: true } : r));
+
   const updatePaymentMethod = (i, value) =>
     setRows(rs => rs.map((r, idx) => idx === i ? { ...r, paymentMethod: value, _methodAutoDetected: true } : r));
+
+  // Apply a newly-saved keyword mapping to all rows that haven't been manually categorized
+  const applyNewMapping = (mapping) => {
+    const flags   = mapping.caseSensitive ? '' : 'i';
+    const regex   = new RegExp(`\\b${escapeRegex(mapping.keyword)}`, flags);
+    setRows(rs => rs.map(r => {
+      if (r._catManual) return r; // never overwrite manual edits
+      const haystack = [r.payee, r.description, r.place].filter(Boolean).join(' ');
+      if (!regex.test(haystack)) return r;
+      return {
+        ...r,
+        categoryId:     mapping.categoryId     || null,
+        subCategory1Id: mapping.subCategory1Id || null,
+        _autocat:       true,
+      };
+    }));
+  };
+
+  const openMappingModal = (row) => {
+    setMappingError('');
+    setMappingModal({
+      keyword:        row.payee || row.description || '',
+      categoryId:     '',
+      subCategory1Id: '',
+      priority:       10,
+      caseSensitive:  false,
+    });
+  };
+
+  const handleMappingConfirm = async () => {
+    if (!mappingModal.keyword.trim()) {
+      setMappingError('La keyword è obbligatoria.');
+      return;
+    }
+    if (!mappingModal.categoryId) {
+      setMappingError('Seleziona una categoria.');
+      return;
+    }
+    setMappingError('');
+
+    const body = {
+      keyword:        mappingModal.keyword.trim(),
+      categoryId:     mappingModal.categoryId,
+      subCategory1Id: mappingModal.subCategory1Id || null,
+      priority:       Number(mappingModal.priority) || 10,
+      caseSensitive:  !!mappingModal.caseSensitive,
+    };
+
+    const res = await fetch('/api/impostazioni/keyword-mapping', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      setMappingError('Errore durante il salvataggio. Riprova.');
+      return;
+    }
+
+    applyNewMapping(body);
+    setMappingModal(null);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -94,6 +167,19 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Alert duplicati */}
+      {duplicatesCount > 0 && (
+        <div className="alert alert-warning text-sm py-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          <span>
+            <strong>{duplicatesCount}</strong> {duplicatesCount === 1 ? 'riga è un possibile duplicato' : 'righe sono possibili duplicati'} (già presenti nel database).
+            {' '}Le righe duplicate sono state auto-deselezionate — puoi riabilitarle manualmente se necessario.
+          </span>
+        </div>
+      )}
+
       {/* Alert metodo pagamento non rilevato */}
       {undetectedMethod > 0 && (
         <div className="alert alert-warning text-sm py-2">
@@ -113,6 +199,9 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
           <h2 className="text-lg font-semibold">Revisione dati</h2>
           <p className="text-sm text-base-content/50">
             {rows.length} righe analizzate · {autocat} auto-categorizzate ·{' '}
+            {duplicatesCount > 0 && (
+              <span className="text-warning font-medium">{duplicatesCount} duplicati · </span>
+            )}
             <span className="text-primary font-medium">{selected.length} selezionate</span>
           </p>
         </div>
@@ -164,14 +253,30 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                       onSave={(field, value) => { updateRow(i, field, value); }}
                       onClose={() => setEditingRow(null)} />
                   : (
-                    <tr key={i} className={`hover ${!row.selected ? 'opacity-40' : ''} ${row.selected && !row._methodAutoDetected ? 'bg-warning/10' : ''}`}>
+                    <tr key={i} className={`hover ${!row.selected ? 'opacity-40' : ''} ${row._isDuplicate ? 'bg-warning/10' : row.selected && !row._methodAutoDetected ? 'bg-warning/5' : ''}`}>
                       <td>
                         <input type="checkbox" className="checkbox checkbox-xs"
                           checked={row.selected} onChange={() => toggleRow(i)} />
                       </td>
                       <td className="whitespace-nowrap">{row.date}</td>
                       <td>
-                        <p className="font-medium">{row.payee || row.description || '—'}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-medium">{row.payee || row.description || '—'}</p>
+                          {row._isDuplicate && (
+                            <span className="badge badge-warning badge-xs shrink-0" title="Possibile duplicato: stessa data, importo e descrizione già presenti nel database">dup</span>
+                          )}
+                          {!row._autocat && (
+                            <button
+                              className="btn btn-ghost btn-xs p-0 h-4 min-h-0 w-4 opacity-30 hover:opacity-80"
+                              title="Crea mapping keyword → categoria"
+                              onClick={() => openMappingModal(row)}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a2 2 0 012-2z" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
                         {row.payee && row.description && (
                           <p className="text-xs text-base-content/50">{row.description}</p>
                         )}
@@ -203,7 +308,7 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                           <select
                             className={`select select-xs select-bordered min-w-[130px] ${row._autocat && row.categoryId ? 'border-success' : ''}`}
                             value={row.categoryId || ''}
-                            onChange={e => updateRow(i, 'categoryId', e.target.value || null)}
+                            onChange={e => updateCategory(i, 'categoryId', e.target.value || null)}
                           >
                             <option value="">— Nessuna —</option>
                             {level1.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
@@ -212,7 +317,7 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                             <select
                               className="select select-xs select-bordered min-w-[130px]"
                               value={row.subCategory1Id || ''}
-                              onChange={e => updateRow(i, 'subCategory1Id', e.target.value || null)}
+                              onChange={e => updateCategory(i, 'subCategory1Id', e.target.value || null)}
                             >
                               <option value="">— Sub —</option>
                               {level2of(row.categoryId).map(c => (
@@ -252,11 +357,25 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
           </table>
         </div>
       </div>
+
+      {/* Modale nuovo mapping */}
+      {mappingModal && (
+        <MappingModal
+          modal={mappingModal}
+          onChange={patch => setMappingModal(m => ({ ...m, ...patch }))}
+          onConfirm={handleMappingConfirm}
+          onClose={() => setMappingModal(null)}
+          level1={level1}
+          level2of={level2of}
+          error={mappingError}
+        />
+      )}
     </div>
   );
 }
 
-// Riga in modalità modifica inline
+// ── Riga in modalità modifica inline ─────────────────────────────────────────
+
 function EditRow({ row, index, level1, level2of, onSave, onClose }) {
   const [local, setLocal] = useState({ ...row });
 

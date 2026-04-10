@@ -23,11 +23,34 @@ export default function ImportaPage() {
     }).catch(() => {});
   }, []);
 
-  const handleParsed = (rows) => {
+  const handleParsed = async (rows) => {
     if (rows.length === 0) {
       setError('Nessuna riga valida trovata. Controlla il template e il file.');
       return;
     }
+
+    // Controlla duplicati rispetto al DB prima di mostrare la schermata di revisione
+    try {
+      const res = await fetch('/api/import/check-duplicates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rows: rows.map(r => ({ date: r.date, amount: r.amount, payee: r.payee, description: r.description })),
+        }),
+      });
+      if (res.ok) {
+        const { duplicates } = await res.json();
+        rows = rows.map((r, i) => ({
+          ...r,
+          _isDuplicate: duplicates[i] === true,
+          // Auto-deseleziona i duplicati (coerente con "Salta duplicati" attivo di default)
+          selected: duplicates[i] === true ? false : r.selected,
+        }));
+      }
+    } catch {
+      // Errore non bloccante: si procede senza flag duplicati
+    }
+
     setParsedRows(rows);
     setStep(2);
   };

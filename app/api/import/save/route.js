@@ -22,16 +22,15 @@ export async function POST(req) {
 
   for (const row of rows) {
     try {
-      // Rilevamento duplicato: stessa data + importo + (payee o description)
+      // Rilevamento duplicato: stessa data + importo + testo (description o payee)
       if (skipDuplicates) {
-        const existing = await Movement.findOne({
-          date: row.date,
-          amount: row.amount,
-          $or: [
-            row.payee       ? { payee: row.payee }             : null,
-            row.description ? { description: row.description } : null,
-          ].filter(Boolean),
-        });
+        const textConditions = [
+          row.description?.trim() ? { description: row.description.trim() } : null,
+          row.payee?.trim()       ? { payee: row.payee.trim() }             : null,
+        ].filter(Boolean);
+        const existing = textConditions.length
+          ? await Movement.findOne({ date: row.date, amount: row.amount, $or: textConditions })
+          : null;
         if (existing) { results.duplicates++; continue; }
       }
 
