@@ -1,10 +1,11 @@
 import './globals.css';
+import Script from 'next/script';
 import SessionProvider from '@/components/layout/SessionProvider';
 import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistration';
 
 export const metadata = {
-  title: 'HomeBI — Spese Personali',
-  description: 'Traccia e analizza le tue spese personali',
+  title: 'HomeBI — Movimenti Personali',
+  description: 'Traccia e analizza i tuoi movimenti personali',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -47,8 +48,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="it" suppressHydrationWarning>
       <body>
-        {/* Must be first child — sets data-theme before paint */}
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Must run before paint — sets data-theme to prevent FOUC */}
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeScript }} />
         <SessionProvider>
           {children}
           <ServiceWorkerRegistration />

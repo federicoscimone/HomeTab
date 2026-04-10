@@ -31,7 +31,8 @@ function firstDayOfYear() {
  * @param {string} type - 'expense' | 'income'.
  */
 async function exportExcel(data, from, to, type) {
-  const XLSX = (await import('xlsx')).default;
+  const xlsxMod = await import('xlsx');
+  const XLSX = xlsxMod.default ?? xlsxMod;
   const rows = [
     ['Categoria', `${from} → ${to}`, `${data.prevFrom} → ${data.prevTo}`, 'Δ', 'Δ%'],
     ...data.byCategory.map(c => [c.name, c.cur, c.prev, c.delta, c.pct != null ? c.pct / 100 : '']),
@@ -80,9 +81,10 @@ export default function AnalisiPage() {
 
   const handleExport = useCallback(() => {
     if (!data) return;
-    exportExcel(data, from, to, type).catch(err =>
-      console.error('[report/analisi] export error:', err),
-    );
+    exportExcel(data, from, to, type).catch(err => {
+      console.error('[report/analisi] export error:', err);
+      alert('Errore durante l\'esportazione. Controlla la console per dettagli.');
+    });
   }, [data, from, to, type]);
 
   const proj = data?.projection;

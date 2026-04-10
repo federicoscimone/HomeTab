@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@source "../app/**/*.{js,jsx,ts,tsx}";
+@source "../components/**/*.{js,jsx,ts,tsx}";
 @plugin "daisyui" {
   themes: light --default, dark;
 }
+@import "daisyui/theme/forest.css";
+@import "daisyui/theme/aqua.css";
+@import "daisyui/theme/abyss.css";

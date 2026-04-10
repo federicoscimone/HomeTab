@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import PaymentBadge from '@/components/spese/PaymentBadge';
+import PaymentBadge from '@/components/movimenti/PaymentBadge';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
 import { fmtFull } from '@/lib/utils/format';
 
@@ -25,11 +25,29 @@ function formatDate(d) {
   return `${day}/${m}/${y}`;
 }
 
+function SortTh({ field, current, dir, onClick, className = '', children }) {
+  const active = current === field;
+  const justifyClass = className.includes('text-right') ? 'justify-end' : '';
+  return (
+    <th
+      className={`cursor-pointer select-none hover:bg-base-300 transition-colors ${className}`}
+      onClick={() => onClick(field)}
+    >
+      <span className={`flex items-center gap-1 ${justifyClass}`}>
+        {children}
+        <span className={`text-xs ${active ? 'text-primary' : 'text-base-content/30'}`}>
+          {active ? (dir === 'asc' ? '↑' : '↓') : '↕'}
+        </span>
+      </span>
+    </th>
+  );
+}
+
 /** @typedef {{ from:string, to:string, categoryId:string, paymentMethod:string, paymentGroup:string, search:string, type:string }} Filters */
 
 /** @type {Filters} */
 const EMPTY_FILTERS = {
-  from: '', to: '', categoryId: '', paymentMethod: '', paymentGroup: '', search: '', type: '',
+  from: '', to: '', categoryId: '', paymentMethod: '', paymentGroup: '', search: '', type: '', incomplete: false,
 };
 
 /**
@@ -48,8 +66,20 @@ export default function SpesePage() {
   const [filters,       setFilters]       = useState(EMPTY_FILTERS);
   const [activeFilters, setActiveFilters] = useState(EMPTY_FILTERS);
 
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleting,     setDeleting]     = useState(false);
+  const [sort,    setSort]    = useState('date');
+  const [sortDir, setSortDir] = useState('desc');
+
+  const [deleteTarget,    setDeleteTarget]    = useState(null);
+  const [deleting,        setDeleting]        = useState(false);
+  const [incompleteCount, setIncompleteCount] = useState(0);
+  const [exporting,       setExporting]       = useState(false);
+
+  useEffect(() => {
+    fetch('/api/movimenti?incomplete=1&limit=1')
+      .then(r => r.json())
+      .then(d => setIncompleteCount(d.total ?? 0))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/categorie')
@@ -64,10 +94,10 @@ export default function SpesePage() {
    * @param {Filters} f - Active filter state.
    * @param {number}  p - Current page number.
    */
-  const fetchExpenses = useCallback(async (f, p) => {
+  const fetchExpenses = useCallback(async (f, p, s, sd) => {
     setLoading(true);
     setError(false);
-    const params = new URLSearchParams({ page: p, limit: PAGE_SIZE });
+    const params = new URLSearchParams({ page: p, limit: PAGE_SIZE, sort: s, sortDir: sd });
     if (f.from)          params.set('from',          f.from);
     if (f.to)            params.set('to',            f.to);
     if (f.categoryId)    params.set('categoryId',    f.categoryId);
@@ -75,9 +105,10 @@ export default function SpesePage() {
     if (f.paymentGroup)  params.set('paymentGroup',  f.paymentGroup);
     if (f.search)        params.set('search',        f.search);
     if (f.type)          params.set('type',          f.type);
+    if (f.incomplete)    params.set('incomplete',    '1');
 
     try {
-      const res  = await fetch(`/api/spese?${params}`);
+      const res  = await fetch(`/api/movimenti?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setExpenses(data.expenses || []);
@@ -91,8 +122,18 @@ export default function SpesePage() {
   }, []);
 
   useEffect(() => {
-    fetchExpenses(activeFilters, page);
-  }, [fetchExpenses, activeFilters, page]);
+    fetchExpenses(activeFilters, page, sort, sortDir);
+  }, [fetchExpenses, activeFilters, page, sort, sortDir]);
+
+  const handleSort = (field) => {
+    if (sort === field) {
+      setSortDir(d => d === 'desc' ? 'asc' : 'desc');
+    } else {
+      setSort(field);
+      setSortDir('desc');
+    }
+    setPage(1);
+  };
 
   const applyFilters = useCallback(() => {
     setPage(1);
@@ -105,12 +146,24 @@ export default function SpesePage() {
     setPage(1);
   }, []);
 
+  /** Toggles excludeFromAnalysis for a single expense (optimistic update). */
+  const handleToggleExclude = async (exp) => {
+    const newVal = !exp.excludeFromAnalysis;
+    // Aggiornamento ottimistico
+    setExpenses(prev => prev.map(e => e._id === exp._id ? { ...e, excludeFromAnalysis: newVal } : e));
+    await fetch(`/api/movimenti/${exp._id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ excludeFromAnalysis: newVal }),
+    });
+  };
+
   /** Deletes the currently targeted expense and refreshes the list. */
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/spese/${deleteTarget._id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/movimenti/${deleteTarget._id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     } catch (err) {
       console.error('[spese] delete error:', err);
@@ -120,6 +173,43 @@ export default function SpesePage() {
     fetchExpenses(activeFilters, page);
   };
 
+  const filterIncomplete = useCallback(() => {
+    const f = { ...EMPTY_FILTERS, incomplete: true };
+    setFilters(f);
+    setActiveFilters(f);
+    setPage(1);
+  }, []);
+
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (activeFilters.from)          params.set('from',          activeFilters.from);
+      if (activeFilters.to)            params.set('to',            activeFilters.to);
+      if (activeFilters.categoryId)    params.set('categoryId',    activeFilters.categoryId);
+      if (activeFilters.paymentMethod) params.set('paymentMethod', activeFilters.paymentMethod);
+      if (activeFilters.paymentGroup)  params.set('paymentGroup',  activeFilters.paymentGroup);
+      if (activeFilters.search)        params.set('search',        activeFilters.search);
+      if (activeFilters.type)          params.set('type',          activeFilters.type);
+      if (activeFilters.incomplete)    params.set('incomplete',    '1');
+
+      const res = await fetch(`/api/movimenti/export?${params}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `homebi-movimenti-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('[export]', err);
+    } finally {
+      setExporting(false);
+    }
+  }, [activeFilters]);
+
   const hasActiveFilters = Object.values(activeFilters).some(Boolean);
 
   return (
@@ -127,19 +217,58 @@ export default function SpesePage() {
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Spese</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Movimenti</h1>
           {!loading && (
             <p className="text-sm text-base-content/50">{total} movimenti trovati</p>
           )}
         </div>
-        <Link href="/spese/nuova" className="btn btn-primary btn-sm gap-1">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span className="hidden xs:inline">Nuova spesa</span>
-          <span className="xs:hidden">Nuova</span>
-        </Link>
+        <div className="flex gap-2">
+          <button
+            className={`btn btn-outline btn-sm gap-1 ${exporting ? 'loading' : ''}`}
+            onClick={handleExport}
+            disabled={exporting || loading}
+            title={hasActiveFilters ? 'Esporta movimenti filtrati' : 'Esporta tutti i movimenti'}
+          >
+            {!exporting && (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            )}
+            <span className="hidden sm:inline">{exporting ? 'Esportazione…' : 'Esporta Excel'}</span>
+          </button>
+          <Link href="/movimenti/nuova" className="btn btn-primary btn-sm gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span className="hidden xs:inline">Nuovo movimento</span>
+            <span className="xs:hidden">Nuovo</span>
+          </Link>
+        </div>
       </div>
+
+      {/* ── Alert movimenti incompleti ─────────────────────────────── */}
+      {incompleteCount > 0 && !activeFilters.incomplete && (
+        <button
+          type="button"
+          onClick={filterIncomplete}
+          className="alert alert-warning mb-4 cursor-pointer hover:brightness-95 transition-all text-left w-full"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          <div>
+            <p className="font-semibold text-sm">
+              {incompleteCount} {incompleteCount === 1 ? 'movimento incompleto' : 'movimenti incompleti'}
+            </p>
+            <p className="text-xs opacity-80">
+              Manca la categoria — clicca per visualizzarli
+            </p>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-auto flex-shrink-0 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      )}
 
       {/* ── Filtri ──────────────────────────────────────────────────── */}
       <div className="card bg-base-100 shadow-sm border border-base-200 mb-4">
@@ -209,10 +338,18 @@ export default function SpesePage() {
               </optgroup>
             </select>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button className="btn btn-primary btn-sm" onClick={applyFilters}>Filtra</button>
             {hasActiveFilters && (
               <button className="btn btn-ghost btn-sm" onClick={resetFilters}>Azzera filtri</button>
+            )}
+            {activeFilters.incomplete && (
+              <span className="badge badge-warning gap-1 text-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                Solo movimenti incompleti
+              </span>
             )}
           </div>
         </div>
@@ -230,7 +367,7 @@ export default function SpesePage() {
       ) : expenses.length === 0 ? (
         <div className="text-center py-16 text-base-content/50">
           <p className="text-4xl mb-3">📭</p>
-          <p className="font-medium">Nessuna spesa trovata</p>
+          <p className="font-medium">Nessun movimento trovato</p>
           {hasActiveFilters && <p className="text-sm mt-1">Prova a modificare i filtri</p>}
         </div>
       ) : (
@@ -254,8 +391,8 @@ export default function SpesePage() {
                         <p className="text-xs text-base-content/50 truncate">{exp.description}</p>
                       )}
                     </div>
-                    <span className={`font-bold text-sm whitespace-nowrap flex-shrink-0 ${exp.type === 'income' ? 'text-success' : ''}`}>
-                      {exp.type === 'income' ? '+' : ''}{fmtFull(exp.amount)}
+                    <span className={`font-bold text-sm whitespace-nowrap flex-shrink-0 ${exp.type === 'income' ? 'text-success' : 'text-error'}`}>
+                      {exp.type === 'income' ? '+' : '-'}{fmtFull(exp.amount)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -269,8 +406,15 @@ export default function SpesePage() {
                       )}
                       <PaymentBadge value={exp.paymentMethod} size="badge-xs" />
                     </div>
-                    <div className="flex gap-1">
-                      <Link href={`/spese/${exp._id}`} className="btn btn-ghost btn-sm py-1 px-2" aria-label="Modifica">
+                    <div className="flex gap-1 items-center">
+                      <input
+                        type="checkbox"
+                        className="checkbox checkbox-sm checkbox-warning"
+                        checked={!!exp.excludeFromAnalysis}
+                        onChange={() => handleToggleExclude(exp)}
+                        title={exp.excludeFromAnalysis ? 'Includi nelle analisi' : 'Escludi dalle analisi'}
+                      />
+                      <Link href={`/movimenti/${exp._id}`} className="btn btn-ghost btn-sm py-1 px-2" aria-label="Modifica">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
@@ -292,17 +436,20 @@ export default function SpesePage() {
           </div>
 
           {/* Desktop: table */}
-          <div className="hidden sm:block card bg-base-100 shadow-sm border border-base-200 overflow-hidden">
+          <div className="hidden sm:block">
+          <div className="card bg-base-100 shadow-sm border border-base-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="table table-sm">
                 <thead>
                   <tr className="bg-base-200">
-                    <th>Data</th>
-                    <th>Esercente / Causale</th>
-                    <th className="hidden lg:table-cell">Categoria</th>
-                    <th className="hidden md:table-cell">Metodo</th>
-                    <th className="text-right">Importo</th>
-                    <th></th>
+                    <SortTh field="date"   current={sort} dir={sortDir} onClick={handleSort}>Data</SortTh>
+                    <SortTh field="payee"  current={sort} dir={sortDir} onClick={handleSort}>Esercente / Causale</SortTh>
+                    <th>Categoria</th>
+                    <th>Metodo</th>
+                    <th>Note</th>
+                    <SortTh field="amount" current={sort} dir={sortDir} onClick={handleSort} className="text-right">Importo</SortTh>
+                    <th className="text-center" title="Escludi dalle analisi">Escludi</th>
+                    <th className="text-right"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -324,7 +471,7 @@ export default function SpesePage() {
                         )}
                         {exp.place && <p className="text-xs text-base-content/40 truncate">{exp.place}</p>}
                       </td>
-                      <td className="hidden lg:table-cell">
+                      <td>
                         {exp.categoryId ? (
                           <div className="flex items-center gap-1">
                             <span className="w-2 h-2 rounded-full flex-shrink-0"
@@ -338,15 +485,29 @@ export default function SpesePage() {
                           <p className="text-xs text-base-content/50 ml-3">{exp.subCategory1Id.name}</p>
                         )}
                       </td>
-                      <td className="hidden md:table-cell">
+                      <td>
                         <PaymentBadge value={exp.paymentMethod} size="badge-sm" />
                       </td>
-                      <td className={`text-right font-semibold whitespace-nowrap ${exp.type === 'income' ? 'text-success' : ''}`}>
-                        {exp.type === 'income' ? '+' : ''}{fmtFull(exp.amount)}
+                      <td className="max-w-[180px]">
+                        {exp.notes
+                          ? <p className="text-xs text-base-content/60 truncate" title={exp.notes}>{exp.notes}</p>
+                          : <span className="text-xs text-base-content/20">—</span>}
+                      </td>
+                      <td className={`text-right font-semibold whitespace-nowrap ${exp.type === 'income' ? 'text-success' : 'text-error'}`}>
+                        {exp.type === 'income' ? '+' : '-'}{fmtFull(exp.amount)}
+                      </td>
+                      <td className="text-center">
+                        <input
+                          type="checkbox"
+                          className="checkbox checkbox-sm checkbox-warning"
+                          checked={!!exp.excludeFromAnalysis}
+                          onChange={() => handleToggleExclude(exp)}
+                          title={exp.excludeFromAnalysis ? 'Includi nelle analisi' : 'Escludi dalle analisi'}
+                        />
                       </td>
                       <td>
                         <div className="flex gap-1 justify-end">
-                          <Link href={`/spese/${exp._id}`} className="btn btn-ghost btn-sm" aria-label="Modifica">
+                          <Link href={`/movimenti/${exp._id}`} className="btn btn-ghost btn-sm" aria-label="Modifica">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
@@ -367,6 +528,7 @@ export default function SpesePage() {
                 </tbody>
               </table>
             </div>
+          </div>
           </div>
         </>
       )}
@@ -404,7 +566,7 @@ export default function SpesePage() {
       {deleteTarget && (
         <div className="modal modal-open">
           <div className="modal-box w-11/12 max-w-md">
-            <h3 className="font-bold text-lg">Elimina spesa</h3>
+            <h3 className="font-bold text-lg">Elimina movimento</h3>
             <p className="py-4 text-sm">
               Sei sicuro di voler eliminare
               {deleteTarget.payee ? <strong> {deleteTarget.payee}</strong> : ''} del{' '}

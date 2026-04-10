@@ -20,7 +20,7 @@ const EMPTY_FORM = {
   excludeFromAnalysis: false,
 };
 
-export default function ExpenseForm({ initial = null, expenseId = null }) {
+export default function MovementForm({ initial = null, expenseId = null }) {
   const router = useRouter();
   const [form, setForm] = useState(initial ? {
     ...EMPTY_FORM,
@@ -35,6 +35,7 @@ export default function ExpenseForm({ initial = null, expenseId = null }) {
   const [categories, setCategories] = useState([]);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
 
   // Categorie per livello
   const level1 = categories.filter((c) => c.level === 1);
@@ -74,7 +75,7 @@ export default function ExpenseForm({ initial = null, expenseId = null }) {
     };
 
     try {
-      const res = await fetch(expenseId ? `/api/spese/${expenseId}` : '/api/spese', {
+      const res = await fetch(expenseId ? `/api/movimenti/${expenseId}` : '/api/movimenti', {
         method: expenseId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -84,9 +85,13 @@ export default function ExpenseForm({ initial = null, expenseId = null }) {
       if (!res.ok) {
         setError(data.error || 'Errore durante il salvataggio');
         setStatus('error');
-      } else {
-        router.push('/spese');
+      } else if (expenseId) {
+        router.push('/movimenti');
         router.refresh();
+      } else {
+        setStatus('idle');
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
       }
     } catch {
       setError('Errore di rete. Riprova.');
@@ -94,9 +99,26 @@ export default function ExpenseForm({ initial = null, expenseId = null }) {
     }
   };
 
+  const importMethodLabel = { xlsx: 'Excel (.xlsx)', csv: 'CSV', paste: 'Copia-incolla' };
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 max-w-2xl">
       {error && <div className="alert alert-error text-sm py-2"><span>{error}</span></div>}
+      {saved && <div className="alert alert-success text-sm py-2"><span>Movimento salvato.</span></div>}
+
+      {/* Origine del dato — solo in modifica, se importato */}
+      {initial?.source === 'import' && (
+        <div className="flex items-center gap-2 text-xs text-base-content/50 -mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span>
+            Importato
+            {initial.importMethod && <> via <strong>{importMethodLabel[initial.importMethod] || initial.importMethod}</strong></>}
+            {initial.importBatchId && <> · batch <code className="font-mono">{initial.importBatchId.slice(0, 8)}…</code></>}
+          </span>
+        </div>
+      )}
 
       {/* Tipo: Uscita / Entrata */}
       <div className="flex gap-2">
@@ -203,17 +225,30 @@ export default function ExpenseForm({ initial = null, expenseId = null }) {
         </label>
       </div>
 
-      {/* Causale */}
-      <label className="form-control">
-        <div className="label"><span className="label-text font-medium">Causale</span></div>
-        <input
-          type="text"
-          className="input input-bordered"
-          placeholder="Descrizione della spesa"
-          value={form.description}
-          onChange={(e) => set('description', e.target.value)}
-        />
-      </label>
+      {/* Riga 4: causale + note */}
+      <div className="grid grid-cols-2 gap-4">
+        <label className="form-control">
+          <div className="label"><span className="label-text font-medium">Causale</span></div>
+          <input
+            type="text"
+            className="input input-bordered"
+            placeholder="Descrizione del movimento"
+            value={form.description}
+            onChange={(e) => set('description', e.target.value)}
+          />
+        </label>
+
+        <label className="form-control">
+          <div className="label"><span className="label-text">Note <span className="text-base-content/40">(opzionali)</span></span></div>
+          <input
+            type="text"
+            className="input input-bordered"
+            placeholder="Informazioni aggiuntive…"
+            value={form.notes}
+            onChange={(e) => set('notes', e.target.value)}
+          />
+        </label>
+      </div>
 
       {/* Categorie */}
       <div className="grid grid-cols-3 gap-4">
@@ -262,18 +297,6 @@ export default function ExpenseForm({ initial = null, expenseId = null }) {
         </label>
       </div>
 
-      {/* Note */}
-      <label className="form-control">
-        <div className="label"><span className="label-text">Note <span className="text-base-content/40">(opzionali)</span></span></div>
-        <textarea
-          className="textarea textarea-bordered"
-          rows={2}
-          placeholder="Informazioni aggiuntive…"
-          value={form.notes}
-          onChange={(e) => set('notes', e.target.value)}
-        />
-      </label>
-
       {/* Escludi da analisi */}
       <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-base-300 hover:bg-base-200 transition-colors">
         <input
@@ -295,7 +318,7 @@ export default function ExpenseForm({ initial = null, expenseId = null }) {
           className={`btn btn-primary ${status === 'loading' ? 'loading' : ''}`}
           disabled={status === 'loading'}
         >
-          {status === 'loading' ? 'Salvataggio…' : expenseId ? 'Salva modifiche' : 'Aggiungi spesa'}
+          {status === 'loading' ? 'Salvataggio…' : expenseId ? 'Salva modifiche' : 'Aggiungi movimento'}
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => router.back()}>
           Annulla

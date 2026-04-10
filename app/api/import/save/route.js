@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import logger, { logApiError } from '@/lib/logger';
+import { writeAudit } from '@/lib/utils/audit';
 import { randomUUID } from 'crypto';
 import connectDB from '@/lib/mongodb';
-import Expense from '@/lib/models/Expense';
+import Movement from '@/lib/models/Movement';
 import { getPaymentGroup } from '@/lib/utils/payments';
 
 export async function POST(req) {
@@ -22,7 +24,7 @@ export async function POST(req) {
     try {
       // Rilevamento duplicato: stessa data + importo + (payee o description)
       if (skipDuplicates) {
-        const existing = await Expense.findOne({
+        const existing = await Movement.findOne({
           date: row.date,
           amount: row.amount,
           $or: [
@@ -33,10 +35,10 @@ export async function POST(req) {
         if (existing) { results.duplicates++; continue; }
       }
 
-      await Expense.create({
+      await Movement.create({
         amount:         row.amount,
-        paymentMethod:  row.paymentMethod || 'credit_card',
-        paymentGroup:   getPaymentGroup(row.paymentMethod || 'credit_card'),
+        paymentMethod:  row.paymentMethod || 'other',
+        paymentGroup:   getPaymentGroup(row.paymentMethod || 'other'),
         date:           row.date,
         time:           row.time || null,
         description:    row.description || '',
@@ -48,15 +50,24 @@ export async function POST(req) {
         subCategory1Id: row.subCategory1Id || null,
         subCategory2Id: row.subCategory2Id || null,
         source:         'import',
+        importMethod:   row.importMethod || null,
         importBatchId:  batchId,
       });
 
       results.saved++;
     } catch (err) {
-      console.error('[import/save] row error', err);
+      logApiError('POST /api/import/save (row)', err, { batchId, row });
       results.errors++;
     }
   }
 
+  logger.info('POST /api/import/save', { ...results, batchId, userId: session.user?.id });
+  await writeAudit(session, req, {
+    action: 'IMPORT',
+    resource: 'movement',
+    resourceId: batchId,
+    description: `Importati ${results.saved} movimenti (${results.duplicates} duplicati, ${results.errors} errori)`,
+    meta: { ...results, batchId },
+  });
   return NextResponse.json({ ...results, batchId });
 }

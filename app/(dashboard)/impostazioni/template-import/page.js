@@ -5,18 +5,42 @@ import { useState, useEffect } from 'react';
 const FIELDS = [
   { key: 'date',        label: 'Data' },
   { key: 'amount',      label: 'Importo' },
-  { key: 'amountDebit', label: 'Importo Dare (colonna separata)' },
-  { key: 'amountCredit',label: 'Importo Avere (colonna separata)' },
+  { key: 'amountDebit', label: 'Importo Uscite (colonna separata)' },
+  { key: 'amountCredit',label: 'Importo Entrate (colonna separata)' },
   { key: 'description', label: 'Causale / Descrizione' },
   { key: 'payee',       label: 'Esercente' },
   { key: 'place',       label: 'Luogo' },
   { key: 'notes',       label: 'Note' },
 ];
 
+const PAYMENT_METHOD_OPTIONS = [
+  { value: 'cash',          label: 'Contanti' },
+  { value: 'credit_card',   label: 'Carta di Credito' },
+  { value: 'debit_card',    label: 'Carta di Debito' },
+  { value: 'bank_transfer', label: 'Bonifico' },
+  { value: 'paypal',        label: 'PayPal' },
+  { value: 'satispay',      label: 'Satispay' },
+  { value: 'meal_ticket',   label: 'Ticket Pasto' },
+  { value: 'gift_voucher',  label: 'Buono Acquisto' },
+  { value: 'fuel_voucher',  label: 'Buono Carburante' },
+  { value: 'other_voucher', label: 'Altro Voucher' },
+  { value: 'other',         label: 'Altro' },
+];
+
+const DATE_FORMAT_LABEL = {
+  'DD/MM/YYYY':  'GG/MM/AAAA',
+  'MM/DD/YYYY':  'MM/GG/AAAA',
+  'YYYY-MM-DD':  'AAAA-MM-GG',
+  'DD-MM-YYYY':  'GG-MM-AAAA',
+  'D/M/YYYY':    'G/M/AAAA',
+};
+
 const EMPTY_FORM = {
   name: '', fileType: 'xlsx', skipRows: 0, delimiter: ';', dateFormat: 'DD/MM/YYYY',
   columnMapping: { date:'', amount:'', description:'', payee:'', place:'', notes:'' },
   amountDebit: '', amountCredit: '', amountSign: 'absolute',
+  defaultPaymentMethod: '',
+  payeeMethodKeywords: [],
 };
 
 export default function TemplateImportPage() {
@@ -51,10 +75,24 @@ export default function TemplateImportPage() {
       columnMapping: { ...EMPTY_FORM.columnMapping, ...t.columnMapping },
       amountDebit: t.amountDebit || '', amountCredit: t.amountCredit || '',
       amountSign: t.amountSign || 'absolute',
+      defaultPaymentMethod: t.defaultPaymentMethod || '',
+      payeeMethodKeywords: t.payeeMethodKeywords ? [...t.payeeMethodKeywords] : [],
     });
     setError('');
     setModal({ mode: 'edit', id: t._id });
   };
+
+  const addKeyword = () =>
+    setForm(f => ({ ...f, payeeMethodKeywords: [...f.payeeMethodKeywords, { keyword: '', method: 'credit_card' }] }));
+
+  const updateKeyword = (idx, field, value) =>
+    setForm(f => ({
+      ...f,
+      payeeMethodKeywords: f.payeeMethodKeywords.map((k, i) => i === idx ? { ...k, [field]: value } : k),
+    }));
+
+  const removeKeyword = (idx) =>
+    setForm(f => ({ ...f, payeeMethodKeywords: f.payeeMethodKeywords.filter((_, i) => i !== idx) }));
 
   const setMapping = (key, value) =>
     setForm(f => ({ ...f, columnMapping: { ...f.columnMapping, [key]: value } }));
@@ -113,7 +151,7 @@ export default function TemplateImportPage() {
                     <div className="flex gap-2 mt-1 flex-wrap">
                       <span className="badge badge-ghost badge-sm">{t.fileType.toUpperCase()}</span>
                       <span className="badge badge-ghost badge-sm">Salta {t.skipRows} righe</span>
-                      <span className="badge badge-ghost badge-sm">Data: {t.dateFormat}</span>
+                      <span className="badge badge-ghost badge-sm">Data: {DATE_FORMAT_LABEL[t.dateFormat] || t.dateFormat}</span>
                       {t.fileType === 'csv' && <span className="badge badge-ghost badge-sm">Sep: "{t.delimiter}"</span>}
                     </div>
                   </div>
@@ -183,11 +221,11 @@ export default function TemplateImportPage() {
                   <div className="label"><span className="label-text">Formato data</span></div>
                   <select className="select select-bordered select-sm" value={form.dateFormat}
                     onChange={e => setForm({ ...form, dateFormat: e.target.value })}>
-                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                    <option value="DD-MM-YYYY">DD-MM-YYYY</option>
-                    <option value="D/M/YYYY">D/M/YYYY</option>
+                    <option value="DD/MM/YYYY">GG/MM/AAAA</option>
+                    <option value="MM/DD/YYYY">MM/GG/AAAA</option>
+                    <option value="YYYY-MM-DD">AAAA-MM-GG</option>
+                    <option value="DD-MM-YYYY">GG-MM-AAAA</option>
+                    <option value="D/M/YYYY">G/M/AAAA</option>
                   </select>
                 </label>
 
@@ -237,8 +275,70 @@ export default function TemplateImportPage() {
               )}
 
               <div className="alert alert-info text-xs py-2 col-span-2">
-                <span>Se la banca usa colonne separate per Dare/Avere, compila entrambe e lascia vuoto "Importo". Altrimenti usa solo "Importo" e configura il segno.</span>
+                <span>Se la banca usa colonne separate per Uscite/Entrate, compila entrambe e lascia vuoto "Importo". Altrimenti usa solo "Importo" e configura il segno.</span>
               </div>
+
+              <div className="divider text-xs my-1">Metodo di pagamento</div>
+
+              {/* Metodo fisso */}
+              <label className="form-control col-span-2">
+                <div className="label py-0">
+                  <span className="label-text text-xs font-medium">Metodo fisso per tutto il file</span>
+                  <span className="label-text-alt text-xs text-base-content/50">es. carta di credito, bonifico</span>
+                </div>
+                <select className="select select-bordered select-xs" value={form.defaultPaymentMethod}
+                  onChange={e => setForm({ ...form, defaultPaymentMethod: e.target.value })}>
+                  <option value="">— Nessuno (usa rilevamento automatico) —</option>
+                  {PAYMENT_METHOD_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              {/* Keyword → metodo */}
+              {!form.defaultPaymentMethod && (
+                <div className="col-span-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="label-text text-xs font-medium">
+                      Keyword per rilevamento metodo automatico
+                    </p>
+                    <button type="button" className="btn btn-ghost btn-xs" onClick={addKeyword}>+ Aggiungi</button>
+                  </div>
+                  {form.payeeMethodKeywords.length === 0 ? (
+                    <p className="text-xs text-base-content/40 italic">
+                      Nessuna keyword — il metodo andrà selezionato manualmente in revisione.
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-1">
+                      {form.payeeMethodKeywords.map((kw, idx) => (
+                        <div key={idx} className="flex gap-1 items-center">
+                          <input
+                            type="text"
+                            className="input input-bordered input-xs flex-1"
+                            placeholder="es. VISA, BANCOMAT, SATISPAY…"
+                            value={kw.keyword}
+                            onChange={e => updateKeyword(idx, 'keyword', e.target.value)}
+                          />
+                          <select
+                            className="select select-bordered select-xs w-40"
+                            value={kw.method}
+                            onChange={e => updateKeyword(idx, 'method', e.target.value)}
+                          >
+                            {PAYMENT_METHOD_OPTIONS.map(o => (
+                              <option key={o.value} value={o.value}>{o.label}</option>
+                            ))}
+                          </select>
+                          <button type="button" className="btn btn-ghost btn-xs text-error px-1"
+                            onClick={() => removeKeyword(idx)}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-base-content/40 mt-1">
+                    La prima keyword trovata nel testo della causale/esercente vince. Le righe senza match vengono evidenziate in revisione.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="modal-action">

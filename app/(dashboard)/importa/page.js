@@ -63,7 +63,7 @@ export default function ImportaPage() {
         <StepReview
           rows={parsedRows}
           categories={categories}
-          onSaved={() => router.push('/spese')}
+          onSaved={() => router.push('/movimenti')}
           onBack={() => { setStep(1); setError(''); }}
         />
       )}

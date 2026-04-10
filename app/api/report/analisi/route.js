@@ -13,7 +13,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';
-import Expense from '@/lib/models/Expense';
+import Movement from '@/lib/models/Movement';
 
 export async function GET(req) {
   const session = await auth();
@@ -37,9 +37,9 @@ export async function GET(req) {
   const prevToStr   = prevTo  .toISOString().split('T')[0];
 
   const [curExp, prevExp] = await Promise.all([
-    Expense.find({ date: { $gte: from, $lte: to }, type, excludeFromAnalysis: { $ne: true } })
+    Movement.find({ date: { $gte: from, $lte: to }, type, excludeFromAnalysis: { $ne: true } })
       .populate('categoryId', 'name color').lean(),
-    Expense.find({ date: { $gte: prevFromStr, $lte: prevToStr }, type, excludeFromAnalysis: { $ne: true } })
+    Movement.find({ date: { $gte: prevFromStr, $lte: prevToStr }, type, excludeFromAnalysis: { $ne: true } })
       .populate('categoryId', 'name color').lean(),
   ]);
 
@@ -64,7 +64,7 @@ export async function GET(req) {
   const curMonth  = new Date().getMonth() + 1;
   const yearFrom  = `${curYear}-01-01`;
   const yearTo    = `${curYear}-12-31`;
-  const yearExp   = await Expense.find({ date: { $gte: yearFrom, $lte: yearTo }, type, excludeFromAnalysis: { $ne: true } }).lean();
+  const yearExp   = await Movement.find({ date: { $gte: yearFrom, $lte: yearTo }, type, excludeFromAnalysis: { $ne: true } }).lean();
   const yearTotal = yearExp.reduce((s,e) => s + e.amount, 0);
   const monthsElapsed = curMonth;
   const avgPerMonth   = monthsElapsed > 0 ? yearTotal / monthsElapsed : 0;

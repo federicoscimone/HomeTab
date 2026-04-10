@@ -126,7 +126,7 @@ export default function DashboardPage() {
               <div className="stat-value text-xl sm:text-2xl">{data.current.count}</div>
               <div className="stat-desc text-xs mt-1">
                 <Link
-                  href={`/spese?from=${year}-${mm}-01&to=${year}-${mm}-31`}
+                  href={`/movimenti?from=${year}-${mm}-01&to=${year}-${mm}-31`}
                   className="text-primary hover:underline"
                 >
                   Vedi tutti →
@@ -202,14 +202,30 @@ export default function DashboardPage() {
                 />
                 {data.byCategory.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-xs text-base-content/50 mb-2">Top uscite per categoria</p>
-                    <div className="flex flex-col gap-1.5">
+                    <p className="text-xs text-base-content/50 mb-2">Uscite per categoria</p>
+                    <div className="flex flex-col gap-2">
                       {data.byCategory.slice(0, 5).map((c, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: c.color }} />
-                          <span className="text-xs flex-1 truncate">{c.name}</span>
-                          <span className="text-xs font-medium">{fmtFull(c.amount)}</span>
+                        <div key={i} className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: c.color }} />
+                            <span className="text-xs flex-1 truncate font-medium">{c.name}</span>
+                            <span className="text-xs font-medium">{fmtFull(c.amount)}</span>
+                          </div>
+                          {(c.traditional > 0 || c.alternative > 0) && (
+                            <div className="flex gap-2 pl-4.5">
+                              {c.traditional > 0 && (
+                                <span className="text-[10px] text-info">
+                                  Trad {fmtFull(c.traditional)}
+                                </span>
+                              )}
+                              {c.alternative > 0 && (
+                                <span className="text-[10px] text-warning">
+                                  Alt {fmtFull(c.alternative)}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

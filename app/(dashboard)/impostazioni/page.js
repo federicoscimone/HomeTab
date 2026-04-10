@@ -1,13 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signOut } from 'next-auth/react';
+
+const THEMES = [
+  { value: 'light',  label: 'Light',  bg: '#ffffff', primary: '#6366f1', text: '#1f2937' },
+  { value: 'dark',   label: 'Dark',   bg: '#1d232a', primary: '#661ae6', text: '#a6adbb' },
+  { value: 'forest', label: 'Forest', bg: '#171212', primary: '#1eb854', text: '#b5b5b5' },
+  { value: 'aqua',   label: 'Aqua',   bg: '#345da7', primary: '#09ecf3', text: '#c3f0fb' },
+  { value: 'abyss',  label: 'Abyss',  bg: '#0a0a14', primary: '#4f46e5', text: '#8b8ba8' },
+];
 
 export default function ImpostazioniPage() {
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('homebi-theme');
+    if (saved) setTheme(saved);
+    else {
+      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      setTheme(sys);
+    }
+  }, []);
+
+  const applyTheme = (value) => {
+    setTheme(value);
+    document.documentElement.setAttribute('data-theme', value);
+    localStorage.setItem('homebi-theme', value);
+  };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -48,7 +72,36 @@ export default function ImpostazioniPage() {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-2xl font-bold mb-6">Impostazioni</h1>
+      <h1 className="text-2xl font-bold mb-6">Account & Sicurezza</h1>
+
+      {/* Tema */}
+      <div className="card bg-base-100 shadow-sm border border-base-200 mb-4">
+        <div className="card-body gap-4">
+          <h2 className="card-title text-lg">Aspetto — Tema</h2>
+          <div className="flex flex-wrap gap-3">
+            {THEMES.map(t => (
+              <button
+                key={t.value}
+                onClick={() => applyTheme(t.value)}
+                className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all ${theme === t.value ? 'border-primary' : 'border-base-200 hover:border-base-300'}`}
+                title={t.label}
+              >
+                <span
+                  className="w-14 h-9 rounded-lg flex items-end p-1 gap-0.5"
+                  style={{ backgroundColor: t.bg }}
+                >
+                  <span className="flex-1 h-3 rounded-sm opacity-80" style={{ backgroundColor: t.primary }} />
+                  <span className="flex-1 h-2 rounded-sm opacity-40" style={{ backgroundColor: t.text }} />
+                </span>
+                <span className="text-xs font-medium">{t.label}</span>
+                {theme === t.value && (
+                  <span className="badge badge-primary badge-xs">attivo</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Cambio password */}
       <div className="card bg-base-100 shadow-sm border border-base-200">

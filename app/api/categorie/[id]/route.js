@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';
 import Category from '@/lib/models/Category';
-import Expense from '@/lib/models/Expense';
+import Movement from '@/lib/models/Movement';
+import { writeAudit } from '@/lib/utils/audit';
 
 export async function PUT(req, { params }) {
   const session = await auth();
@@ -13,6 +14,13 @@ export async function PUT(req, { params }) {
   const body = await req.json();
   const category = await Category.findByIdAndUpdate(id, body, { new: true, runValidators: true });
   if (!category) return NextResponse.json({ error: 'Non trovata' }, { status: 404 });
+
+  await writeAudit(session, req, {
+    action: 'UPDATE',
+    resource: 'category',
+    resourceId: id,
+    description: `Modificata categoria "${category.name}"`,
+  });
   return NextResponse.json(category);
 }
 
@@ -24,7 +32,7 @@ export async function DELETE(req, { params }) {
   const { id } = await params;
 
   // Verifica se ci sono spese associate
-  const usageCount = await Expense.countDocuments({
+  const usageCount = await Movement.countDocuments({
     $or: [{ categoryId: id }, { subCategory1Id: id }, { subCategory2Id: id }],
   });
   if (usageCount > 0)
@@ -40,7 +48,14 @@ export async function DELETE(req, { params }) {
     for (const gc of grandchildren) await Category.findByIdAndDelete(gc._id);
     await Category.findByIdAndDelete(child._id);
   }
-  await Category.findByIdAndDelete(id);
+  const deleted = await Category.findByIdAndDelete(id);
 
+  await writeAudit(session, req, {
+    action: 'DELETE',
+    resource: 'category',
+    resourceId: id,
+    description: `Eliminata categoria "${deleted?.name ?? id}"`,
+    meta: { childrenDeleted: children.length },
+  });
   return NextResponse.json({ message: 'Eliminata' });
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { logApiError } from '@/lib/logger';
 import connectDB from '@/lib/mongodb';
 import ImportTemplate from '@/lib/models/ImportTemplate';
 import KeywordMapping from '@/lib/models/KeywordMapping';
@@ -43,9 +44,14 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Nessun dato fornito' }, { status: 400 });
     }
   } catch (err) {
-    console.error('[import/parse]', err);
+    logApiError('POST /api/import/parse', err, { templateId });
     return NextResponse.json({ error: `Errore parsing: ${err.message}` }, { status: 400 });
   }
+
+  // Determina metodo di caricamento dal tipo file / input
+  const importMethod = (file && file.size > 0)
+    ? (template.fileType === 'csv' ? 'csv' : 'xlsx')
+    : 'paste';
 
   // Applica auto-categorizzazione
   const enriched = rows.map((row, i) => {
@@ -53,13 +59,14 @@ export async function POST(req) {
     return {
       _rowId: i,
       ...row,
-      // type è già impostato dal parser ('expense' | 'income')
-      paymentMethod: 'credit_card', // default modificabile in revisione
-      categoryId: cat?.categoryId || null,
+      // paymentMethod proviene dal parser (rilevato via keyword/default) o null se non rilevato
+      // _methodAutoDetected è già impostato dal parser
+      categoryId:     cat?.categoryId     || null,
       subCategory1Id: cat?.subCategory1Id || null,
       subCategory2Id: null,
-      selected: true,
-      _autocat: !!cat,
+      selected:       true,
+      _autocat:       !!cat,
+      importMethod,
     };
   });
 

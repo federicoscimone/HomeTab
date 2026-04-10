@@ -1,5 +1,5 @@
 /**
- * @fileoverview API route — /api/spese
+ * @fileoverview API route — /api/movimenti
  * GET  — paginated, filtered list of expenses/incomes.
  * POST — create a new expense/income record.
  */
@@ -7,8 +7,10 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';
-import Expense from '@/lib/models/Expense';
+import Movement from '@/lib/models/Movement';
 import { getPaymentGroup } from '@/lib/utils/payments';
+import logger, { logApiError } from '@/lib/logger';
+import { writeAudit } from '@/lib/utils/audit';
 
 export async function GET(req) {
   const session = await auth();
@@ -26,6 +28,11 @@ export async function GET(req) {
   const paymentGroup  = searchParams.get('paymentGroup');
   const search        = searchParams.get('search');
   const type          = searchParams.get('type');
+  const incomplete    = searchParams.get('incomplete') === '1';
+
+  const SORT_FIELDS = { date: 'date', payee: 'payee', amount: 'amount' };
+  const sortField = SORT_FIELDS[searchParams.get('sort')] || 'date';
+  const sortDir   = searchParams.get('sortDir') === 'asc' ? 1 : -1;
 
   const filter = {};
   if (from || to) {
@@ -41,19 +48,23 @@ export async function GET(req) {
     const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     filter.$or = [{ payee: rx }, { description: rx }, { place: rx }, { notes: rx }];
   }
+  if (incomplete) {
+    filter.categoryId = null;
+  }
 
   const [expenses, total] = await Promise.all([
-    Expense.find(filter)
+    Movement.find(filter)
       .populate('categoryId', 'name color')
       .populate('subCategory1Id', 'name')
       .populate('subCategory2Id', 'name')
-      .sort({ date: -1, createdAt: -1 })
+      .sort({ [sortField]: sortDir, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .lean(),
-    Expense.countDocuments(filter),
+    Movement.countDocuments(filter),
   ]);
 
+  logger.info('GET /api/movimenti', { total, page, limit, userId: session.user?.id });
   return NextResponse.json({ expenses, total, page, limit, pages: Math.ceil(total / limit) });
 }
 
@@ -70,6 +81,19 @@ export async function POST(req) {
   if (!body.subCategory2Id) body.subCategory2Id = null;
   if (!body.categoryId)     body.categoryId = null;
 
-  const expense = await Expense.create(body);
-  return NextResponse.json(expense, { status: 201 });
+  try {
+    const expense = await Movement.create(body);
+    logger.info('POST /api/movimenti', { id: expense._id, type: expense.type, userId: session.user?.id });
+    await writeAudit(session, req, {
+      action: 'CREATE',
+      resource: 'movement',
+      resourceId: expense._id,
+      description: `Creato movimento €${expense.amount.toFixed(2)}${expense.payee ? ` — ${expense.payee}` : ''}${expense.description ? ` (${expense.description})` : ''}`,
+      meta: { type: expense.type, paymentMethod: expense.paymentMethod, date: expense.date },
+    });
+    return NextResponse.json(expense, { status: 201 });
+  } catch (err) {
+    logApiError('POST /api/movimenti', err, { userId: session.user?.id });
+    return NextResponse.json({ error: 'Errore salvataggio movimento' }, { status: 500 });
+  }
 }

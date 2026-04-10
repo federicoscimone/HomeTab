@@ -13,7 +13,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';
-import Expense from '@/lib/models/Expense';
+import Movement from '@/lib/models/Movement';
 import Category from '@/lib/models/Category';
 
 export async function GET(req) {
@@ -34,7 +34,7 @@ export async function GET(req) {
   if (paymentGroup) filter.paymentGroup = paymentGroup;
 
   const [expenses, categories] = await Promise.all([
-    Expense.find(filter).lean(),
+    Movement.find(filter).lean(),
     Category.find({ level: 1 }).sort({ order: 1, name: 1 }).lean(),
   ]);
 

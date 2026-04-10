@@ -14,7 +14,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';
-import Expense from '@/lib/models/Expense';
+import Movement from '@/lib/models/Movement';
 import Category from '@/lib/models/Category';
 
 export async function GET(req) {
@@ -44,12 +44,12 @@ export async function GET(req) {
     const toPrev   = `${year - 1}-12-31`;
 
     const [curExp, prevExp] = await Promise.all([
-      Expense.find({
+      Movement.find({
         $or: [{ categoryId: cat._id }, { subCategory1Id: cat._id }],
         date: { $gte: fromCur, $lte: toCur }, type,
         excludeFromAnalysis: { $ne: true },
       }).lean(),
-      Expense.find({
+      Movement.find({
         $or: [{ categoryId: cat._id }, { subCategory1Id: cat._id }],
         date: { $gte: fromPrev, $lte: toPrev }, type,
         excludeFromAnalysis: { $ne: true },

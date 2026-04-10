@@ -13,7 +13,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';
-import Expense from '@/lib/models/Expense';
+import Movement from '@/lib/models/Movement';
+import '@/lib/models/Category';
 
 export async function GET(req) {
   const session = await auth();
@@ -38,10 +39,10 @@ export async function GET(req) {
   const excludeFilter = { excludeFromAnalysis: { $ne: true } };
 
   const [curExpenses, prevExpenses] = await Promise.all([
-    Expense.find({ date: { $gte: curFrom, $lte: curTo }, ...excludeFilter })
+    Movement.find({ date: { $gte: curFrom, $lte: curTo }, ...excludeFilter })
       .populate('categoryId', 'name color')
       .lean(),
-    Expense.find({ date: { $gte: prevFrom, $lte: prevTo }, ...excludeFilter })
+    Movement.find({ date: { $gte: prevFrom, $lte: prevTo }, ...excludeFilter })
       .lean(),
   ]);
 
@@ -61,14 +62,16 @@ export async function GET(req) {
     .filter(e => e.type === 'income')
     .reduce((s, e) => s + e.amount, 0);
 
-  // Uscite per categoria
+  // Uscite per categoria (con split tradizionale/alternativo)
   const byCategoryMap = {};
   for (const e of curExpenses.filter(e => e.type !== 'income')) {
     const key   = e.categoryId?._id?.toString() || 'uncategorized';
     const name  = e.categoryId?.name  || 'Senza categoria';
     const color = e.categoryId?.color || '#94a3b8';
-    if (!byCategoryMap[key]) byCategoryMap[key] = { name, color, amount: 0 };
+    if (!byCategoryMap[key]) byCategoryMap[key] = { name, color, amount: 0, traditional: 0, alternative: 0 };
     byCategoryMap[key].amount += e.amount;
+    if (e.paymentGroup === 'alternative') byCategoryMap[key].alternative += e.amount;
+    else byCategoryMap[key].traditional += e.amount;
   }
   const byCategory = Object.values(byCategoryMap)
     .sort((a, b) => b.amount - a.amount)
@@ -113,7 +116,7 @@ export async function GET(req) {
     const y = d.getFullYear();
     const from = `${y}-${String(m).padStart(2,'0')}-01`;
     const to   = `${y}-${String(m).padStart(2,'0')}-31`;
-    const docs = await Expense.find({ date: { $gte: from, $lte: to }, ...excludeFilter }).lean();
+    const docs = await Movement.find({ date: { $gte: from, $lte: to }, ...excludeFilter }).lean();
     trend.push({
       label: `${String(m).padStart(2,'0')}/${y}`,
       expense: docs.filter(e => e.type !== 'income').reduce((s,e) => s + e.amount, 0),
