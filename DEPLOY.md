@@ -58,13 +58,13 @@ ssh pi@192.168.1.200
 sudo bash setup-pi.sh
 ```
 
-Lo script installa Docker, crea l'utente `hometab`, crea le directory e guida all'installazione del runner.
+Lo script installa Docker, crea l'utente `federico`, crea le directory e guida all'installazione del runner.
 
 ### B.2 — Creare `.env.production` sul Pi
 
 ```bash
-su - hometab
-nano /home/hometab/hometab/.env.production
+su - federico
+nano /home/federico/hometab/.env.production
 ```
 
 Contenuto (usa `.env.production.example` come riferimento):
@@ -84,10 +84,10 @@ SMTP_FROM=HomeTab <tua@email.com>
 
 1. Vai su: `https://github.com/federicoscimone/HomeTab/settings/actions/runners/new`
 2. Seleziona **Linux / ARM64**
-3. Esegui i comandi mostrati da GitHub come utente `hometab`:
+3. Esegui i comandi mostrati da GitHub come utente `federico`:
 
 ```bash
-su - hometab
+su - federico
 mkdir actions-runner && cd actions-runner
 # incolla qui i comandi di download e config mostrati da GitHub
 ./config.sh --url https://github.com/federicoscimone/HomeTab --token <TOKEN>
@@ -125,7 +125,7 @@ Si attiva automaticamente su ogni push a `main` (o manualmente dalla UI GitHub).
 Il workflow usa `GITHUB_TOKEN` (automatico) per autenticarsi al Container Registry.
 Non servono secret aggiuntivi per il deploy di base.
 
-Per abilitare il pull dell'immagine dal Pi, rendi il package **pubblico** oppure configura l'autenticazione a ghcr.io sull'utente `hometab` del Pi:
+Per abilitare il pull dell'immagine dal Pi, rendi il package **pubblico** oppure configura l'autenticazione a ghcr.io sull'utente `federico` del Pi:
 
 ```bash
 # sul Pi, come utente hometab
@@ -138,14 +138,14 @@ echo "<GITHUB_PAT>" | docker login ghcr.io -u federicoscimone --password-stdin
 
 ### Script di backup MongoDB
 
-Da aggiungere come cron job sul Pi (`crontab -e` come utente `hometab`):
+Da aggiungere come cron job sul Pi (`crontab -e` come utente `federico`):
 
 ```bash
 # Backup MongoDB ogni giorno alle 02:00
-0 2 * * * docker exec $(docker ps -qf name=mongodb) mongodump --db hometab --archive | gzip > /home/hometab/backups/hometab-$(date +\%Y\%m\%d).gz
+0 2 * * * docker exec $(docker ps -qf name=mongodb) mongodump --db hometab --archive | gzip > /home/federico/backups/hometab-$(date +\%Y\%m\%d).gz
 
 # Pulizia backup più vecchi di 30 giorni
-0 3 * * * find /home/hometab/backups -name "*.gz" -mtime +30 -delete
+0 3 * * * find /home/federico/backups -name "*.gz" -mtime +30 -delete
 ```
 
 ### Aggiornamenti manuali
@@ -155,7 +155,7 @@ Se si vuole forzare un deploy senza push:
 ```bash
 # dalla UI GitHub: Actions → Build & Deploy → Run workflow
 # oppure dal Pi:
-cd /home/hometab/hometab
+cd /home/federico/hometab
 docker compose pull && docker compose up -d
 ```
 

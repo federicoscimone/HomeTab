@@ -193,7 +193,7 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
         </div>
       )}
 
-      {/* Riepilogo */}
+      {/* Riepilogo -*/}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-lg font-semibold">Revisione dati</h2>
