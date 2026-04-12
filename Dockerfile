@@ -1,19 +1,16 @@
-# Stage 1: installa dipendenze
-FROM node:20-alpine AS deps
+# Stage 1: build
+FROM node:20-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps
-
-# Stage 2: build
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# npm install invece di npm ci: rileva la piattaforma arm64-musl
+# e installa i binari nativi corretti (es. lightningcss-linux-arm64-musl)
+RUN npm install --legacy-peer-deps
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# Stage 3: immagine finale minimale
+# Stage 2: immagine finale minimale
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
