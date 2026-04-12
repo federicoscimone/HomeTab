@@ -1,17 +1,17 @@
 # Stage 1: build
-FROM node:20-alpine AS builder
-RUN apk add --no-cache libc6-compat
+# Usiamo Debian slim (glibc) invece di Alpine (musl) per compatibilità
+# con i binari nativi di lightningcss/tailwindcss su arm64
+FROM node:20-slim AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package.json package-lock.json ./
-# npm install invece di npm ci: rileva la piattaforma arm64-musl
-# e installa i binari nativi corretti (es. lightningcss-linux-arm64-musl)
 RUN npm install --legacy-peer-deps
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # Stage 2: immagine finale minimale
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
