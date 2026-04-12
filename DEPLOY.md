@@ -15,7 +15,7 @@
                                ↓
                     GitHub Actions (ubuntu-latest)
                     build immagine arm64 con QEMU
-                    push su ghcr.io/federicoscimone/hometab
+                    push su ghcr.io/federicoscimone/HomeTab
                                ↓
                     GitHub Actions (self-hosted sul Pi)
                     docker compose pull + up
@@ -82,7 +82,7 @@ SMTP_FROM=HomeTab <tua@email.com>
 
 ### B.3 — Installare il self-hosted runner GitHub Actions
 
-1. Vai su: `https://github.com/federicoscimone/hometab/settings/actions/runners/new`
+1. Vai su: `https://github.com/federicoscimone/HomeTab/settings/actions/runners/new`
 2. Seleziona **Linux / ARM64**
 3. Esegui i comandi mostrati da GitHub come utente `hometab`:
 
@@ -90,7 +90,7 @@ SMTP_FROM=HomeTab <tua@email.com>
 su - hometab
 mkdir actions-runner && cd actions-runner
 # incolla qui i comandi di download e config mostrati da GitHub
-./config.sh --url https://github.com/federicoscimone/hometab --token <TOKEN>
+./config.sh --url https://github.com/federicoscimone/HomeTab --token <TOKEN>
 ```
 
 4. Installa e avvia come servizio systemd (si avvia automaticamente al reboot):
@@ -112,7 +112,7 @@ Si attiva automaticamente su ogni push a `main` (o manualmente dalla UI GitHub).
 
 **Job 1 — `build`** (runner GitHub, ubuntu-latest):
 - Emula arm64 con QEMU
-- Builda l'immagine Docker e la pusha su `ghcr.io/federicoscimone/hometab:latest`
+- Builda l'immagine Docker e la pusha su `ghcr.io/federicoscimone/HomeTab:latest`
 - Usa la cache di GitHub Actions per build più veloci
 
 **Job 2 — `deploy`** (self-hosted runner sul Pi):

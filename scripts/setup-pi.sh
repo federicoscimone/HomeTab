@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-GITHUB_REPO="federicoscimone/hometab"   # <-- cambia se il repo ha nome diverso
+GITHUB_REPO="federicoscimone/HomeTab"   # nome del repo su GitHub
 APP_USER="hometab"
 APP_DIR="/home/${APP_USER}/hometab"
 BACKUP_DIR="/home/${APP_USER}/backups"
