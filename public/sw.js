@@ -1,4 +1,4 @@
-const CACHE_NAME = 'homebi-v1';
+const CACHE_NAME = 'hometab-v1';
 
 // Static shell to pre-cache on install
 const PRECACHE_URLS = [

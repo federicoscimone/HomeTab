@@ -106,7 +106,7 @@ function ResetPasswordForm() {
     <div className="card bg-base-100 shadow-xl w-full max-w-sm">
       <div className="card-body gap-4">
         <div className="text-center mb-2">
-          <h1 className="text-2xl font-bold text-primary">HomeBI</h1>
+          <h1 className="text-2xl font-bold text-primary">HomeTab</h1>
           <p className="text-sm text-base-content/60">Imposta nuova password</p>
         </div>
 

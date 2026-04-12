@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'Offline — HomeBI',
+  title: 'Offline — HomeTab',
 };
 
 export default function OfflinePage() {
@@ -12,7 +12,7 @@ export default function OfflinePage() {
       </svg>
       <h1 className="text-3xl font-bold mb-3">Sei offline</h1>
       <p className="text-base-content/60 max-w-sm mb-8">
-        HomeBI non è raggiungibile al momento. Controlla la connessione internet e riprova.
+        HomeTab non è raggiungibile al momento. Controlla la connessione internet e riprova.
       </p>
       <a href="/" className="btn btn-primary">
         Riprova

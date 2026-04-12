@@ -83,7 +83,7 @@ export async function GET(req) {
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
     const dateStr = new Date().toISOString().slice(0, 10);
-    const filename = `homebi-movimenti-${dateStr}.xlsx`;
+    const filename = `hometab-movimenti-${dateStr}.xlsx`;
 
     return new NextResponse(buffer, {
       status: 200,

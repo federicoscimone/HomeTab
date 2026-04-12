@@ -36,7 +36,7 @@ async function exportExcel(data, year, type) {
   const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totRow]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, `Pivot ${year}`);
-  XLSX.writeFile(wb, `homebi-pivot-${year}-${type}.xlsx`);
+  XLSX.writeFile(wb, `hometab-pivot-${year}-${type}.xlsx`);
 }
 
 /**

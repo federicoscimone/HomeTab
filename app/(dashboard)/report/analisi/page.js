@@ -42,7 +42,7 @@ async function exportExcel(data, from, to, type) {
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Analisi');
-  XLSX.writeFile(wb, `homebi-analisi-${from}-${to}-${type}.xlsx`);
+  XLSX.writeFile(wb, `hometab-analisi-${from}-${to}-${type}.xlsx`);
 }
 
 /**

@@ -1,0 +1,30 @@
+# Dipendenze (reinstallate nel container)
+node_modules
+
+# Output build (rigenerato nel container)
+.next
+
+# File ambiente locali (non devono entrare nell'immagine)
+.env*
+
+# Log applicazione
+logs
+
+# File di sviluppo
+.git
+.gitignore
+README.md
+HOMETAB.md
+DEPLOY.md
+AGENTS.md
+CLAUDE.md
+
+# File Excel di test/import
+*.xlsx
+*.csv
+
+# Editor e OS
+.DS_Store
+*.pem
+.vscode
+.idea

@@ -19,7 +19,7 @@ export default function ImpostazioniPage() {
   const [theme, setTheme] = useState('light');
 
   useEffect(() => {
-    const saved = localStorage.getItem('homebi-theme');
+    const saved = localStorage.getItem('hometab-theme');
     if (saved) setTheme(saved);
     else {
       const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -30,7 +30,7 @@ export default function ImpostazioniPage() {
   const applyTheme = (value) => {
     setTheme(value);
     document.documentElement.setAttribute('data-theme', value);
-    localStorage.setItem('homebi-theme', value);
+    localStorage.setItem('hometab-theme', value);
   };
 
   const handleChangePassword = async (e) => {

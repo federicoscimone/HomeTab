@@ -13,12 +13,12 @@ export default function ServiceWorkerRegistration() {
             newWorker?.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 // New version available — could show a toast here if desired
-                console.info('[HomeBI] Nuova versione disponibile. Ricarica per aggiornare.');
+                console.info('[HomeTab] Nuova versione disponibile. Ricarica per aggiornare.');
               }
             });
           });
         })
-        .catch(err => console.warn('[HomeBI] Service worker non registrato:', err));
+        .catch(err => console.warn('[HomeTab] Service worker non registrato:', err));
     }
   }, []);
 

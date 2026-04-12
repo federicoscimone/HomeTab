@@ -4,13 +4,13 @@ import SessionProvider from '@/components/layout/SessionProvider';
 import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistration';
 
 export const metadata = {
-  title: 'HomeBI — Movimenti Personali',
+  title: 'HomeTab — Movimenti Personali',
   description: 'Traccia e analizza i tuoi movimenti personali',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'HomeBI',
+    title: 'HomeTab',
   },
   formatDetection: { telephone: false },
   icons: {
@@ -36,7 +36,7 @@ export const viewport = {
 // Inline script to prevent FOUC — runs before React hydrates
 const themeScript = `
   try {
-    var t = localStorage.getItem('homebi-theme');
+    var t = localStorage.getItem('hometab-theme');
     if (!t) {
       t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }

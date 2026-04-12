@@ -58,7 +58,7 @@ export default function DashboardLayout({ children }) {
                 d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-lg font-bold text-primary">HomeBI</span>
+          <span className="text-lg font-bold text-primary">HomeTab</span>
         </header>
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">

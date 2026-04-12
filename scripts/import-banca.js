@@ -1,5 +1,5 @@
 /**
- * Script di importazione: "export analisi banca.xlsx" → MongoDB HomeBI
+ * Script di importazione: "export analisi banca.xlsx" → MongoDB HomeTab
  *
  * Fogli:
  *   "Dati"        – movimenti bancari principali (4390 righe)

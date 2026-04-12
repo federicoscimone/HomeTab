@@ -1,0 +1,12 @@
+# Override per test locale del container (non usato in produzione)
+# Uso: docker compose up --build
+# Sovrascrive l'immagine ghcr.io con una build locale
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hometab:local
+    env_file:
+      - .env.local

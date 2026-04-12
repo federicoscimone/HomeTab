@@ -1,6 +1,6 @@
 {
-  "name": "HomeBI — Spese Personali",
-  "short_name": "HomeBI",
+  "name": "HomeTab — Spese Personali",
+  "short_name": "HomeTab",
   "description": "Traccia e analizza le tue spese personali",
   "start_url": "/",
   "display": "standalone",
