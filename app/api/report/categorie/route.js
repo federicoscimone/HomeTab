@@ -28,7 +28,7 @@ export async function GET(req) {
   const categoryId = searchParams.get('categoryId') || null;
   const type       = searchParams.get('type') || 'expense';
 
-  const categories = await Category.find({ level: 1 }).sort({ order: 1, name: 1 }).lean();
+  const categories = await Category.find({ level: 1 }).sort({ name: 1 }).lean();
 
   // Per ogni categoria calcola: mensile anno corrente + anno precedente
   const result = [];

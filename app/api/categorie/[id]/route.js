@@ -42,9 +42,9 @@ export async function DELETE(req, { params }) {
     );
 
   // Elimina anche i figli
-  const children = await Category.find({ parentId: id }).lean();
+  const children = await Category.find({ parentId: id }).sort({ name: 1 }).lean();
   for (const child of children) {
-    const grandchildren = await Category.find({ parentId: child._id }).lean();
+    const grandchildren = await Category.find({ parentId: child._id }).sort({ name: 1 }).lean();
     for (const gc of grandchildren) await Category.findByIdAndDelete(gc._id);
     await Category.findByIdAndDelete(child._id);
   }

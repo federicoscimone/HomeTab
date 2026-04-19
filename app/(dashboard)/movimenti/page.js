@@ -44,11 +44,11 @@ function SortTh({ field, current, dir, onClick, className = '', children }) {
   );
 }
 
-/** @typedef {{ from:string, to:string, categoryId:string, paymentMethod:string, paymentGroup:string, search:string, type:string }} Filters */
+/** @typedef {{ from:string, to:string, categoryIds:string[], paymentMethod:string, paymentGroup:string, search:string, type:string, incomplete:boolean, excludeFromAnalysis:boolean }} Filters */
 
 /** @type {Filters} */
 const EMPTY_FILTERS = {
-  from: '', to: '', categoryId: '', paymentMethod: '', paymentGroup: '', search: '', type: '', incomplete: false,
+  from: '', to: '', categoryIds: [], paymentMethod: '', paymentGroup: '', search: '', type: '', incomplete: false, excludeFromAnalysis: false,
 };
 
 /**
@@ -66,6 +66,7 @@ export default function SpesePage() {
 
   const [filters,       setFilters]       = useState(EMPTY_FILTERS);
   const [activeFilters, setActiveFilters] = useState(EMPTY_FILTERS);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const [sort,    setSort]    = useState('date');
   const [sortDir, setSortDir] = useState('desc');
@@ -103,12 +104,13 @@ export default function SpesePage() {
     const params = new URLSearchParams({ page: p, limit: PAGE_SIZE, sort: s, sortDir: sd });
     if (f.from)          params.set('from',          f.from);
     if (f.to)            params.set('to',            f.to);
-    if (f.categoryId)    params.set('categoryId',    f.categoryId);
+    if (f.categoryIds && f.categoryIds.length > 0) params.set('categoryIds', f.categoryIds.join(','));
     if (f.paymentMethod) params.set('paymentMethod', f.paymentMethod);
     if (f.paymentGroup)  params.set('paymentGroup',  f.paymentGroup);
     if (f.search)        params.set('search',        f.search);
     if (f.type)          params.set('type',          f.type);
     if (f.incomplete)    params.set('incomplete',    '1');
+    if (f.excludeFromAnalysis) params.set('excludeFromAnalysis', '1');
 
     try {
       const res  = await fetch(`/api/movimenti?${params}`);
@@ -189,12 +191,13 @@ export default function SpesePage() {
       const params = new URLSearchParams();
       if (activeFilters.from)          params.set('from',          activeFilters.from);
       if (activeFilters.to)            params.set('to',            activeFilters.to);
-      if (activeFilters.categoryId)    params.set('categoryId',    activeFilters.categoryId);
+      if (activeFilters.categoryIds && activeFilters.categoryIds.length > 0) params.set('categoryIds', activeFilters.categoryIds.join(','));
       if (activeFilters.paymentMethod) params.set('paymentMethod', activeFilters.paymentMethod);
       if (activeFilters.paymentGroup)  params.set('paymentGroup',  activeFilters.paymentGroup);
       if (activeFilters.search)        params.set('search',        activeFilters.search);
       if (activeFilters.type)          params.set('type',          activeFilters.type);
       if (activeFilters.incomplete)    params.set('incomplete',    '1');
+      if (activeFilters.excludeFromAnalysis) params.set('excludeFromAnalysis', '1');
 
       const res = await fetch(`/api/movimenti/export?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -260,7 +263,7 @@ export default function SpesePage() {
       .catch(() => {});
   };
 
-  const hasActiveFilters = Object.values(activeFilters).some(Boolean);
+  const hasActiveFilters = activeFilters.from || activeFilters.to || activeFilters.categoryIds.length > 0 || activeFilters.paymentMethod || activeFilters.paymentGroup || activeFilters.search || activeFilters.type || activeFilters.incomplete || activeFilters.excludeFromAnalysis;
 
   return (
     <div>
@@ -346,15 +349,64 @@ export default function SpesePage() {
               onChange={e => setFilters({ ...filters, to: e.target.value })}
               aria-label="A data"
             />
-            <select
-              className="select select-bordered select-sm"
-              value={filters.categoryId}
-              onChange={e => setFilters({ ...filters, categoryId: e.target.value })}
-              aria-label="Categoria"
-            >
-              <option value="">Tutte le categorie</option>
-              {categories.filter(c => c.level === 1).map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-            </select>
+            <div className="relative" onBlur={() => setTimeout(() => setShowCategoryDropdown(false), 200)}>
+              <button
+                type="button"
+                className="select select-bordered select-sm w-full text-left justify-between flex items-center"
+                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+              >
+                <span className="truncate">
+                  {filters.categoryIds.length === 0
+                    ? 'Tutte le categorie'
+                    : filters.categoryIds.length === 1
+                    ? categories.find(c => c._id === filters.categoryIds[0])?.name || 'Categoria'
+                    : `${filters.categoryIds.length} categor.`}
+                </span>
+                <svg className={`w-4 h-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </button>
+              {showCategoryDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-base-100 border border-base-300 rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto">
+                  <div className="p-2 border-b border-base-200 sticky top-0 bg-base-100">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-ghost btn-block text-xs justify-start"
+                      onClick={() => setFilters({ ...filters, categoryIds: categories.filter(c => c.level === 1).map(c => c._id) })}
+                    >
+                      Seleziona tutto
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-ghost btn-block text-xs justify-start"
+                      onClick={() => setFilters({ ...filters, categoryIds: [] })}
+                    >
+                      Deseleziona tutto
+                    </button>
+                  </div>
+                  <div className="p-2 space-y-1">
+                    {categories.filter(c => c.level === 1).map(cat => (
+                      <label key={cat._id} className="flex items-center gap-2 p-2 hover:bg-base-200 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="checkbox checkbox-sm"
+                          checked={filters.categoryIds.includes(cat._id)}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setFilters({ ...filters, categoryIds: [...filters.categoryIds, cat._id] });
+                            } else {
+                              setFilters({ ...filters, categoryIds: filters.categoryIds.filter(id => id !== cat._id) });
+                            }
+                          }}
+                        />
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                        <span className="text-sm flex-1">{cat.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <select
               className="select select-bordered select-sm"
               value={filters.type}
@@ -401,6 +453,23 @@ export default function SpesePage() {
                 Solo movimenti incompleti
               </span>
             )}
+            {activeFilters.excludeFromAnalysis && (
+              <span className="badge badge-info gap-1 text-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.658 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                Solo movimenti esclusi
+              </span>
+            )}
+            <label className="flex items-center gap-2 cursor-pointer ml-auto">
+              <input
+                type="checkbox"
+                className="checkbox checkbox-sm"
+                checked={filters.excludeFromAnalysis ?? false}
+                onChange={e => setFilters({ ...filters, excludeFromAnalysis: e.target.checked })}
+              />
+              <span className="text-sm">Esclusi</span>
+            </label>
           </div>
         </div>
       </div>

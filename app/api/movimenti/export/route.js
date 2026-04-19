@@ -19,12 +19,13 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const from          = searchParams.get('from');
   const to            = searchParams.get('to');
-  const categoryId    = searchParams.get('categoryId');
+  const categoryIds   = searchParams.get('categoryIds') ? searchParams.get('categoryIds').split(',').filter(Boolean) : [];
   const paymentMethod = searchParams.get('paymentMethod');
   const paymentGroup  = searchParams.get('paymentGroup');
   const search        = searchParams.get('search');
   const type          = searchParams.get('type');
   const incomplete    = searchParams.get('incomplete') === '1';
+  const excludeFromAnalysis = searchParams.get('excludeFromAnalysis') === '1';
 
   const filter = {};
   if (from || to) {
@@ -32,7 +33,13 @@ export async function GET(req) {
     if (from) filter.date.$gte = from;
     if (to)   filter.date.$lte = to;
   }
-  if (categoryId)    filter.$or = [{ categoryId }, { subCategory1Id: categoryId }, { subCategory2Id: categoryId }];
+  if (categoryIds.length > 0) {
+    filter.$or = [
+      { categoryId: { $in: categoryIds } },
+      { subCategory1Id: { $in: categoryIds } },
+      { subCategory2Id: { $in: categoryIds } }
+    ];
+  }
   if (paymentMethod) filter.paymentMethod = paymentMethod;
   if (paymentGroup)  filter.paymentGroup  = paymentGroup;
   if (type)          filter.type = type;
@@ -41,6 +48,7 @@ export async function GET(req) {
     filter.$or = [{ payee: rx }, { description: rx }, { place: rx }, { notes: rx }];
   }
   if (incomplete) filter.categoryId = null;
+  if (excludeFromAnalysis) filter.excludeFromAnalysis = true;
 
   try {
     const movements = await Movement.find(filter)

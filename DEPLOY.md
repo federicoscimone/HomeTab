@@ -161,6 +161,32 @@ docker compose pull && docker compose up -d
 
 ---
 
+## Fase E — Nginx + SSL
+
+Sul Pi esiste già un container `my-nginx` (porta 80:80). Andrà configurato come reverse proxy per HomeTab su **porta 443** con certificato SSL.
+
+### E.1 — Scelta del certificato SSL
+
+Per una rete domestica (senza dominio pubblico) le opzioni sono:
+
+| Opzione | Pro | Contro |
+|---------|-----|--------|
+| **Self-signed** | Immediato, nessuna dipendenza | Browser mostra avviso "non sicuro" |
+| **Let's Encrypt (locale)** | Certificato valido, nessun avviso | Richiede dominio pubblico o DNS challenge |
+| **mkcert (CA locale)** | Certificato valido nella LAN, nessun avviso | Va installata la CA su ogni dispositivo |
+
+**Consigliato per LAN domestica: mkcert** — genera certificati validi per IP/hostname locali, basta installare la CA una volta per dispositivo.
+
+### E.2 — Configurazione Nginx per HomeTab
+
+Da creare: `nginx/hometab.conf` con reverse proxy da 443 → `app:3000`.
+
+### E.3 — Integrazione con il container my-nginx esistente
+
+Il container `my-nginx` andrà collegato alla rete Docker di HomeTab per poter raggiungere il container `app`.
+
+---
+
 ## Riepilogo file del progetto legati al deploy
 
 | File | Stato |
@@ -172,5 +198,5 @@ docker compose pull && docker compose up -d
 | `.env.production.example` | ✅ creato |
 | `.github/workflows/deploy.yml` | ✅ creato |
 | `scripts/setup-pi.sh` | ✅ creato |
+| `nginx/hometab.conf` | da fare (Fase E) |
 | `scripts/backup-mongo.sh` | da fare (opzionale) |
-| `nginx/hometab.conf` | da fare (opzionale) |

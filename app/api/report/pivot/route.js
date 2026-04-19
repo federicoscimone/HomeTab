@@ -35,7 +35,7 @@ export async function GET(req) {
 
   const [expenses, categories] = await Promise.all([
     Movement.find(filter).lean(),
-    Category.find({ level: 1 }).sort({ order: 1, name: 1 }).lean(),
+    Category.find({ level: 1 }).sort({ name: 1 }).lean(),
   ]);
 
   const months = Array.from({ length: 12 }, (_, i) => i + 1);

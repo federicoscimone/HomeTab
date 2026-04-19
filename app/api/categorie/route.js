@@ -8,7 +8,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
 
   await connectDB();
-  const categories = await Category.find().sort({ level: 1, order: 1, name: 1 }).lean();
+  const categories = await Category.find().sort({ level: 1, name: 1 }).lean();
   return NextResponse.json(categories);
 }
 
