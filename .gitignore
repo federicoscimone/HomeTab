@@ -26,6 +26,8 @@
 
 # logs applicazione
 /logs
+/deploy/nginx/certs/*.crt
+/deploy/nginx/certs/*.key
 
 # debug
 npm-debug.log*
