@@ -9,6 +9,7 @@ import { fmtFull } from '@/lib/utils/format';
 
 /**
  * @typedef {Object} PieDataPoint
+ * @property {string|null} categoryId - Linked category id (null for uncategorized).
  * @property {string} name   - Category name.
  * @property {number} amount - Total amount in euros.
  * @property {string} color  - Hex fill colour.
@@ -35,8 +36,9 @@ const CustomTooltip = ({ active, payload }) => {
  *
  * @param {object}        props
  * @param {PieDataPoint[]} props.data - Category amounts to render.
+ * @param {(entry: PieDataPoint) => void} [props.onCategoryClick] - Click handler for a pie slice.
  */
-export default function CategoryPieChart({ data }) {
+export default function CategoryPieChart({ data, onCategoryClick }) {
   if (!data?.length) {
     return (
       <div className="flex items-center justify-center h-48 text-base-content/30 text-sm">
@@ -59,8 +61,18 @@ export default function CategoryPieChart({ data }) {
           paddingAngle={2}
           label={({ percent }) => percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''}
           labelLine={false}
+          onClick={(_, index) => {
+            if (!onCategoryClick || typeof index !== 'number') return;
+            onCategoryClick(data[index]);
+          }}
         >
-          {data.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+          {data.map((entry, i) => (
+            <Cell
+              key={i}
+              fill={entry.color}
+              style={{ cursor: onCategoryClick ? 'pointer' : 'default' }}
+            />
+          ))}
         </Pie>
         <Tooltip content={<CustomTooltip />} />
         <Legend

@@ -68,7 +68,16 @@ export async function GET(req) {
     const key   = e.categoryId?._id?.toString() || 'uncategorized';
     const name  = e.categoryId?.name  || 'Senza categoria';
     const color = e.categoryId?.color || '#94a3b8';
-    if (!byCategoryMap[key]) byCategoryMap[key] = { name, color, amount: 0, traditional: 0, alternative: 0 };
+    if (!byCategoryMap[key]) {
+      byCategoryMap[key] = {
+        categoryId: e.categoryId?._id?.toString() || null,
+        name,
+        color,
+        amount: 0,
+        traditional: 0,
+        alternative: 0,
+      };
+    }
     byCategoryMap[key].amount += e.amount;
     if (e.paymentGroup === 'alternative') byCategoryMap[key].alternative += e.amount;
     else byCategoryMap[key].traditional += e.amount;
@@ -83,7 +92,14 @@ export async function GET(req) {
     const key   = e.categoryId?._id?.toString() || 'uncategorized';
     const name  = e.categoryId?.name  || 'Senza categoria';
     const color = e.categoryId?.color || '#94a3b8';
-    if (!byIncomeCategoryMap[key]) byIncomeCategoryMap[key] = { name, color, amount: 0 };
+    if (!byIncomeCategoryMap[key]) {
+      byIncomeCategoryMap[key] = {
+        categoryId: e.categoryId?._id?.toString() || null,
+        name,
+        color,
+        amount: 0,
+      };
+    }
     byIncomeCategoryMap[key].amount += e.amount;
   }
   const byIncomeCategory = Object.values(byIncomeCategoryMap)

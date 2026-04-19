@@ -1,4 +1,5 @@
 import './globals.css';
+import Script from 'next/script';
 import { auth } from '@/auth';
 import SessionProvider from '@/components/layout/SessionProvider';
 import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistration';
@@ -33,24 +34,23 @@ export const viewport = {
   initialScale: 1,
 };
 
-// Inline script to prevent FOUC — runs before React hydrates
-const themeScript = `
-  try {
-    var t = localStorage.getItem('hometab-theme');
-    if (!t) {
-      t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    document.documentElement.setAttribute('data-theme', t);
-  } catch(e) {}
-`;
-
 export default async function RootLayout({ children }) {
   const session = await auth();
   return (
     <html lang="it" suppressHydrationWarning>
       <body>
         {/* Must run before paint — sets data-theme to prevent FOUC */}
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <Script id="theme-script" strategy="beforeInteractive">
+          {`
+            try {
+              var t = localStorage.getItem('hometab-theme');
+              if (!t) {
+                t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+              }
+              document.documentElement.setAttribute('data-theme', t);
+            } catch(e) {}
+          `}
+        </Script>
         <SessionProvider session={session}>
           {children}
           <ServiceWorkerRegistration />

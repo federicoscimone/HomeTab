@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import StatCard from '@/components/dashboard/StatCard';
 import CategoryPieChart from '@/components/dashboard/CategoryPieChart';
 import TrendChart from '@/components/dashboard/TrendChart';
@@ -18,6 +19,7 @@ import { fmtFull, MONTHS_FULL } from '@/lib/utils/format';
  * payment method breakdown, and a 6-month trend.
  */
 export default function DashboardPage() {
+  const router = useRouter();
   const now = new Date();
   const [month,   setMonth]   = useState(now.getMonth() + 1);
   const [year,    setYear]    = useState(now.getFullYear());
@@ -58,6 +60,20 @@ export default function DashboardPage() {
 
   /** Zero-padded month string for URL params, e.g. "03". */
   const mm = String(month).padStart(2, '0');
+
+  const openMovementsForCategory = useCallback((entry, type) => {
+    if (!entry) return;
+    const params = new URLSearchParams({
+      from: `${year}-${mm}-01`,
+      to: `${year}-${mm}-31`,
+      type,
+    });
+
+    if (entry.categoryId) params.set('categoryIds', entry.categoryId);
+    else params.set('incomplete', '1');
+
+    router.push(`/movimenti?${params.toString()}`);
+  }, [router, year, mm]);
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
@@ -140,13 +156,19 @@ export default function DashboardPage() {
             <div className="card bg-base-100 border border-base-200 shadow-sm">
               <div className="card-body py-4">
                 <h2 className="font-semibold text-sm">Uscite per categoria</h2>
-                <CategoryPieChart data={data.byCategory} />
+                <CategoryPieChart
+                  data={data.byCategory}
+                  onCategoryClick={(entry) => openMovementsForCategory(entry, 'expense')}
+                />
               </div>
             </div>
             <div className="card bg-base-100 border border-base-200 shadow-sm">
               <div className="card-body py-4">
                 <h2 className="font-semibold text-sm">Entrate per categoria</h2>
-                <CategoryPieChart data={data.byIncomeCategory} />
+                <CategoryPieChart
+                  data={data.byIncomeCategory}
+                  onCategoryClick={(entry) => openMovementsForCategory(entry, 'income')}
+                />
               </div>
             </div>
           </div>

@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import PaymentBadge from '@/components/movimenti/PaymentBadge';
 import MappingModal from '@/components/shared/MappingModal';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
@@ -56,6 +57,8 @@ const EMPTY_FILTERS = {
  * On mobile, renders as stacked cards instead of a table.
  */
 export default function SpesePage() {
+  const searchParams = useSearchParams();
+  const searchParamsKey = searchParams.toString();
   const [expenses, setExpenses]     = useState([]);
   const [total,    setTotal]        = useState(0);
   const [pages,    setPages]        = useState(1);
@@ -66,6 +69,7 @@ export default function SpesePage() {
 
   const [filters,       setFilters]       = useState(EMPTY_FILTERS);
   const [activeFilters, setActiveFilters] = useState(EMPTY_FILTERS);
+  const [queryReady, setQueryReady] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const [sort,    setSort]    = useState('date');
@@ -91,6 +95,33 @@ export default function SpesePage() {
       .then(data => setCategories(data))
       .catch(err => console.error('[spese] categorie fetch error:', err));
   }, []);
+
+  useEffect(() => {
+    const from = searchParams.get('from') || '';
+    const to = searchParams.get('to') || '';
+    const categoryIds = (searchParams.get('categoryIds') || '')
+      .split(',')
+      .map(v => v.trim())
+      .filter(Boolean);
+    const type = searchParams.get('type') || '';
+    const incomplete = searchParams.get('incomplete') === '1';
+    const excludeFromAnalysis = searchParams.get('excludeFromAnalysis') === '1';
+
+    const incoming = {
+      ...EMPTY_FILTERS,
+      from,
+      to,
+      categoryIds,
+      type,
+      incomplete,
+      excludeFromAnalysis,
+    };
+
+    setFilters(incoming);
+    setActiveFilters(incoming);
+    setPage(1);
+    setQueryReady(true);
+  }, [searchParamsKey]);
 
   /**
    * Fetches the expense list from the API.
@@ -127,8 +158,9 @@ export default function SpesePage() {
   }, []);
 
   useEffect(() => {
+    if (!queryReady) return;
     fetchExpenses(activeFilters, page, sort, sortDir);
-  }, [fetchExpenses, activeFilters, page, sort, sortDir]);
+  }, [fetchExpenses, activeFilters, page, sort, sortDir, queryReady]);
 
   const handleSort = (field) => {
     if (sort === field) {
