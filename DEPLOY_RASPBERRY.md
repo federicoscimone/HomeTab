@@ -1,4 +1,4 @@
-# Deploy HomeBI su Raspberry (Ubuntu + Docker)
+# Deploy HomeTab su Raspberry (Ubuntu + Docker)
 
 Questa guida configura:
 - Next.js in container Docker
@@ -36,7 +36,7 @@ Aggiorna i valori dentro .env.production, in particolare:
 - MONGO_APP_PASSWORD
 - AUTH_SECRET
 - NEXT_PUBLIC_APP_URL
-- SMTP_*
+- SMTP_* (opzionale per ora)
 
 Genera AUTH_SECRET robusto:
 
@@ -56,16 +56,16 @@ Genera certificato e chiave (validi 365 giorni):
 
 ```bash
 openssl req -x509 -nodes -newkey rsa:4096 \
-  -keyout deploy/nginx/certs/homebi.key \
-  -out deploy/nginx/certs/homebi.crt \
+  -keyout deploy/nginx/certs/hometab.key \
+  -out deploy/nginx/certs/hometab.crt \
   -days 365 \
-  -subj "/CN=homebi.local"
+  -subj "/CN=hometab.local"
 ```
 
 Per raggiungere il server da client LAN, aggiungi una entry DNS locale o nel file hosts:
 
 ```text
-<IP_RASPBERRY> homebi.local
+<IP_RASPBERRY> hometab.local
 ```
 
 ## 4) Avvio stack
@@ -95,7 +95,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production logs -f --t
 Apri:
 
 ```text
-https://homebi.local
+https://hometab.local
 ```
 
 Il browser mostrerà warning TLS perché il certificato è self-signed: è atteso in LAN.
@@ -145,4 +145,5 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d --bui
 
 - Il file deploy/mongo/init/01-create-app-user.js viene eseguito solo al primo avvio del volume Mongo vuoto.
 - Se cambi credenziali Mongo dopo il primo avvio, aggiornale manualmente su Mongo oppure ricrea il volume dati.
+- Se SMTP non è configurato, il reset password via email non funzionerà finché non inserisci SMTP_*.
 - Quando vorrai esporre il servizio su internet, conviene passare a certificato trusted (es. Let's Encrypt) e hardening aggiuntivo Nginx/firewall.

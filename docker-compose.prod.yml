@@ -1,9 +1,9 @@
-name: homebi
+name: hometab
 
 services:
   mongodb:
     image: mongo:8.0
-    container_name: homebi-mongodb
+    container_name: hometab-mongodb
     restart: unless-stopped
     command: ["--bind_ip_all"]
     environment:
@@ -28,7 +28,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: homebi-app
+    container_name: hometab-app
     restart: unless-stopped
     depends_on:
       mongodb:
@@ -55,7 +55,7 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: homebi-nginx
+    container_name: hometab-nginx
     restart: unless-stopped
     depends_on:
       app:
