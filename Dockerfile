@@ -2,8 +2,9 @@ FROM node:20-bookworm-slim AS base
 WORKDIR /app
 
 FROM base AS deps
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 FROM base AS builder
 ENV NODE_ENV=production
