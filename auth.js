@@ -1,16 +1,10 @@
-import NextAuth from 'next-auth';
+import NextAuth, { getServerSession } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import { MongoDBAdapter } from '@auth/mongodb-adapter';
-import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 
-// Client Mongoose compatibile con il MongoDBAdapter
-const clientPromise = connectDB().then(() => mongoose.connection.getClient());
-
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: MongoDBAdapter(clientPromise),
+export const authOptions = {
   session: {
     strategy: 'jwt',   // JWT + cookie HTTP-only
     maxAge: 30 * 24 * 60 * 60, // 30 giorni
@@ -61,4 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
-});
+};
+
+// Wrapper di compatibilità: usato da server components e route handlers
+export const auth = () => getServerSession(authOptions);
