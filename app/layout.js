@@ -1,6 +1,7 @@
 import './globals.css';
 import Script from 'next/script';
 import { auth } from '@/auth';
+import connectDB from '@/lib/mongodb';
 import SessionProvider from '@/components/layout/SessionProvider';
 import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistration';
 
@@ -35,6 +36,7 @@ export const viewport = {
 };
 
 export default async function RootLayout({ children }) {
+  await connectDB();
   const session = await auth();
   return (
     <html lang="it" suppressHydrationWarning>

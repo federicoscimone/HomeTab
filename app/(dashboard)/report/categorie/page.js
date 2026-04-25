@@ -19,6 +19,8 @@ const MONTHS = MONTHS_SHORT.slice(1); // ['Gen', ...]
 export default function CategoriePage() {
   const now = new Date();
   const [year,     setYear]     = useState(now.getFullYear());
+  const [month,    setMonth]    = useState(now.getMonth() + 1);
+  const [mode,     setMode]     = useState('annual'); // 'annual' | 'monthly'
   const [type,     setType]     = useState('expense');
   const [data,     setData]     = useState(null);
   const [loading,  setLoading]  = useState(true);
@@ -29,7 +31,13 @@ export default function CategoriePage() {
     setLoading(true);
     setError(false);
     setSelected(null);
-    fetch(`/api/report/categorie?year=${year}&type=${type}`)
+
+    let url = `/api/report/categorie?year=${year}&type=${type}`;
+    if (mode === 'monthly') {
+      url += `&month=${month}`;
+    }
+
+    fetch(url)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -40,7 +48,7 @@ export default function CategoriePage() {
         setError(true);
         setLoading(false);
       });
-  }, [year, type]);
+  }, [year, month, mode, type]);
 
   const categories  = data?.categories || [];
   const selectedCat = selected ? categories.find(c => c.categoryId === selected) : null;
@@ -57,7 +65,11 @@ export default function CategoriePage() {
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4 sm:mb-6">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold">Analisi per Categoria</h1>
-          <p className="text-sm text-base-content/50">Confronto anno corrente vs anno precedente</p>
+          <p className="text-sm text-base-content/50">
+            {mode === 'annual'
+              ? `Confronto anno corrente vs anno precedente`
+              : `Confronto ${MONTHS[month - 1]} ${year} vs ${MONTHS[month - 1]} ${year - 1}`}
+          </p>
         </div>
       </div>
 
@@ -69,10 +81,27 @@ export default function CategoriePage() {
             <option key={y} value={y}>{y}</option>
           ))}
         </select>
+
+        {mode === 'monthly' && (
+          <select className="select select-bordered select-sm" value={month}
+            onChange={e => setMonth(parseInt(e.target.value))} aria-label="Mese">
+            {MONTHS.map((m, i) => (
+              <option key={i} value={i + 1}>{m}</option>
+            ))}
+          </select>
+        )}
+
         <div className="tabs tabs-boxed">
           {[['expense', 'Uscite'], ['income', 'Entrate']].map(([v, l]) => (
             <button key={v} className={`tab tab-sm ${type === v ? 'tab-active' : ''}`}
               onClick={() => setType(v)}>{l}</button>
+          ))}
+        </div>
+
+        <div className="ml-auto tabs tabs-boxed">
+          {[['annual', 'Annuale'], ['monthly', 'Mensile']].map(([v, l]) => (
+            <button key={v} className={`tab tab-sm ${mode === v ? 'tab-active' : ''}`}
+              onClick={() => setMode(v)}>{l}</button>
           ))}
         </div>
       </div>
@@ -96,7 +125,7 @@ export default function CategoriePage() {
             <div className="card bg-base-100 border border-base-200 shadow-sm">
               <div className="card-body p-3">
                 <h2 className="text-xs font-semibold text-base-content/50 uppercase tracking-wide mb-2 px-1">
-                  Categorie {year}
+                  Categorie {mode === 'annual' ? year : `${MONTHS[month - 1]} ${year}`}
                 </h2>
                 <ul className="space-y-0.5 max-h-64 lg:max-h-none overflow-y-auto">
                   {categories.map(cat => (
@@ -141,79 +170,105 @@ export default function CategoriePage() {
                       <h2 className="text-lg font-bold">{selectedCat.categoryName}</h2>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {[
-                        { label: String(year),     val: fmt(selectedCat.totalCur), cls: '' },
-                        { label: String(year - 1), val: fmt(selectedCat.totalPrev), cls: 'text-base-content/60' },
-                        {
-                          label: 'Variazione',
-                          val: `${selectedCat.deltaAbs >= 0 ? '+' : ''}${fmt(selectedCat.deltaAbs)}`,
-                          cls: deltaClass(selectedCat.deltaAbs, type),
-                        },
-                        { label: 'Media/mese', val: fmt(selectedCat.avg), cls: '' },
-                      ].map(s => (
-                        <div key={s.label} className="bg-base-200 rounded-lg p-3">
-                          <p className="text-xs text-base-content/50 mb-1">{s.label}</p>
-                          <p className={`text-lg font-bold ${s.cls}`}>{s.val}</p>
-                        </div>
-                      ))}
+                      {mode === 'annual' ? (
+                        <>
+                          {[
+                            { label: String(year),     val: fmt(selectedCat.totalCur), cls: '' },
+                            { label: String(year - 1), val: fmt(selectedCat.totalPrev), cls: 'text-base-content/60' },
+                            {
+                              label: 'Variazione',
+                              val: `${selectedCat.deltaAbs >= 0 ? '+' : ''}${fmt(selectedCat.deltaAbs)}`,
+                              cls: deltaClass(selectedCat.deltaAbs, type),
+                            },
+                            { label: 'Media/mese', val: fmt(selectedCat.avg), cls: '' },
+                          ].map(s => (
+                            <div key={s.label} className="bg-base-200 rounded-lg p-3">
+                              <p className="text-xs text-base-content/50 mb-1">{s.label}</p>
+                              <p className={`text-lg font-bold ${s.cls}`}>{s.val}</p>
+                            </div>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          {[
+                            { label: `${MONTHS[month - 1]} ${year}`, val: fmt(selectedCat.totalCur), cls: '' },
+                            { label: `${MONTHS[month - 1]} ${year - 1}`, val: fmt(selectedCat.totalPrev), cls: 'text-base-content/60' },
+                            {
+                              label: 'Variazione',
+                              val: `${selectedCat.deltaAbs >= 0 ? '+' : ''}${fmt(selectedCat.deltaAbs)}`,
+                              cls: deltaClass(selectedCat.deltaAbs, type),
+                            },
+                            { label: 'Variazione %', val: selectedCat.deltaPct !== null ? fmtPct(selectedCat.deltaPct) : '—', cls: selectedCat.deltaPct !== null ? deltaClass(selectedCat.deltaPct, type) : '' },
+                          ].map(s => (
+                            <div key={s.label} className="bg-base-200 rounded-lg p-3">
+                              <p className="text-xs text-base-content/50 mb-1">{s.label}</p>
+                              <p className={`text-lg font-bold ${s.cls}`}>{s.val}</p>
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Monthly line chart */}
-                <div className="card bg-base-100 border border-base-200 shadow-sm">
-                  <div className="card-body p-4">
-                    <h3 className="text-sm font-semibold text-base-content/60 mb-3">Andamento Mensile</h3>
-                    <MonthlyLineChart
-                      data={selectedCat.monthly}
-                      color={selectedCat.color}
-                      year={year}
-                      prevYear={year - 1}
-                    />
+                {/* Monthly line chart — only in annual mode */}
+                {mode === 'annual' && (
+                  <div className="card bg-base-100 border border-base-200 shadow-sm">
+                    <div className="card-body p-4">
+                      <h3 className="text-sm font-semibold text-base-content/60 mb-3">Andamento Mensile</h3>
+                      <MonthlyLineChart
+                        data={selectedCat.monthly}
+                        color={selectedCat.color}
+                        year={year}
+                        prevYear={year - 1}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Monthly breakdown table */}
-                <div className="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="table table-xs text-xs">
-                      <thead>
-                        <tr className="bg-base-200">
-                          <th>Mese</th>
-                          <th className="text-right">{year}</th>
-                          <th className="text-right text-base-content/50">{year - 1}</th>
-                          <th className="text-right">Δ assoluto</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedCat.monthly.map(m => {
-                          const delta    = m.cur - m.prev;
-                          const hasDelta = m.prev > 0 || m.cur > 0;
-                          return (
-                            <tr key={m.month} className="hover">
-                              <td className="font-medium">{MONTHS[m.month - 1]}</td>
-                              <td className="text-right">{m.cur > 0 ? fmt(m.cur) : '—'}</td>
-                              <td className="text-right text-base-content/50">{m.prev > 0 ? fmt(m.prev) : '—'}</td>
-                              <td className={`text-right ${hasDelta && delta !== 0 ? deltaClass(delta, type) : 'text-base-content/30'}`}>
-                                {hasDelta && delta !== 0 ? `${delta > 0 ? '+' : ''}${fmt(delta)}` : '—'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                {/* Monthly breakdown table — only in annual mode */}
+                {mode === 'annual' && (
+                  <div className="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="table table-xs text-xs">
+                        <thead>
+                          <tr className="bg-base-200">
+                            <th>Mese</th>
+                            <th className="text-right">{year}</th>
+                            <th className="text-right text-base-content/50">{year - 1}</th>
+                            <th className="text-right">Δ assoluto</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedCat.monthly.map(m => {
+                            const delta    = m.cur - m.prev;
+                            const hasDelta = m.prev > 0 || m.cur > 0;
+                            return (
+                              <tr key={m.month} className="hover">
+                                <td className="font-medium">{MONTHS[m.month - 1]}</td>
+                                <td className="text-right">{m.cur > 0 ? fmt(m.cur) : '—'}</td>
+                                <td className="text-right text-base-content/50">{m.prev > 0 ? fmt(m.prev) : '—'}</td>
+                                <td className={`text-right ${hasDelta && delta !== 0 ? deltaClass(delta, type) : 'text-base-content/30'}`}>
+                                  {hasDelta && delta !== 0 ? `${delta > 0 ? '+' : ''}${fmt(delta)}` : '—'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
+                )}
               </>
             ) : (
               /* Overview: bar chart all categories */
               <div className="card bg-base-100 border border-base-200 shadow-sm">
                 <div className="card-body p-4">
                   <h3 className="text-sm font-semibold text-base-content/60 mb-1">
-                    Top Categorie — {year} vs {year - 1}
+                    Top Categorie — {mode === 'annual' ? `${year} vs ${year - 1}` : `${MONTHS[month - 1]} ${year} vs ${year - 1}`}
                   </h3>
                   <p className="text-xs text-base-content/40 mb-3">
-                    Tocca una categoria nella lista per il dettaglio mensile
+                    Tocca una categoria nella lista per il dettaglio
                   </p>
                   <CategoryBarChart
                     data={categories.map(c => ({
