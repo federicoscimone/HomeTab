@@ -1,5 +1,5 @@
 import './globals.css';
-import Script from 'next/script';
+import { cookies } from 'next/headers';
 import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';
 import SessionProvider from '@/components/layout/SessionProvider';
@@ -38,21 +38,13 @@ export const viewport = {
 export default async function RootLayout({ children }) {
   await connectDB();
   const session = await auth();
+  const cookieStore = await cookies();
+  const cookieTheme = cookieStore.get('hometab-theme')?.value;
+  const validThemes = ['light', 'dark', 'forest', 'aqua', 'abyss'];
+  const theme = validThemes.includes(cookieTheme) ? cookieTheme : 'light';
   return (
-    <html lang="it" suppressHydrationWarning>
+    <html lang="it" data-theme={theme} suppressHydrationWarning>
       <body>
-        {/* Must run before paint — sets data-theme to prevent FOUC */}
-        <Script id="theme-script" strategy="beforeInteractive">
-          {`
-            try {
-              var t = localStorage.getItem('hometab-theme');
-              if (!t) {
-                t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-              }
-              document.documentElement.setAttribute('data-theme', t);
-            } catch(e) {}
-          `}
-        </Script>
         <SessionProvider session={session}>
           {children}
           <ServiceWorkerRegistration />

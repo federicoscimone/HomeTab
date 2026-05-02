@@ -19,18 +19,26 @@ export default function ImpostazioniPage() {
   const [theme, setTheme] = useState('light');
 
   useEffect(() => {
-    const saved = localStorage.getItem('hometab-theme');
-    if (saved) setTheme(saved);
-    else {
-      const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      setTheme(sys);
+    const fromCookie = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('hometab-theme='))
+      ?.split('=')[1];
+    const saved = fromCookie || localStorage.getItem('hometab-theme');
+    if (saved) {
+      setTheme(saved);
+      document.documentElement.setAttribute('data-theme', saved);
+      return;
     }
+    const sys = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    setTheme(sys);
+    document.documentElement.setAttribute('data-theme', sys);
   }, []);
 
   const applyTheme = (value) => {
     setTheme(value);
     document.documentElement.setAttribute('data-theme', value);
     localStorage.setItem('hometab-theme', value);
+    document.cookie = `hometab-theme=${value}; Path=/; Max-Age=31536000; SameSite=Lax`;
   };
 
   const handleChangePassword = async (e) => {

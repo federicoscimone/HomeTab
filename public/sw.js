@@ -1,8 +1,7 @@
-const CACHE_NAME = 'hometab-v1';
+const CACHE_NAME = 'hometab-v2';
 
 // Static shell to pre-cache on install
 const PRECACHE_URLS = [
-  '/',
   '/offline',
 ];
 
@@ -33,6 +32,12 @@ self.addEventListener('fetch', (event) => {
 
   // Solo richieste GET stesso dominio
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+
+  // Navigazioni HTML: network-first per evitare mismatch tra shell/chunk dopo deploy.
+  if (request.mode === 'navigate') {
+    event.respondWith(networkFirstPage(request));
+    return;
+  }
 
   // API: network-first (dati sempre freschi, nessuna cache)
   if (url.pathname.startsWith('/api/')) {
@@ -98,4 +103,20 @@ async function staleWhileRevalidate(request) {
   // Fallback offline per le pagine HTML
   const offlineFallback = await cache.match('/offline');
   return offlineFallback || new Response('Offline', { status: 503 });
+}
+
+async function networkFirstPage(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    const offlineFallback = await cache.match('/offline');
+    return offlineFallback || new Response('Offline', { status: 503 });
+  }
 }

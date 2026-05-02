@@ -9,6 +9,7 @@ import { useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import packageJson from '@/package.json';
 
 /**
  * @typedef {Object} NavChild
@@ -215,6 +216,7 @@ export default function Sidebar({ onNavigate }) {
           </svg>
           Disconnetti
         </button>
+        <p className="text-[11px] text-base-content/40 mt-2 px-1">Versione {packageJson.version}</p>
       </div>
     </aside>
   );

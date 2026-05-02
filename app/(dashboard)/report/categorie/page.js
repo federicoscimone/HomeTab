@@ -22,6 +22,7 @@ export default function CategoriePage() {
   const [month,    setMonth]    = useState(now.getMonth() + 1);
   const [mode,     setMode]     = useState('annual'); // 'annual' | 'monthly'
   const [type,     setType]     = useState('expense');
+  const [paymentGroup, setPaymentGroup] = useState('traditional'); // traditional | alternative | all
   const [data,     setData]     = useState(null);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(false);
@@ -36,6 +37,9 @@ export default function CategoriePage() {
     if (mode === 'monthly') {
       url += `&month=${month}`;
     }
+    if (paymentGroup !== 'all') {
+      url += `&paymentGroup=${paymentGroup}`;
+    }
 
     fetch(url)
       .then(r => {
@@ -48,7 +52,7 @@ export default function CategoriePage() {
         setError(true);
         setLoading(false);
       });
-  }, [year, month, mode, type]);
+  }, [year, month, mode, type, paymentGroup]);
 
   const categories  = data?.categories || [];
   const selectedCat = selected ? categories.find(c => c.categoryId === selected) : null;
@@ -97,6 +101,17 @@ export default function CategoriePage() {
               onClick={() => setType(v)}>{l}</button>
           ))}
         </div>
+
+        <select
+          className="select select-bordered select-sm"
+          value={paymentGroup}
+          onChange={e => setPaymentGroup(e.target.value)}
+          aria-label="Metodi pagamento"
+        >
+          <option value="traditional">Tradizionali</option>
+          <option value="alternative">Alternativi</option>
+          <option value="all">Tutti</option>
+        </select>
 
         <div className="ml-auto tabs tabs-boxed">
           {[['annual', 'Annuale'], ['monthly', 'Mensile']].map(([v, l]) => (

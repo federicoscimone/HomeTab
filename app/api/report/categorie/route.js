@@ -5,6 +5,7 @@
  * Query params:
  *   year       {number} - Calendar year.
  *   type       {string} - 'expense' | 'income'.
+ *   paymentGroup {string} - Optional: 'traditional' | 'alternative'.
  *   month      {number} - Optional (1-12): if set, returns data for that month vs same month of previous year.
  *   categoryId {string} - Optional: restrict to a single category ObjectId.
  *
@@ -29,6 +30,7 @@ export async function GET(req) {
   const year       = parseInt(searchParams.get('year') || new Date().getFullYear());
   const categoryId = searchParams.get('categoryId') || null;
   const type       = searchParams.get('type') || 'expense';
+  const paymentGroup = searchParams.get('paymentGroup') || '';
   const month      = searchParams.get('month') ? parseInt(searchParams.get('month')) : null;
 
   const categories = await Category.find({ level: 1 }).sort({ name: 1 }).lean();
@@ -58,16 +60,21 @@ export async function GET(req) {
       toPrev   = `${year - 1}-12-31`;
     }
 
+    const baseFilter = {
+      $or: [{ categoryId: cat._id }, { subCategory1Id: cat._id }],
+      type,
+      excludeFromAnalysis: { $ne: true },
+    };
+    if (paymentGroup) baseFilter.paymentGroup = paymentGroup;
+
     const [curExp, prevExp] = await Promise.all([
       Movement.find({
-        $or: [{ categoryId: cat._id }, { subCategory1Id: cat._id }],
-        date: { $gte: fromCur, $lte: toCur }, type,
-        excludeFromAnalysis: { $ne: true },
+        ...baseFilter,
+        date: { $gte: fromCur, $lte: toCur },
       }).lean(),
       Movement.find({
-        $or: [{ categoryId: cat._id }, { subCategory1Id: cat._id }],
-        date: { $gte: fromPrev, $lte: toPrev }, type,
-        excludeFromAnalysis: { $ne: true },
+        ...baseFilter,
+        date: { $gte: fromPrev, $lte: toPrev },
       }).lean(),
     ]);
 
@@ -105,6 +112,7 @@ export async function GET(req) {
   result.sort((a, b) => b.totalCur - a.totalCur);
 
   const response = { year, type, categories: result };
+  if (paymentGroup) response.paymentGroup = paymentGroup;
   if (month) response.month = month;
 
   return NextResponse.json(response);

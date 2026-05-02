@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const now = new Date();
   const [month,   setMonth]   = useState(now.getMonth() + 1);
   const [year,    setYear]    = useState(now.getFullYear());
+  const [paymentGroup, setPaymentGroup] = useState('traditional'); // traditional | alternative | all
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(false);
@@ -30,7 +31,9 @@ export default function DashboardPage() {
   useEffect(() => {
     setLoading(true);
     setError(false);
-    fetch(`/api/dashboard?year=${year}&month=${month}`)
+    const p = new URLSearchParams({ year: String(year), month: String(month) });
+    if (paymentGroup !== 'all') p.set('paymentGroup', paymentGroup);
+    fetch(`/api/dashboard?${p.toString()}`)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -41,7 +44,7 @@ export default function DashboardPage() {
         setError(true);
         setLoading(false);
       });
-  }, [month, year]);
+  }, [month, year, paymentGroup]);
 
   /** Navigate to the previous calendar month. */
   const prevMonth = useCallback(() => {
@@ -68,12 +71,13 @@ export default function DashboardPage() {
       to: `${year}-${mm}-31`,
       type,
     });
+    if (paymentGroup !== 'all') params.set('paymentGroup', paymentGroup);
 
     if (entry.categoryId) params.set('categoryIds', entry.categoryId);
     else params.set('incomplete', '1');
 
     router.push(`/movimenti?${params.toString()}`);
-  }, [router, year, mm]);
+  }, [router, year, mm, paymentGroup]);
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
@@ -103,6 +107,16 @@ export default function DashboardPage() {
               Oggi
             </button>
           )}
+          <select
+            className="select select-bordered select-sm ml-1"
+            value={paymentGroup}
+            onChange={e => setPaymentGroup(e.target.value)}
+            aria-label="Metodi pagamento"
+          >
+            <option value="traditional">Tradizionali</option>
+            <option value="alternative">Alternativi</option>
+            <option value="all">Tutti</option>
+          </select>
         </div>
       </div>
 
@@ -142,7 +156,7 @@ export default function DashboardPage() {
               <div className="stat-value text-xl sm:text-2xl">{data.current.count}</div>
               <div className="stat-desc text-xs mt-1">
                 <Link
-                  href={`/movimenti?from=${year}-${mm}-01&to=${year}-${mm}-31`}
+                  href={`/movimenti?from=${year}-${mm}-01&to=${year}-${mm}-31${paymentGroup !== 'all' ? `&paymentGroup=${paymentGroup}` : ''}`}
                   className="text-primary hover:underline"
                 >
                   Vedi tutti →

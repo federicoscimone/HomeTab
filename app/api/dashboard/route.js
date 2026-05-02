@@ -5,6 +5,7 @@
  * Query params:
  *   year  {number} - Calendar year (default: current year).
  *   month {number} - Calendar month 1–12 (default: current month).
+ *   paymentGroup {string} - Optional: 'traditional' | 'alternative' | 'all' (default: 'traditional').
  *
  * Response includes: current/previous month totals, byCategory, byMethod,
  * paymentGroups breakdown, and 6-month trend.
@@ -26,6 +27,10 @@ export async function GET(req) {
   const now    = new Date();
   const year   = parseInt(searchParams.get('year')  || now.getFullYear());
   const month  = parseInt(searchParams.get('month') || now.getMonth() + 1);
+  const paymentGroupParam = searchParams.get('paymentGroup') || 'traditional';
+  const paymentGroup = ['traditional', 'alternative', 'all'].includes(paymentGroupParam)
+    ? paymentGroupParam
+    : 'traditional';
 
   // Mese corrente e precedente in formato YYYY-MM-DD
   const curFrom = `${year}-${String(month).padStart(2,'0')}-01`;
@@ -37,12 +42,13 @@ export async function GET(req) {
   const prevTo    = `${prevYear}-${String(prevMonth).padStart(2,'0')}-31`;
 
   const excludeFilter = { excludeFromAnalysis: { $ne: true } };
+  const paymentGroupFilter = paymentGroup === 'all' ? {} : { paymentGroup };
 
   const [curExpenses, prevExpenses] = await Promise.all([
-    Movement.find({ date: { $gte: curFrom, $lte: curTo }, ...excludeFilter })
+    Movement.find({ date: { $gte: curFrom, $lte: curTo }, ...excludeFilter, ...paymentGroupFilter })
       .populate('categoryId', 'name color')
       .lean(),
-    Movement.find({ date: { $gte: prevFrom, $lte: prevTo }, ...excludeFilter })
+    Movement.find({ date: { $gte: prevFrom, $lte: prevTo }, ...excludeFilter, ...paymentGroupFilter })
       .lean(),
   ]);
 
@@ -132,7 +138,7 @@ export async function GET(req) {
     const y = d.getFullYear();
     const from = `${y}-${String(m).padStart(2,'0')}-01`;
     const to   = `${y}-${String(m).padStart(2,'0')}-31`;
-    const docs = await Movement.find({ date: { $gte: from, $lte: to }, ...excludeFilter }).lean();
+    const docs = await Movement.find({ date: { $gte: from, $lte: to }, ...excludeFilter, ...paymentGroupFilter }).lean();
     trend.push({
       label: `${String(m).padStart(2,'0')}/${y}`,
       expense: docs.filter(e => e.type !== 'income').reduce((s,e) => s + e.amount, 0),
@@ -142,6 +148,7 @@ export async function GET(req) {
 
   return NextResponse.json({
     month, year,
+    paymentGroup,
     current:  { totalExpense: curTotalExpense,  totalIncome: curTotalIncome,  count: curExpenses.length },
     previous: { totalExpense: prevTotalExpense, totalIncome: prevTotalIncome },
     byCategory,

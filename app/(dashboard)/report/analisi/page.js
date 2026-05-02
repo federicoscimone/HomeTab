@@ -53,6 +53,7 @@ export default function AnalisiPage() {
   const [from,    setFrom]    = useState(firstDayOfYear());
   const [to,      setTo]      = useState(todayStr());
   const [type,    setType]    = useState('expense');
+  const [paymentGroup, setPaymentGroup] = useState('traditional'); // traditional | alternative | all
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState(false);
@@ -63,6 +64,9 @@ export default function AnalisiPage() {
     setLoading(true);
     setError(false);
     const p = new URLSearchParams({ from, to, type });
+    if (paymentGroup !== 'all') {
+      p.set('paymentGroup', paymentGroup);
+    }
     fetch(`/api/report/analisi?${p}`)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -74,7 +78,7 @@ export default function AnalisiPage() {
         setError(true);
         setLoading(false);
       });
-  }, [from, to, type]);
+  }, [from, to, type, paymentGroup]);
 
   // Initial load on mount
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -121,6 +125,19 @@ export default function AnalisiPage() {
                 <button key={v} className={`tab tab-sm ${type === v ? 'tab-active' : ''}`}
                   onClick={() => setType(v)}>{l}</button>
               ))}
+            </div>
+            <div>
+              <label className="label py-0 mb-1"><span className="label-text text-xs">Metodi pagamento</span></label>
+              <select
+                className="select select-bordered select-sm"
+                value={paymentGroup}
+                onChange={e => setPaymentGroup(e.target.value)}
+                aria-label="Metodi pagamento"
+              >
+                <option value="traditional">Tradizionali</option>
+                <option value="alternative">Alternativi</option>
+                <option value="all">Tutti</option>
+              </select>
             </div>
             <button className="btn btn-primary btn-sm self-end" onClick={fetchData} disabled={loading}>
               {loading ? <span className="loading loading-spinner loading-xs" /> : 'Analizza'}

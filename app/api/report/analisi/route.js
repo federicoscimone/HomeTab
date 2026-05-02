@@ -6,6 +6,7 @@
  *   from {string} - Start date YYYY-MM-DD (required).
  *   to   {string} - End date YYYY-MM-DD (required).
  *   type {string} - 'expense' | 'income'.
+ *   paymentGroup {string} - Optional: 'traditional' | 'alternative'.
  *
  * Response: totals, byCategory comparison, weekly breakdown, year-end projection.
  */
@@ -25,6 +26,7 @@ export async function GET(req) {
   const from = searchParams.get('from');
   const to   = searchParams.get('to');
   const type = searchParams.get('type') || 'expense';
+  const paymentGroup = searchParams.get('paymentGroup') || '';
 
   if (!from || !to) return NextResponse.json({ error: 'from e to obbligatori' }, { status: 400 });
 
@@ -36,10 +38,13 @@ export async function GET(req) {
   const prevFromStr = prevFrom.toISOString().split('T')[0];
   const prevToStr   = prevTo  .toISOString().split('T')[0];
 
+  const baseFilter = { type, excludeFromAnalysis: { $ne: true } };
+  if (paymentGroup) baseFilter.paymentGroup = paymentGroup;
+
   const [curExp, prevExp] = await Promise.all([
-    Movement.find({ date: { $gte: from, $lte: to }, type, excludeFromAnalysis: { $ne: true } })
+    Movement.find({ ...baseFilter, date: { $gte: from, $lte: to } })
       .populate('categoryId', 'name color').lean(),
-    Movement.find({ date: { $gte: prevFromStr, $lte: prevToStr }, type, excludeFromAnalysis: { $ne: true } })
+    Movement.find({ ...baseFilter, date: { $gte: prevFromStr, $lte: prevToStr } })
       .populate('categoryId', 'name color').lean(),
   ]);
 
@@ -64,7 +69,7 @@ export async function GET(req) {
   const curMonth  = new Date().getMonth() + 1;
   const yearFrom  = `${curYear}-01-01`;
   const yearTo    = `${curYear}-12-31`;
-  const yearExp   = await Movement.find({ date: { $gte: yearFrom, $lte: yearTo }, type, excludeFromAnalysis: { $ne: true } }).lean();
+  const yearExp   = await Movement.find({ ...baseFilter, date: { $gte: yearFrom, $lte: yearTo } }).lean();
   const yearTotal = yearExp.reduce((s,e) => s + e.amount, 0);
   const monthsElapsed = curMonth;
   const avgPerMonth   = monthsElapsed > 0 ? yearTotal / monthsElapsed : 0;
@@ -84,6 +89,7 @@ export async function GET(req) {
 
   return NextResponse.json({
     from, to, type,
+    paymentGroup: paymentGroup || 'all',
     prevFrom: prevFromStr, prevTo: prevToStr,
     totalCur, totalPrev,
     deltaAbs: totalCur - totalPrev,
