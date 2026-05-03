@@ -52,3 +52,6 @@ AGENTS.md
 
 # VS Code (local editor settings)
 .vscode/
+
+# GitHub (local workflows and prompts)
+.github/
