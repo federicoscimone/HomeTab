@@ -44,3 +44,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Code (local development tool)
+.claude/
+CLAUDE.md
+AGENTS.md
+
+# VS Code (local editor settings)
+.vscode/

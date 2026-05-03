@@ -2,12 +2,14 @@ import './globals.css';
 import { cookies } from 'next/headers';
 import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';
+import User from '@/lib/models/User';
+import seedDemoMode from '@/lib/seed-demo-mode';
 import SessionProvider from '@/components/layout/SessionProvider';
 import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistration';
 
 export const metadata = {
-  title: 'HomeTab — Movimenti Personali',
-  description: 'Traccia e analizza i tuoi movimenti personali',
+  title: 'HomeTab — Family Manager',
+  description: 'Traccia e analizza i tuoi movimenti familiari',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -37,6 +39,15 @@ export const viewport = {
 
 export default async function RootLayout({ children }) {
   await connectDB();
+
+  // Demo mode: seed automatico al primo avvio
+  if (process.env.DEMO_MODE === 'true') {
+    const marioExists = await User.findOne({ email: 'mario@test.it' });
+    if (!marioExists) {
+      await seedDemoMode();
+    }
+  }
+
   const session = await auth();
   const cookieStore = await cookies();
   const cookieTheme = cookieStore.get('hometab-theme')?.value;

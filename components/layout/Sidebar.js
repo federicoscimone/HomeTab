@@ -126,7 +126,7 @@ export default function Sidebar({ onNavigate }) {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-base-300">
         <span className="text-xl font-bold text-primary">HomeTab</span>
-        <p className="text-xs text-base-content/60 mt-0.5">Movimenti Personali</p>
+        <p className="text-xs text-base-content/60 mt-0.5">Family Manager</p>
       </div>
 
       {/* Navigation */}
