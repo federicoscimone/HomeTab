@@ -26,6 +26,14 @@ export async function GET(req) {
   const year         = parseInt(searchParams.get('year') || new Date().getFullYear());
   const type         = searchParams.get('type') || 'expense';       // expense | income
   const paymentGroup = searchParams.get('paymentGroup') || '';
+  const currentDate  = new Date();
+  const isCurrentYear = year === currentDate.getFullYear();
+  const daysInCurrentMonth = new Date(year, currentDate.getMonth() + 1, 0).getDate();
+  const daysToMonthEnd = daysInCurrentMonth - currentDate.getDate();
+  const includeCurrentMonth = daysToMonthEnd < 3;
+  const elapsedMonths = isCurrentYear
+    ? currentDate.getMonth() + (includeCurrentMonth ? 1 : 0)
+    : 12;
 
   const from = `${year}-01-01`;
   const to   = `${year}-12-31`;
@@ -67,11 +75,21 @@ export async function GET(req) {
       monthly:      data.monthly,
       total:        data.total,
       avg:          data.total / 12,
+      avgElapsed:   elapsedMonths > 0 ? data.total / elapsedMonths : 0,
     }))
     .sort((a, b) => b.total - a.total);
 
   // Aggiunge categoria "non categorizzate" se presente
   const grandTotal = Object.values(monthTotals).reduce((s, v) => s + v, 0);
 
-  return NextResponse.json({ year, type, rows, monthTotals, grandTotal, months });
+  return NextResponse.json({
+    year,
+    type,
+    rows,
+    monthTotals,
+    grandTotal,
+    months,
+    isCurrentYear,
+    elapsedMonths,
+  });
 }

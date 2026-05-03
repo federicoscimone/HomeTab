@@ -20,18 +20,30 @@ const MONTH_LABELS = MONTHS_SHORT.slice(1); // ['Gen', 'Feb', ...]
  */
 async function exportExcel(data, year, type) {
   const XLSX = (await import('xlsx')).default;
-  const header = ['Categoria', ...MONTH_LABELS, 'Totale', 'Media/mese'];
+  const showElapsedAvg = Boolean(data?.isCurrentYear);
+  const elapsedAvgLabel = `Media/${data.elapsedMonths}m`;
+  const header = [
+    'Categoria',
+    ...MONTH_LABELS,
+    'Totale',
+    'Media/mese',
+    ...(showElapsedAvg ? [elapsedAvgLabel] : []),
+  ];
   const rows   = data.rows.map(r => [
     r.categoryName,
     ...Array.from({ length: 12 }, (_, i) => r.monthly[i + 1] || 0),
     r.total,
     r.avg,
+    ...(showElapsedAvg ? [r.avgElapsed] : []),
   ]);
   const totRow = [
     'TOTALE',
     ...Array.from({ length: 12 }, (_, i) => data.monthTotals[i + 1] || 0),
     data.grandTotal,
     data.grandTotal / 12,
+    ...(showElapsedAvg
+      ? [data.elapsedMonths > 0 ? data.grandTotal / data.elapsedMonths : 0]
+      : []),
   ];
   const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totRow]);
   const wb = XLSX.utils.book_new();
@@ -76,6 +88,9 @@ export default function PivotPage() {
       console.error('[pivot] export error:', err),
     );
   }, [data, year, type]);
+
+  const showElapsedAvg = Boolean(data?.isCurrentYear);
+  const elapsedAvgLabel = showElapsedAvg ? `Media/${data.elapsedMonths}m` : '';
 
   return (
     <div>
@@ -135,6 +150,9 @@ export default function PivotPage() {
                   {MONTH_LABELS.map(m => <th key={m} className="text-right">{m}</th>)}
                   <th className="text-right font-bold">Totale</th>
                   <th className="text-right text-base-content/60">Media/m</th>
+                  {showElapsedAvg && (
+                    <th className="text-right text-base-content/60">{elapsedAvgLabel}</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -168,6 +186,9 @@ export default function PivotPage() {
                     })}
                     <td className="text-right font-bold">{fmt(row.total)}</td>
                     <td className="text-right text-base-content/50">{fmt(row.avg)}</td>
+                    {showElapsedAvg && (
+                      <td className="text-right text-base-content/50">{fmt(row.avgElapsed)}</td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -179,6 +200,11 @@ export default function PivotPage() {
                   ))}
                   <td className="text-right">{fmt(data.grandTotal)}</td>
                   <td className="text-right text-base-content/60">{fmt(data.grandTotal / 12)}</td>
+                  {showElapsedAvg && (
+                    <td className="text-right text-base-content/60">
+                      {fmt(data.elapsedMonths > 0 ? data.grandTotal / data.elapsedMonths : 0)}
+                    </td>
+                  )}
                 </tr>
               </tfoot>
             </table>
