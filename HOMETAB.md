@@ -1,8 +1,8 @@
-# HomeTab — Personal Finance Tracker
+# HomeTab — Family Manager
 
 ## Descrizione
 
-HomeTab è un'applicazione web per l'analisi e il tracciamento delle spese personali. Permette di registrare uscite effettuate con qualsiasi metodo di pagamento (contanti, carte, bonifici, ticket pasto, buoni acquisto), importare automaticamente movimenti bancari da file Excel, categorizzare le spese con un sistema gerarchico flessibile e visualizzare report analitici mensili/annuali con confronti e proiezioni.
+HomeTab è un'applicazione web per l'analisi e il tracciamento delle spese della famiglia. Permette di registrare uscite effettuate con qualsiasi metodo di pagamento (contanti, carte, bonifici, ticket pasto, buoni acquisto), importare automaticamente movimenti bancari da file Excel, categorizzare le spese con un sistema gerarchico flessibile e visualizzare report analitici mensili/annuali con confronti e proiezioni.
 
 ---
 
