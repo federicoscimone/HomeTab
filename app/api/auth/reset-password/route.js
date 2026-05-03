@@ -30,6 +30,13 @@ export async function GET(req) {
 // POST: applica la nuova password
 export async function POST(req) {
   try {
+    if (process.env.DEMO_MODE === 'true') {
+      return NextResponse.json(
+        { error: 'Reset password disabilitato in modalità demo' },
+        { status: 403 }
+      );
+    }
+
     const { token, password } = await req.json();
 
     if (!token || !password)

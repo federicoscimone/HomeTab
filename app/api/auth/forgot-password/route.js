@@ -7,6 +7,12 @@ import { sendPasswordResetEmail } from '@/lib/email';
 
 export async function POST(req) {
   try {
+    if (process.env.DEMO_MODE === 'true') {
+      return NextResponse.json(
+        { message: 'Se l\'email è registrata, riceverai un link per il reset.' }
+      );
+    }
+
     const { email } = await req.json();
     if (!email) return NextResponse.json({ error: 'Email obbligatoria' }, { status: 400 });
 

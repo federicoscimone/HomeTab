@@ -7,6 +7,13 @@ import { sendPasswordChangedEmail } from '@/lib/email';
 
 export async function POST(req) {
   try {
+    if (process.env.DEMO_MODE === 'true') {
+      return NextResponse.json(
+        { error: 'Cambio password disabilitato in modalità demo' },
+        { status: 403 }
+      );
+    }
+
     const session = await auth();
     if (!session?.user?.id)
       return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
