@@ -31,8 +31,7 @@ export default function DashboardPage() {
   useEffect(() => {
     setLoading(true);
     setError(false);
-    const p = new URLSearchParams({ year: String(year), month: String(month) });
-    if (paymentGroup !== 'all') p.set('paymentGroup', paymentGroup);
+    const p = new URLSearchParams({ year: String(year), month: String(month), paymentGroup });
     fetch(`/api/dashboard?${p.toString()}`)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
