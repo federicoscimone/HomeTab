@@ -18,6 +18,7 @@ const PAYMENT_METHOD_OPTIONS = [
   { value: 'credit_card',   label: 'Carta di Credito' },
   { value: 'debit_card',    label: 'Carta di Debito' },
   { value: 'bank_transfer', label: 'Bonifico' },
+  { value: 'direct_debit',  label: 'Addebito Diretto' },
   { value: 'paypal',        label: 'PayPal' },
   { value: 'satispay',      label: 'Satispay' },
   { value: 'meal_ticket',   label: 'Ticket Pasto' },
