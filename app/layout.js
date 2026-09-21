@@ -38,13 +38,18 @@ export const viewport = {
 };
 
 export default async function RootLayout({ children }) {
-  await connectDB();
+  // Durante la build dell'immagine container non esiste un database raggiungibile:
+  // BUILD_TARGET è impostato solo nello stage builder del Dockerfile, mai a runtime
+  // né su Vercel, dove questo blocco si comporta esattamente come prima.
+  if (process.env.BUILD_TARGET !== 'container') {
+    await connectDB();
 
-  // Demo mode: seed automatico al primo avvio
-  if (process.env.DEMO_MODE === 'true') {
-    const marioExists = await User.findOne({ email: 'mario@test.it' });
-    if (!marioExists) {
-      await seedDemoMode();
+    // Demo mode: seed automatico al primo avvio
+    if (process.env.DEMO_MODE === 'true') {
+      const marioExists = await User.findOne({ email: 'mario@test.it' });
+      if (!marioExists) {
+        await seedDemoMode();
+      }
     }
   }
 
