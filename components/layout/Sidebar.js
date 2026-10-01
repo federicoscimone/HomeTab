@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -26,6 +26,7 @@ import { ROLE_INFO } from '@/lib/auth/permissions';
  * @property {React.ReactNode} icon       - SVG icon element.
  * @property {NavChild[]}      [children] - Sub-items (section group).
  * @property {string}          [permission] - Permesso richiesto per vedere la voce (lib/auth/permissions).
+ * @property {boolean}         [collapsible] - Gruppo chiuso di default, si apre al click.
  */
 
 /** @type {NavItem[]} */
@@ -84,6 +85,7 @@ const NAV_ITEMS = [
   {
     label: 'Impostazioni',
     permission: 'settings:manage',
+    collapsible: true,
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -124,6 +126,24 @@ export default function Sidebar({ onNavigate }) {
   const { data: session }  = useSession();
   const canDo              = useCan();
   const navItems           = NAV_ITEMS.filter((item) => !item.permission || canDo(item.permission));
+  // Scelte esplicite dell'utente sui gruppi richiudibili; finché non tocca nulla, un gruppo è
+  // aperto solo se contiene la pagina corrente (così la voce attiva non resta nascosta).
+  const [groupToggles, setGroupToggles] = useState({});
+  const [menuOpen, setMenuOpen]         = useState(false);
+  const userBoxRef                      = useRef(null);
+
+  // Il menu utente si chiude cliccando fuori o con Esc. I listener esistono solo mentre è aperto.
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onPointer = (e) => { if (!userBoxRef.current?.contains(e.target)) setMenuOpen(false); };
+    const onKey = (e) => { if (e.key === 'Escape') setMenuOpen(false); };
+    document.addEventListener('mousedown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
   /**
    * Returns whether a nav item href is the currently active route.
    *
@@ -138,23 +158,50 @@ export default function Sidebar({ onNavigate }) {
     [pathname],
   );
 
+  /** @param {NavItem} item */
+  const isGroupOpen = (item) => {
+    if (!item.collapsible) return true;
+    return groupToggles[item.label] ?? item.children.some((c) => isActive(c.href));
+  };
+  const toggleGroup = (item) =>
+    setGroupToggles((t) => ({ ...t, [item.label]: !isGroupOpen(item) }));
+
   return (
-    <aside className="w-64 min-h-screen bg-base-200 flex flex-col">
+    // Alta quanto lo schermo: scorre solo la navigazione, il piede con l'utente resta sempre visibile.
+    <aside className="w-64 h-dvh bg-base-200 flex flex-col">
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-base-300">
+      <div className="px-6 py-5 border-b border-base-300 shrink-0">
         <span className="text-xl font-bold text-primary">HomeTab</span>
         <p className="text-xs text-base-content/60 mt-0.5">Family Manager</p>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1" aria-label="Navigazione principale">
+      <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1" aria-label="Navigazione principale">
         {navItems.map((item) =>
           item.children ? (
             <div key={item.label}>
-              <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-base-content/50 uppercase tracking-wider mt-3 mb-1">
-                {item.icon}
-                {item.label}
-              </div>
+              {item.collapsible ? (
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(item)}
+                  aria-expanded={isGroupOpen(item)}
+                  aria-controls={`nav-group-${item.label}`}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-base-content/50 uppercase tracking-wider mt-3 mb-1 rounded-lg hover:bg-base-300 hover:text-base-content/70 transition-colors"
+                >
+                  {item.icon}
+                  <span className="flex-1 text-left">{item.label}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isGroupOpen(item) ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-base-content/50 uppercase tracking-wider mt-3 mb-1">
+                  {item.icon}
+                  {item.label}
+                </div>
+              )}
+              {isGroupOpen(item) && (
+              <div id={`nav-group-${item.label}`}>
               {item.children.map((child) => (
                 <Link
                   key={child.href}
@@ -169,6 +216,8 @@ export default function Sidebar({ onNavigate }) {
                   {child.label}
                 </Link>
               ))}
+              </div>
+              )}
             </div>
           ) : item.quickAdd && canDo('movements:create') ? (
             <div key={item.href} className={`flex items-center rounded-lg transition-colors ${isActive(item.href) ? 'bg-primary text-primary-content' : 'hover:bg-base-500 text-base-content'}`}>
@@ -208,44 +257,64 @@ export default function Sidebar({ onNavigate }) {
         )}
       </nav>
 
-      {/* User + logout */}
-      <div className="px-4 py-4 border-t border-base-300">
-        {session?.user && (
-          <div className="flex items-center gap-2 mb-3">
-            <div className="avatar placeholder">
-              <div className="bg-primary text-primary-content rounded-full w-8">
-                <span className="text-xs">{session.user.name?.[0]?.toUpperCase() || 'U'}</span>
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{session.user.name}</p>
-              <p className="text-xs text-base-content/40 truncate">
-                {ROLE_INFO[session.user.role]?.label ?? session.user.email}
-              </p>
-            </div>
-          </div>
+      {/* Utente: piede fisso, con menu contestuale (verso l'alto) e uscita a sola icona */}
+      <div ref={userBoxRef} className="relative px-3 pt-3 pb-2 border-t border-base-300 shrink-0">
+        {menuOpen && (
+          <ul
+            role="menu"
+            aria-label="Menu utente"
+            className="menu absolute bottom-full left-3 right-3 mb-1 bg-base-100 rounded-box shadow-lg border border-base-300 z-10 p-1"
+          >
+            <li role="none">
+              <Link
+                role="menuitem"
+                href="/account"
+                onClick={() => { setMenuOpen(false); onNavigate?.(); }}
+                className={`gap-2 text-sm ${isActive('/account') ? 'menu-active' : ''}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Il mio account
+              </Link>
+            </li>
+          </ul>
         )}
-        <Link
-          href="/account"
-          onClick={onNavigate}
-          className={`btn btn-ghost btn-sm w-full justify-start gap-2 ${isActive('/account') ? 'text-primary' : 'text-base-content/50'}`}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          Il mio account
-        </Link>
-        <button
-          onClick={() => signOut({ callbackUrl: '/login' })}
-          className="btn btn-ghost btn-sm w-full justify-start text-base-content/50 gap-2"
-          aria-label="Disconnetti"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Disconnetti
-        </button>
-        <p className="text-[11px] text-base-content/40 mt-2 px-1">Versione {packageJson.version}</p>
+
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            className="flex items-center gap-2 flex-1 min-w-0 rounded-lg px-2 py-1.5 text-left hover:bg-base-300 transition-colors"
+          >
+            <span className="w-8 h-8 shrink-0 rounded-full bg-primary text-primary-content grid place-items-center text-xs font-semibold" aria-hidden="true">
+              {session?.user?.name?.[0]?.toUpperCase() || 'U'}
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-xs font-medium truncate">{session?.user?.name}</span>
+              <span className="block text-xs text-base-content/40 truncate">
+                {ROLE_INFO[session?.user?.role]?.label ?? session?.user?.email}
+              </span>
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 shrink-0 text-base-content/40 transition-transform ${menuOpen ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: '/login' })}
+            className="btn btn-ghost btn-sm btn-square text-base-content/50 hover:text-error"
+            aria-label="Disconnetti"
+            title="Disconnetti"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
+        <p className="text-[11px] text-base-content/40 mt-1 px-2">Versione {packageJson.version}</p>
       </div>
     </aside>
   );

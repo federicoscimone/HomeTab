@@ -23,7 +23,8 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="flex min-h-screen bg-base-100">
       {/* ── Desktop sidebar (always visible ≥ lg) ─────────────────────── */}
-      <div className="hidden lg:flex lg:flex-shrink-0">
+      {/* sticky + self-start: la sidebar resta ferma mentre scorre la pagina */}
+      <div className="hidden lg:flex lg:flex-shrink-0 lg:sticky lg:top-0 lg:self-start">
         <Sidebar />
       </div>
 
