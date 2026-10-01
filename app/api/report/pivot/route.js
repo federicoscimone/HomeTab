@@ -11,14 +11,14 @@
  */
 
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
 import Category from '@/lib/models/Category';
 
 export async function GET(req) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('data:read');
+  if (denied) return denied;
 
   await connectDB();
 

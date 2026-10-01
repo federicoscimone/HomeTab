@@ -11,6 +11,7 @@ import PaymentBadge from '@/components/movimenti/PaymentBadge';
 import MappingModal from '@/components/shared/MappingModal';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
 import { fmtFull } from '@/lib/utils/format';
+import useCan from '@/lib/auth/useCan';
 
 /** Number of records per page. */
 const PAGE_SIZE = 20;
@@ -58,6 +59,7 @@ const EMPTY_FILTERS = {
  */
 export default function SpesePage() {
   const searchParams = useSearchParams();
+  const canDo = useCan();
   const searchParamsKey = searchParams.toString();
   const [expenses, setExpenses]     = useState([]);
   const [total,    setTotal]        = useState(0);
@@ -321,6 +323,7 @@ export default function SpesePage() {
             )}
             <span className="hidden sm:inline">{exporting ? 'Esportazione…' : 'Esporta Excel'}</span>
           </button>
+          {canDo('movements:create') && (
           <Link href="/movimenti/nuova" className="btn btn-primary btn-sm gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -328,6 +331,7 @@ export default function SpesePage() {
             <span className="hidden xs:inline">Nuovo movimento</span>
             <span className="xs:hidden">Nuovo</span>
           </Link>
+          )}
         </div>
       </div>
 
@@ -537,7 +541,7 @@ export default function SpesePage() {
                         {exp.excludeFromAnalysis && (
                           <span className="badge badge-ghost badge-xs flex-shrink-0" title="Escluso dalle analisi">escluso</span>
                         )}
-                        {!exp.categoryId && (
+                        {!exp.categoryId && canDo('settings:manage') && (
                           <button
                             className="btn btn-ghost btn-xs p-0 h-4 min-h-0 w-4 opacity-30 hover:opacity-80 flex-shrink-0"
                             title="Crea mapping keyword → categoria"
@@ -574,13 +578,17 @@ export default function SpesePage() {
                         className="checkbox checkbox-sm checkbox-warning"
                         checked={!!exp.excludeFromAnalysis}
                         onChange={() => handleToggleExclude(exp)}
+                        disabled={!canDo('movements:edit')}
                         title={exp.excludeFromAnalysis ? 'Includi nelle analisi' : 'Escludi dalle analisi'}
                       />
+                      {canDo('movements:edit') && (
                       <Link href={`/movimenti/${exp._id}`} className="btn btn-ghost btn-sm py-1 px-2" aria-label="Modifica">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </Link>
+                      )}
+                      {canDo('movements:delete') && (
                       <button
                         className="btn btn-ghost btn-sm py-1 px-2 text-error"
                         onClick={() => setDeleteTarget(exp)}
@@ -590,6 +598,7 @@ export default function SpesePage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -627,7 +636,7 @@ export default function SpesePage() {
                           {exp.excludeFromAnalysis && (
                             <span className="badge badge-ghost badge-xs flex-shrink-0" title="Escluso dalle analisi">escluso</span>
                           )}
-                          {!exp.categoryId && (
+                          {!exp.categoryId && canDo('settings:manage') && (
                             <button
                               className="btn btn-ghost btn-xs p-0 h-4 min-h-0 w-4 opacity-30 hover:opacity-80 flex-shrink-0"
                               title="Crea mapping keyword → categoria"
@@ -675,16 +684,20 @@ export default function SpesePage() {
                           className="checkbox checkbox-sm checkbox-warning"
                           checked={!!exp.excludeFromAnalysis}
                           onChange={() => handleToggleExclude(exp)}
+                          disabled={!canDo('movements:edit')}
                           title={exp.excludeFromAnalysis ? 'Includi nelle analisi' : 'Escludi dalle analisi'}
                         />
                       </td>
                       <td>
                         <div className="flex gap-1 justify-end">
+                          {canDo('movements:edit') && (
                           <Link href={`/movimenti/${exp._id}`} className="btn btn-ghost btn-sm" aria-label="Modifica">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                           </Link>
+                          )}
+                          {canDo('movements:delete') && (
                           <button
                             className="btn btn-ghost btn-sm text-error"
                             onClick={() => setDeleteTarget(exp)}
@@ -694,6 +707,7 @@ export default function SpesePage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                           </button>
+                          )}
                         </div>
                       </td>
                     </tr>

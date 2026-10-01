@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import KeywordMapping from '@/lib/models/KeywordMapping';
 
 export async function GET() {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('data:read');
+  if (denied) return denied;
   await connectDB();
   const mappings = await KeywordMapping.find()
     .populate('categoryId', 'name color')
@@ -16,8 +16,8 @@ export async function GET() {
 }
 
 export async function POST(req) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('settings:manage');
+  if (denied) return denied;
   await connectDB();
   const body = await req.json();
   if (!body.subCategory1Id) body.subCategory1Id = null;

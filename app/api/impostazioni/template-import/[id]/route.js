@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import ImportTemplate from '@/lib/models/ImportTemplate';
 
 export async function GET(req, { params }) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('data:read');
+  if (denied) return denied;
   await connectDB();
   const { id } = await params;
   const t = await ImportTemplate.findById(id).lean();
@@ -14,8 +14,8 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('settings:manage');
+  if (denied) return denied;
   await connectDB();
   const { id } = await params;
   const body = await req.json();
@@ -25,8 +25,8 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('settings:manage');
+  if (denied) return denied;
   await connectDB();
   const { id } = await params;
   const t = await ImportTemplate.findByIdAndDelete(id);

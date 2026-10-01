@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import GoogleDriveIntegration from '@/lib/models/GoogleDriveIntegration';
 import { writeAudit } from '@/lib/utils/audit';
@@ -40,10 +40,8 @@ function serializeIntegration(integration) {
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
-  }
+  const { session, denied } = await requirePermission('settings:manage');
+  if (denied) return denied;
 
   await connectDB();
   const integration = await GoogleDriveIntegration.findOne({ userId: session.user.id }).lean();
@@ -52,10 +50,8 @@ export async function GET() {
 }
 
 export async function PATCH(req) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
-  }
+  const { session, denied } = await requirePermission('settings:manage');
+  if (denied) return denied;
 
   try {
     const { autoBackupEnabled, backupFrequency } = await req.json();
@@ -96,10 +92,8 @@ export async function PATCH(req) {
 }
 
 export async function DELETE(req) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
-  }
+  const { session, denied } = await requirePermission('settings:manage');
+  if (denied) return denied;
 
   try {
     await connectDB();

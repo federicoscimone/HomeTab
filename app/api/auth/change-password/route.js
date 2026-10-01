@@ -1,22 +1,31 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import { sendPasswordChangedEmail } from '@/lib/email';
+import { isProtectedDemoAccount } from '@/lib/demoAccounts';
+import { writeAudit } from '@/lib/utils/audit';
+import logger from '@/lib/logger';
 
+/**
+ * Cambio della propria password, anche quella provvisoria assegnata da un admin.
+ *
+ * Incrementa `sessionVersion`: tutte le sessioni aperte con la vecchia password decadono, compresa
+ * quella che ha fatto la richiesta. Il client deve quindi rifare l'accesso con la nuova password
+ * (lo fa components/account/ChangePasswordForm.js).
+ */
 export async function POST(req) {
   try {
-    if (process.env.DEMO_MODE === 'true') {
+    const { session, denied } = await requirePermission('data:read', { allowPendingPassword: true });
+    if (denied) return denied;
+
+    if (isProtectedDemoAccount(session.user.email)) {
       return NextResponse.json(
-        { error: 'Cambio password disabilitato in modalità demo' },
+        { error: 'La password degli account demo non si può cambiare' },
         { status: 403 }
       );
     }
-
-    const session = await auth();
-    if (!session?.user?.id)
-      return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
 
     const { currentPassword, newPassword } = await req.json();
 
@@ -25,6 +34,9 @@ export async function POST(req) {
 
     if (newPassword.length < 8)
       return NextResponse.json({ error: 'La nuova password deve essere di almeno 8 caratteri' }, { status: 400 });
+
+    if (newPassword === currentPassword)
+      return NextResponse.json({ error: 'La nuova password deve essere diversa da quella attuale' }, { status: 400 });
 
     await connectDB();
     const user = await User.findById(session.user.id);
@@ -36,9 +48,23 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Password attuale non corretta' }, { status: 400 });
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
-    await User.updateOne({ _id: user._id }, { hashedPassword });
+    await User.updateOne(
+      { _id: user._id },
+      { hashedPassword, mustChangePassword: false, $inc: { sessionVersion: 1 } },
+    );
 
-    await sendPasswordChangedEmail({ to: user.email, name: user.name });
+    await writeAudit(session, req, {
+      action: 'PASSWORD_CHANGE',
+      resource: 'user',
+      resourceId: user._id,
+      description: user.mustChangePassword
+        ? `${user.name} ha sostituito la password provvisoria`
+        : `${user.name} ha cambiato la propria password`,
+    });
+    // Notifica di cortesia: se l'invio fallisce (es. SMTP non configurato) la password è già
+    // cambiata, e rispondere 500 farebbe credere all'utente il contrario.
+    await sendPasswordChangedEmail({ to: user.email, name: user.name })
+      .catch((err) => logger.warn('Email di conferma cambio password non inviata', { error: err.message }));
 
     return NextResponse.json({ message: 'Password aggiornata con successo' });
   } catch (err) {

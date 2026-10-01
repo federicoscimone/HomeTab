@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import { logApiError } from '@/lib/logger';
 import connectDB from '@/lib/mongodb';
 import ImportTemplate from '@/lib/models/ImportTemplate';
@@ -8,8 +8,8 @@ import { parseExcelBuffer, parsePasteText } from '@/lib/utils/importParser';
 import { autoCategorize } from '@/lib/utils/autoCategorize';
 
 export async function POST(req) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('movements:create');
+  if (denied) return denied;
 
   await connectDB();
 

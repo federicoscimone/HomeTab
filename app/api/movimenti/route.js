@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
 import { getPaymentGroup } from '@/lib/utils/payments';
@@ -13,8 +13,8 @@ import logger, { logApiError } from '@/lib/logger';
 import { writeAudit } from '@/lib/utils/audit';
 
 export async function GET(req) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('data:read');
+  if (denied) return denied;
 
   await connectDB();
 
@@ -79,8 +79,8 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('movements:create');
+  if (denied) return denied;
 
   await connectDB();
 
@@ -90,6 +90,8 @@ export async function POST(req) {
   if (!body.subCategory1Id) body.subCategory1Id = null;
   if (!body.subCategory2Id) body.subCategory2Id = null;
   if (!body.categoryId)     body.categoryId = null;
+  // Solo un'uscita tradizionale può pagare un obiettivo: è l'unica che entra nel risparmio.
+  if (!body.goalId || body.type !== 'expense' || body.paymentGroup !== 'traditional') body.goalId = null;
 
   try {
     const expense = await Movement.create(body);

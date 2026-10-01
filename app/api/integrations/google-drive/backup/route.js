@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import GoogleDriveIntegration from '@/lib/models/GoogleDriveIntegration';
 import { runBackupForIntegration } from '@/lib/services/googleDriveBackup';
 import { logApiError } from '@/lib/logger';
 
 export async function POST(req) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
-  }
+  const { session, denied } = await requirePermission('settings:manage');
+  if (denied) return denied;
 
   try {
     await connectDB();

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
 
@@ -12,8 +12,8 @@ import Movement from '@/lib/models/Movement';
  * Usa query dirette per-riga invece di confronto batch JS, per massima affidabilità.
  */
 export async function POST(req) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('movements:create');
+  if (denied) return denied;
 
   const { rows } = await req.json();
   if (!Array.isArray(rows) || rows.length === 0)

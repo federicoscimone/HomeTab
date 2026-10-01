@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
 import PaymentBadge from '@/components/movimenti/PaymentBadge';
 import MappingModal from '@/components/shared/MappingModal';
+import useCan from '@/lib/auth/useCan';
 
 function formatAmount(n) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
@@ -15,6 +16,7 @@ function escapeRegex(s) {
 
 export default function StepReview({ rows: initialRows, categories, onSaved, onBack }) {
   const [rows, setRows] = useState(initialRows);
+  const canDo = useCan();
   const [skipDuplicates, setSkipDuplicates] = useState(true);
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
@@ -265,7 +267,8 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                           {row._isDuplicate && (
                             <span className="badge badge-warning badge-xs shrink-0" title="Possibile duplicato: stessa data, importo e descrizione già presenti nel database">dup</span>
                           )}
-                          {!row._autocat && (
+                          {/* Il mapping è un'impostazione: lo crea solo un amministratore. */}
+                          {!row._autocat && canDo('settings:manage') && (
                             <button
                               className="btn btn-ghost btn-xs p-0 h-4 min-h-0 w-4 opacity-30 hover:opacity-80"
                               title="Crea mapping keyword → categoria"

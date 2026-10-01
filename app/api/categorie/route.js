@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Category from '@/lib/models/Category';
 
 export async function GET() {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('data:read');
+  if (denied) return denied;
 
   await connectDB();
   const categories = await Category.find().sort({ level: 1, name: 1 }).lean();
@@ -13,8 +13,8 @@ export async function GET() {
 }
 
 export async function POST(req) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('settings:manage');
+  if (denied) return denied;
 
   await connectDB();
   const body = await req.json();

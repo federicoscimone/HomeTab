@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import { buildGoogleDriveAuthUrl, getGoogleDriveConfig } from '@/lib/services/googleDrive';
 import { generateToken } from '@/lib/utils/tokens';
 
 export async function POST() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
-  }
+  const { session, denied } = await requirePermission('settings:manage');
+  if (denied) return denied;
 
   try {
     getGoogleDriveConfig();

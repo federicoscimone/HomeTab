@@ -10,6 +10,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import packageJson from '@/package.json';
+import useCan from '@/lib/auth/useCan';
+import { ROLE_INFO } from '@/lib/auth/permissions';
 
 /**
  * @typedef {Object} NavChild
@@ -23,6 +25,7 @@ import packageJson from '@/package.json';
  * @property {string}          label      - Display label.
  * @property {React.ReactNode} icon       - SVG icon element.
  * @property {NavChild[]}      [children] - Sub-items (section group).
+ * @property {string}          [permission] - Permesso richiesto per vedere la voce (lib/auth/permissions).
  */
 
 /** @type {NavItem[]} */
@@ -49,9 +52,19 @@ const NAV_ITEMS = [
   {
     href: '/importa',
     label: 'Importa',
+    permission: 'movements:create',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+      </svg>
+    ),
+  },
+  {
+    href: '/obiettivi',
+    label: 'Obiettivi',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21V4m0 0h11l-1.5 4L14 12H3" />
       </svg>
     ),
   },
@@ -70,6 +83,7 @@ const NAV_ITEMS = [
   },
   {
     label: 'Impostazioni',
+    permission: 'settings:manage',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -77,7 +91,8 @@ const NAV_ITEMS = [
       </svg>
     ),
     children: [
-      { href: '/impostazioni',                  label: 'Account & Sicurezza' },
+      { href: '/impostazioni/utenti',           label: 'Utenti' },
+      { href: '/impostazioni',                  label: 'Backup' },
       { href: '/impostazioni/categorie',         label: 'Categorie' },
       { href: '/impostazioni/metodi-pagamento',  label: 'Metodi Pagamento' },
       { href: '/impostazioni/template-import',   label: 'Template Import' },
@@ -107,6 +122,8 @@ const EXACT_MATCH_PATHS = ['/', '/impostazioni', '/report'];
 export default function Sidebar({ onNavigate }) {
   const pathname           = usePathname();
   const { data: session }  = useSession();
+  const canDo              = useCan();
+  const navItems           = NAV_ITEMS.filter((item) => !item.permission || canDo(item.permission));
   /**
    * Returns whether a nav item href is the currently active route.
    *
@@ -131,7 +148,7 @@ export default function Sidebar({ onNavigate }) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1" aria-label="Navigazione principale">
-        {NAV_ITEMS.map((item) =>
+        {navItems.map((item) =>
           item.children ? (
             <div key={item.label}>
               <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-base-content/50 uppercase tracking-wider mt-3 mb-1">
@@ -153,7 +170,7 @@ export default function Sidebar({ onNavigate }) {
                 </Link>
               ))}
             </div>
-          ) : item.quickAdd ? (
+          ) : item.quickAdd && canDo('movements:create') ? (
             <div key={item.href} className={`flex items-center rounded-lg transition-colors ${isActive(item.href) ? 'bg-primary text-primary-content' : 'hover:bg-base-500 text-base-content'}`}>
               <Link
                 href={item.href}
@@ -202,10 +219,22 @@ export default function Sidebar({ onNavigate }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium truncate">{session.user.name}</p>
-              <p className="text-xs text-base-content/40 truncate">{session.user.email}</p>
+              <p className="text-xs text-base-content/40 truncate">
+                {ROLE_INFO[session.user.role]?.label ?? session.user.email}
+              </p>
             </div>
           </div>
         )}
+        <Link
+          href="/account"
+          onClick={onNavigate}
+          className={`btn btn-ghost btn-sm w-full justify-start gap-2 ${isActive('/account') ? 'text-primary' : 'text-base-content/50'}`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          Il mio account
+        </Link>
         <button
           onClick={() => signOut({ callbackUrl: '/login' })}
           className="btn btn-ghost btn-sm w-full justify-start text-base-content/50 gap-2"

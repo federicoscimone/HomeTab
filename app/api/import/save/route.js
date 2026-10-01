@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { requirePermission } from '@/lib/auth/guard';
 import logger, { logApiError } from '@/lib/logger';
 import { writeAudit } from '@/lib/utils/audit';
 import { randomUUID } from 'crypto';
@@ -8,8 +8,8 @@ import Movement from '@/lib/models/Movement';
 import { getPaymentGroup } from '@/lib/utils/payments';
 
 export async function POST(req) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
+  const { session, denied } = await requirePermission('movements:create');
+  if (denied) return denied;
 
   await connectDB();
 

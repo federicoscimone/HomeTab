@@ -18,6 +18,7 @@ const EMPTY_FORM = {
   subCategory1Id: '',
   subCategory2Id: '',
   excludeFromAnalysis: false,
+  goalId: '',
 };
 
 export default function MovementForm({ initial = null, expenseId = null }) {
@@ -29,10 +30,12 @@ export default function MovementForm({ initial = null, expenseId = null }) {
     categoryId:    initial.categoryId?._id    || initial.categoryId    || '',
     subCategory1Id: initial.subCategory1Id?._id || initial.subCategory1Id || '',
     subCategory2Id: initial.subCategory2Id?._id || initial.subCategory2Id || '',
+    goalId: initial.goalId?._id || initial.goalId || '',
     amount: initial.amount?.toString() || '',
   } : EMPTY_FORM);
 
   const [categories, setCategories] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
@@ -47,7 +50,16 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       .then((r) => r.json())
       .then(setCategories)
       .catch(() => {});
+    fetch('/api/obiettivi')
+      .then((r) => (r.ok ? r.json() : { goals: [] }))
+      .then((d) => setGoals(d.goals))
+      .catch(() => {});
   }, []);
+
+  // Si collegano a un obiettivo solo le uscite tradizionali: sono le uniche che toccano il risparmio.
+  const canLinkGoal = form.type === 'expense' && getPaymentGroup(form.paymentMethod) === 'traditional';
+  // Gli obiettivi chiusi restano visibili solo se il movimento è già collegato a uno di loro.
+  const goalOptions = goals.filter((g) => g.status === 'active' || g.id === form.goalId);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
@@ -72,6 +84,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       categoryId: form.categoryId || null,
       subCategory1Id: form.subCategory1Id || null,
       subCategory2Id: form.subCategory2Id || null,
+      goalId: canLinkGoal ? form.goalId || null : null,
     };
 
     try {
@@ -296,6 +309,27 @@ export default function MovementForm({ initial = null, expenseId = null }) {
           </select>
         </label>
       </div>
+
+      {/* Obiettivo pagato con questa spesa */}
+      {canLinkGoal && goalOptions.length > 0 && (
+        <label className="form-control">
+          <div className="label"><span className="label-text">Paga un obiettivo <span className="text-base-content/40">(opzionale)</span></span></div>
+          <select
+            className="select select-bordered"
+            value={form.goalId}
+            onChange={(e) => set('goalId', e.target.value)}
+          >
+            <option value="">— Nessuno —</option>
+            {goalOptions.map((g) => (
+              <option key={g.id} value={g.id}>{g.name}{g.status !== 'active' ? ' (chiuso)' : ''}</option>
+            ))}
+          </select>
+          {/* Fuori da .label: DaisyUI 5 la rende nowrap e la frase uscirebbe dal form. */}
+          <p className="text-xs text-base-content/50 mt-1">
+            Es. il volo del viaggio: resta nei report, ma viene scalato dall&apos;obiettivo invece che dal risparmio del mese.
+          </p>
+        </label>
+      )}
 
       {/* Escludi da analisi */}
       <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg border border-base-300 hover:bg-base-200 transition-colors">

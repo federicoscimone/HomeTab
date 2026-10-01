@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { can } from '@/lib/auth/permissions';
 import connectDB from '@/lib/mongodb';
 import GoogleDriveIntegration from '@/lib/models/GoogleDriveIntegration';
 import {
@@ -21,6 +22,10 @@ export async function GET(req) {
   if (!session?.user?.id) {
     redirectUrl.searchParams.set('driveError', 'sessione');
     return NextResponse.redirect(redirectUrl);
+  }
+  // Qui arriva il browser di ritorno da Google: l'errore è un redirect, non JSON come nelle altre rotte.
+  if (session.user.mustChangePassword || !can(session.user.role, 'settings:manage')) {
+    return NextResponse.redirect(new URL('/', req.url));
   }
 
   const state = new URL(req.url).searchParams.get('state');
