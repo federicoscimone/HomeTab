@@ -19,7 +19,8 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
 - **Import dagli estratti conto**: Excel, CSV o testo incollato. Per ogni banca si definisce un
   template (quale colonna contiene cosa, formato delle date, come leggere il segno degli
   importi), e regole a parole chiave assegnano la categoria. I doppioni si riconoscono prima del
-  salvataggio.
+  salvataggio. In modalità demo sono già pronti un template e un estratto conto di esempio per
+  provarlo.
 - **Report**: dashboard mensile, pivot categorie × mesi, confronto con l'anno precedente per
   categoria, intervalli di date a scelta con proiezione a fine anno. Movimenti, pivot e analisi
   si esportano in Excel.

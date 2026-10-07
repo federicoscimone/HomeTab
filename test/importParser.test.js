@@ -79,3 +79,25 @@ test('parseAmountRaw: formati italiano e americano', () => {
   assert.deepEqual(parseAmountRaw('+120,00'), { amount: 120, negative: false });
   assert.deepEqual(parseAmountRaw('+1.234,56'), { amount: 1234.56, negative: false });
 });
+
+test('il CSV di esempio della demo si importa con il suo template', async () => {
+  const { DEMO_IMPORT_TEMPLATE, demoImportSample } = await import('../lib/demoImport.js');
+  const duplicate = { date: '2026-10-07', amount: 46.78, payee: 'Q8', description: 'Benzina - auto Marco' };
+  const csv = demoImportSample(new Date(2026, 9, 7), duplicate);
+  const rows = parseExcelBuffer(Buffer.from(csv, 'utf8'), DEMO_IMPORT_TEMPLATE);
+
+  assert.equal(rows.length, 9);
+  assert.deepEqual(rows[0], {
+    date: '2026-10-06', description: 'PAGAMENTO POS', payee: 'ESSELUNGA MILANO', place: '', notes: '',
+    paymentMethod: 'debit_card', _methodAutoDetected: true, amount: 62.4, type: 'expense',
+  });
+  const refund = rows.find((r) => r.payee === 'RIMBORSO SPESE MEDICHE');
+  assert.equal(refund.type, 'income');
+  assert.equal(refund.amount, 120);
+  // Il prelievo non contiene parole chiave di metodo: la revisione lo segnala.
+  assert.equal(rows.find((r) => r.payee === 'SPORTELLO')._methodAutoDetected, false);
+  assert.deepEqual(rows.at(-1), {
+    date: '2026-10-07', description: 'Benzina - auto Marco', payee: 'Q8', place: '', notes: '',
+    paymentMethod: null, _methodAutoDetected: false, amount: 46.78, type: 'expense',
+  });
+});

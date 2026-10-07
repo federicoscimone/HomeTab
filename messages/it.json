@@ -491,6 +491,7 @@
     "noValidRows": "Nessuna riga valida trovata. Controlla il template e il file.",
     "chooseTemplate": "Seleziona il template",
     "noTemplates": "Nessun template configurato. Vai in <b>Impostazioni → Template Import</b> per crearne uno.",
+    "sampleHint": "Per provare: scarica l’<link>estratto conto di esempio</link> e importalo con il template «{template}».",
     "skipRows": "{count, plural, one {Salta # riga} other {Salta # righe}}",
     "dateFormat": "Data: {format}",
     "separator": "Sep: \"{delimiter}\"",

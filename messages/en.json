@@ -491,6 +491,7 @@
     "noValidRows": "No valid rows found. Check the template and the file.",
     "chooseTemplate": "Choose the template",
     "noTemplates": "No templates set up yet. Go to <b>Settings → Import templates</b> to create one.",
+    "sampleHint": "To try it out: download the <link>sample bank statement</link> and import it with the “{template}” template.",
     "skipRows": "{count, plural, one {Skips # row} other {Skips # rows}}",
     "dateFormat": "Date: {format}",
     "separator": "Separator: \"{delimiter}\"",
