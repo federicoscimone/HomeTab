@@ -105,7 +105,7 @@ export default function PivotPage() {
           ))}
         </select>
 
-        <div className="tabs tabs-boxed">
+        <div className="tabs tabs-box">
           {[['expense', tCommon('expenses')], ['income', tCommon('income')]].map(([v, l]) => (
             <button key={v} className={`tab tab-sm ${type === v ? 'tab-active' : ''}`}
               onClick={() => setType(v)}>{l}</button>

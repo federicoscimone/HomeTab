@@ -119,7 +119,7 @@ export default function AnalisiPage() {
               <input id="analisi-to" type="date" className="input input-bordered input-sm"
                 value={to} onChange={e => setTo(e.target.value)} />
             </div>
-            <div className="tabs tabs-boxed self-end">
+            <div className="tabs tabs-box self-end">
               {[['expense', tCommon('expenses')], ['income', tCommon('income')]].map(([v, l]) => (
                 <button key={v} className={`tab tab-sm ${type === v ? 'tab-active' : ''}`}
                   onClick={() => setType(v)}>{l}</button>
