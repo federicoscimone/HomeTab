@@ -5,25 +5,21 @@ import User from '@/lib/models/User';
 import PasswordResetToken from '@/lib/models/PasswordResetToken';
 import { generateToken, hashToken, tokenExpiry } from '@/lib/utils/tokens';
 import { sendPasswordResetEmail } from '@/lib/email';
+import { serverTranslator } from '@/lib/i18n/server';
 
 export async function POST(req) {
   try {
-    if (isDemoMode()) {
-      return NextResponse.json(
-        { message: 'Se l\'email è registrata, riceverai un link per il reset.' }
-      );
-    }
+    // Risposta generica per non rivelare se l'email esiste o meno
+    const genericOk = NextResponse.json({ message: (await serverTranslator('apiMessages'))('resetRequested') });
+    if (isDemoMode()) return genericOk;
 
     const { email } = await req.json();
-    if (!email) return NextResponse.json({ error: 'Email obbligatoria' }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ error: (await serverTranslator('errors'))('emailRequired') }, { status: 400 });
+    }
 
     await connectDB();
     const user = await User.findOne({ email: email.toLowerCase() });
-
-    // Risposta generica per non rivelare se l'email esiste o meno
-    const genericOk = NextResponse.json({
-      message: 'Se l\'email è registrata, riceverai un link per il reset.',
-    });
 
     if (!user) return genericOk;
 
@@ -40,11 +36,11 @@ export async function POST(req) {
     const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
-    await sendPasswordResetEmail({ to: user.email, name: user.name, resetUrl });
+    await sendPasswordResetEmail({ to: user.email, name: user.name, resetUrl, locale: user.locale });
 
     return genericOk;
   } catch (err) {
     console.error('[forgot-password]', err);
-    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
+    return NextResponse.json({ error: (await serverTranslator('errors'))('internal') }, { status: 500 });
   }
 }

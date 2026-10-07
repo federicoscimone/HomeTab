@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -15,6 +16,8 @@ function ResetPasswordForm() {
   const [form, setForm] = useState({ password: '', confirm: '' });
   const [status, setStatus] = useState('idle'); // idle | loading | success | error
   const [error, setError] = useState('');
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
 
   useEffect(() => {
     if (!token) return;
@@ -30,11 +33,11 @@ function ResetPasswordForm() {
     setError('');
 
     if (form.password !== form.confirm) {
-      setError('Le password non coincidono');
+      setError(t('passwordsMismatch'));
       return;
     }
     if (form.password.length < 8) {
-      setError('La password deve essere di almeno 8 caratteri');
+      setError(t('passwordTooShort'));
       return;
     }
 
@@ -49,14 +52,14 @@ function ResetPasswordForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Errore durante il reset');
+        setError(data.error || t('reset.resetError'));
         setStatus('error');
       } else {
         setStatus('success');
         setTimeout(() => router.push('/login'), 3000);
       }
     } catch {
-      setError('Errore di rete. Riprova.');
+      setError(tCommon('networkError'));
       setStatus('error');
     }
   };
@@ -66,7 +69,7 @@ function ResetPasswordForm() {
       <div className="card bg-base-100 shadow-xl w-full max-w-sm">
         <div className="card-body items-center">
           <span className="loading loading-spinner loading-lg text-primary"></span>
-          <p className="text-sm text-base-content/60">Verifica link in corso…</p>
+          <p className="text-sm text-base-content/60">{t('reset.checking')}</p>
         </div>
       </div>
     );
@@ -77,12 +80,10 @@ function ResetPasswordForm() {
       <div className="card bg-base-100 shadow-xl w-full max-w-sm">
         <div className="card-body gap-4 text-center">
           <div className="text-5xl">❌</div>
-          <h2 className="text-xl font-bold">Link non valido</h2>
-          <p className="text-sm text-base-content/70">
-            Il link è scaduto o è già stato utilizzato. Richiedine uno nuovo.
-          </p>
+          <h2 className="text-xl font-bold">{t('reset.invalidTitle')}</h2>
+          <p className="text-sm text-base-content/70">{t('reset.invalidText')}</p>
           <Link href="/forgot-password" className="btn btn-primary btn-sm">
-            Richiedi nuovo link
+            {t('reset.requestNew')}
           </Link>
         </div>
       </div>
@@ -94,11 +95,9 @@ function ResetPasswordForm() {
       <div className="card bg-base-100 shadow-xl w-full max-w-sm">
         <div className="card-body gap-4 text-center">
           <div className="text-5xl">✅</div>
-          <h2 className="text-xl font-bold">Password aggiornata</h2>
-          <p className="text-sm text-base-content/70">
-            Reindirizzamento al login tra pochi secondi…
-          </p>
-          <Link href="/login" className="btn btn-primary btn-sm">Vai al login</Link>
+          <h2 className="text-xl font-bold">{t('reset.doneTitle')}</h2>
+          <p className="text-sm text-base-content/70">{t('reset.doneText')}</p>
+          <Link href="/login" className="btn btn-primary btn-sm">{t('reset.goToLogin')}</Link>
         </div>
       </div>
     );
@@ -109,7 +108,7 @@ function ResetPasswordForm() {
       <div className="card-body gap-4">
         <div className="text-center mb-2">
           <h1 className="text-2xl font-bold text-primary">HomeTab</h1>
-          <p className="text-sm text-base-content/60">Imposta nuova password</p>
+          <p className="text-sm text-base-content/60">{t('reset.subtitle')}</p>
         </div>
 
         {error && (
@@ -118,11 +117,11 @@ function ResetPasswordForm() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <label className="form-control">
-            <div className="label"><span className="label-text">Nuova password</span></div>
+            <div className="label"><span className="label-text">{t('reset.newPassword')}</span></div>
             <input
               type="password"
               className="input input-bordered"
-              placeholder="Minimo 8 caratteri"
+              placeholder={t('minLength')}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               required
@@ -131,11 +130,11 @@ function ResetPasswordForm() {
           </label>
 
           <label className="form-control">
-            <div className="label"><span className="label-text">Conferma password</span></div>
+            <div className="label"><span className="label-text">{t('reset.confirmPassword')}</span></div>
             <input
               type="password"
               className="input input-bordered"
-              placeholder="Ripeti la password"
+              placeholder={t('repeatPassword')}
               value={form.confirm}
               onChange={(e) => setForm({ ...form, confirm: e.target.value })}
               required
@@ -148,7 +147,7 @@ function ResetPasswordForm() {
             className={`btn btn-primary mt-1 ${status === 'loading' ? 'loading' : ''}`}
             disabled={status === 'loading'}
           >
-            {status === 'loading' ? 'Aggiornamento…' : 'Aggiorna password'}
+            {status === 'loading' ? t('reset.submitting') : t('reset.submit')}
           </button>
         </form>
       </div>

@@ -7,6 +7,7 @@ import PasswordResetToken from '@/lib/models/PasswordResetToken';
 import { hashToken } from '@/lib/utils/tokens';
 import { sendPasswordChangedEmail } from '@/lib/email';
 import logger from '@/lib/logger';
+import { serverTranslator } from '@/lib/i18n/server';
 
 // GET: verifica validità token (usato dal frontend prima di mostrare il form)
 export async function GET(req) {
@@ -32,20 +33,18 @@ export async function GET(req) {
 // POST: applica la nuova password
 export async function POST(req) {
   try {
+    const t = await serverTranslator('errors');
     if (isDemoMode()) {
-      return NextResponse.json(
-        { error: 'Reset password disabilitato in modalità demo' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: t('demoResetDisabled') }, { status: 403 });
     }
 
     const { token, password } = await req.json();
 
     if (!token || !password)
-      return NextResponse.json({ error: 'Dati mancanti' }, { status: 400 });
+      return NextResponse.json({ error: t('missingData') }, { status: 400 });
 
     if (password.length < 8)
-      return NextResponse.json({ error: 'La password deve essere di almeno 8 caratteri' }, { status: 400 });
+      return NextResponse.json({ error: t('passwordTooShort') }, { status: 400 });
 
     await connectDB();
 
@@ -56,11 +55,11 @@ export async function POST(req) {
     });
 
     if (!record)
-      return NextResponse.json({ error: 'Link non valido o scaduto' }, { status: 400 });
+      return NextResponse.json({ error: t('invalidResetLink') }, { status: 400 });
 
     const user = await User.findOne({ email: record.email });
     if (!user)
-      return NextResponse.json({ error: 'Utente non trovato' }, { status: 404 });
+      return NextResponse.json({ error: t('userNotFound') }, { status: 404 });
 
     const hashedPassword = await bcrypt.hash(password, 12);
     // Come nel cambio password: la nuova password l'ha scelta l'utente, quindi non è più provvisoria,
@@ -75,12 +74,12 @@ export async function POST(req) {
 
     // Notifica di cortesia: se l'invio fallisce (es. SMTP non configurato) la password è già
     // cambiata, e rispondere 500 farebbe credere all'utente il contrario.
-    await sendPasswordChangedEmail({ to: user.email, name: user.name })
+    await sendPasswordChangedEmail({ to: user.email, name: user.name, locale: user.locale })
       .catch((err) => logger.warn('Email di conferma cambio password non inviata', { error: err.message }));
 
-    return NextResponse.json({ message: 'Password aggiornata con successo' });
+    return NextResponse.json({ message: (await serverTranslator('apiMessages'))('passwordUpdated') });
   } catch (err) {
     console.error('[reset-password POST]', err);
-    return NextResponse.json({ error: 'Errore interno' }, { status: 500 });
+    return NextResponse.json({ error: (await serverTranslator('errors'))('internal') }, { status: 500 });
   }
 }

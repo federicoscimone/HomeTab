@@ -2,19 +2,22 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function SetupPage() {
   const router = useRouter();
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     if (form.password !== form.confirm) {
-      setError('Le password non coincidono');
+      setError(t('passwordsMismatch'));
       return;
     }
 
@@ -29,14 +32,14 @@ export default function SetupPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Errore durante la creazione');
+        setError(data.error || t('setup.createError'));
         setStatus('error');
       } else {
         setStatus('success');
         setTimeout(() => router.push('/login'), 2000);
       }
     } catch {
-      setError('Errore di rete. Riprova.');
+      setError(tCommon('networkError'));
       setStatus('error');
     }
   };
@@ -47,8 +50,8 @@ export default function SetupPage() {
         <div className="card bg-base-100 shadow-xl w-full max-w-sm">
           <div className="card-body gap-4 text-center">
             <div className="text-5xl">🎉</div>
-            <h2 className="text-xl font-bold">Account creato!</h2>
-            <p className="text-sm text-base-content/70">Reindirizzamento al login…</p>
+            <h2 className="text-xl font-bold">{t('setup.doneTitle')}</h2>
+            <p className="text-sm text-base-content/70">{t('setup.doneText')}</p>
           </div>
         </div>
       </div>
@@ -61,11 +64,11 @@ export default function SetupPage() {
         <div className="card-body gap-4">
           <div className="text-center mb-2">
             <h1 className="text-2xl font-bold text-primary">HomeTab</h1>
-            <p className="text-sm text-base-content/60">Configurazione iniziale — Crea l&apos;account admin</p>
+            <p className="text-sm text-base-content/60">{t('setup.subtitle')}</p>
           </div>
 
           <div className="alert alert-info text-xs py-2">
-            <span>Questo form è disponibile solo al primo avvio, quando non esiste ancora nessun utente.</span>
+            <span>{t('setup.info')}</span>
           </div>
 
           {error && (
@@ -74,11 +77,11 @@ export default function SetupPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <label className="form-control">
-              <div className="label"><span className="label-text">Nome</span></div>
+              <div className="label"><span className="label-text">{t('setup.name')}</span></div>
               <input
                 type="text"
                 className="input input-bordered"
-                placeholder="Il tuo nome"
+                placeholder={t('setup.namePlaceholder')}
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
@@ -86,11 +89,11 @@ export default function SetupPage() {
             </label>
 
             <label className="form-control">
-              <div className="label"><span className="label-text">Email</span></div>
+              <div className="label"><span className="label-text">{t('email')}</span></div>
               <input
                 type="email"
                 className="input input-bordered"
-                placeholder="nome@email.com"
+                placeholder={tCommon('emailPlaceholder')}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
@@ -98,11 +101,11 @@ export default function SetupPage() {
             </label>
 
             <label className="form-control">
-              <div className="label"><span className="label-text">Password</span></div>
+              <div className="label"><span className="label-text">{t('password')}</span></div>
               <input
                 type="password"
                 className="input input-bordered"
-                placeholder="Minimo 8 caratteri"
+                placeholder={t('minLength')}
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
@@ -110,11 +113,11 @@ export default function SetupPage() {
             </label>
 
             <label className="form-control">
-              <div className="label"><span className="label-text">Conferma password</span></div>
+              <div className="label"><span className="label-text">{t('reset.confirmPassword')}</span></div>
               <input
                 type="password"
                 className="input input-bordered"
-                placeholder="Ripeti la password"
+                placeholder={t('repeatPassword')}
                 value={form.confirm}
                 onChange={(e) => setForm({ ...form, confirm: e.target.value })}
                 required
@@ -126,7 +129,7 @@ export default function SetupPage() {
               className={`btn btn-primary mt-1 ${status === 'loading' ? 'loading' : ''}`}
               disabled={status === 'loading'}
             >
-              {status === 'loading' ? 'Creazione…' : 'Crea account admin'}
+              {status === 'loading' ? t('setup.submitting') : t('setup.submit')}
             </button>
           </form>
         </div>

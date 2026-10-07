@@ -9,20 +9,24 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
 
 /**
  * @param {object}   props
  * @param {string}   props.email          - Email dell'utente, per rifare l'accesso.
- * @param {string}   [props.currentLabel] - Etichetta del campo password attuale.
- * @param {string}   [props.submitLabel]
+ * @param {string}   [props.currentLabel] - Etichetta del campo password attuale (predefinita: tradotta).
+ * @param {string}   [props.submitLabel]  - Testo del pulsante (predefinito: tradotto).
  * @param {Function} props.onDone         - Chiamata dopo cambio e nuovo accesso riusciti.
  */
 export default function ChangePasswordForm({
   email,
-  currentLabel = 'Password attuale',
-  submitLabel = 'Aggiorna password',
+  currentLabel,
+  submitLabel,
   onDone,
 }) {
+  const t = useTranslations('auth.changePassword');
+  const tAuth = useTranslations('auth');
+  const tCommon = useTranslations('common');
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,7 +37,7 @@ export default function ChangePasswordForm({
     e.preventDefault();
     setError('');
     if (form.newPassword !== form.confirm) {
-      setError('Le nuove password non coincidono');
+      setError(t('mismatch'));
       return;
     }
 
@@ -46,7 +50,7 @@ export default function ChangePasswordForm({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Errore durante l\'aggiornamento');
+        setError(data.error || t('updateError'));
         setLoading(false);
         return;
       }
@@ -63,7 +67,7 @@ export default function ChangePasswordForm({
       setLoading(false);
       onDone();
     } catch {
-      setError('Errore di rete. Riprova.');
+      setError(tCommon('networkError'));
       setLoading(false);
     }
   };
@@ -73,22 +77,22 @@ export default function ChangePasswordForm({
       {error && <div className="alert alert-error py-2 text-sm"><span>{error}</span></div>}
 
       <label className="form-control">
-        <div className="label"><span className="label-text">{currentLabel}</span></div>
+        <div className="label"><span className="label-text">{currentLabel ?? t('current')}</span></div>
         <input
           type="password" className="input input-bordered w-full" required autoComplete="current-password"
           value={form.currentPassword} onChange={set('currentPassword')}
         />
       </label>
       <label className="form-control">
-        <div className="label"><span className="label-text">Nuova password</span></div>
+        <div className="label"><span className="label-text">{t('new')}</span></div>
         <input
           type="password" className="input input-bordered w-full" required minLength={8} autoComplete="new-password"
-          placeholder="Minimo 8 caratteri"
+          placeholder={tAuth('minLength')}
           value={form.newPassword} onChange={set('newPassword')}
         />
       </label>
       <label className="form-control">
-        <div className="label"><span className="label-text">Conferma nuova password</span></div>
+        <div className="label"><span className="label-text">{t('confirm')}</span></div>
         <input
           type="password" className="input input-bordered w-full" required autoComplete="new-password"
           value={form.confirm} onChange={set('confirm')}
@@ -96,7 +100,7 @@ export default function ChangePasswordForm({
       </label>
 
       <button type="submit" className="btn btn-primary" disabled={loading}>
-        {loading ? <span className="loading loading-spinner loading-sm" /> : submitLabel}
+        {loading ? <span className="loading loading-spinner loading-sm" /> : (submitLabel ?? t('submit'))}
       </button>
     </form>
   );
