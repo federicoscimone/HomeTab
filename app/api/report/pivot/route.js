@@ -70,6 +70,13 @@ export async function GET(req) {
   const catMap = {};
   for (const c of categories) catMap[c._id.toString()] = c;
 
+  // Media dei mesi trascorsi: numeratore e denominatore sugli stessi mesi. Prima il totale
+  // includeva i primi giorni del mese in corso ma si divideva solo per i mesi chiusi, e l'affitto
+  // di ottobre, pagato il primo del mese, gonfiava la media dell'11%.
+  const elapsedAvg = (byMonth) => (elapsedMonths > 0
+    ? months.filter(m => m <= elapsedMonths).reduce((s, m) => s + (byMonth[m] || 0), 0) / elapsedMonths
+    : null);
+
   const rows = Object.entries(matrix)
     .map(([catId, data]) => ({
       categoryId:   catId,
@@ -78,7 +85,7 @@ export async function GET(req) {
       monthly:      data.monthly,
       total:        data.total,
       avg:          data.total / 12,
-      avgElapsed:   elapsedMonths > 0 ? data.total / elapsedMonths : 0,
+      avgElapsed:   elapsedAvg(data.monthly),
     }))
     .sort((a, b) => b.total - a.total);
 
@@ -94,5 +101,6 @@ export async function GET(req) {
     months,
     isCurrentYear,
     elapsedMonths,
+    grandAvgElapsed: elapsedAvg(monthTotals),
   });
 }

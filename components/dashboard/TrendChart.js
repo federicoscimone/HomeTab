@@ -12,7 +12,7 @@ import { useFormat } from '@/lib/hooks/useFormat';
 
 /**
  * @typedef {Object} TrendDataPoint
- * @property {string} label   - Month label (e.g. "Mar 2025").
+ * @property {string} month   - Month as YYYY-MM.
  * @property {number} expense - Total expenses for the month.
  * @property {number} income  - Total income for the month.
  */
@@ -23,11 +23,11 @@ import { useFormat } from '@/lib/hooks/useFormat';
  * @param {object} props - Recharts tooltip props.
  */
 const CustomTooltip = ({ active, payload, label }) => {
-  const { fmt } = useFormat();
+  const { fmt, fmtMonth } = useFormat();
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-base-100 border border-base-200 rounded-lg shadow px-3 py-2 text-sm">
-      <p className="font-medium mb-1">{label}</p>
+      <p className="font-medium mb-1">{fmtMonth(label)}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color }}>{p.name}: {fmt(p.value)}</p>
       ))}
@@ -43,7 +43,7 @@ const CustomTooltip = ({ active, payload, label }) => {
  */
 export default function TrendChart({ data }) {
   const t = useTranslations('common');
-  const { fmtAxis } = useFormat();
+  const { fmtAxis, fmtMonth } = useFormat();
   if (!data?.length) {
     return (
       <div className="flex items-center justify-center h-48 text-base-content/30 text-sm">
@@ -66,7 +66,7 @@ export default function TrendChart({ data }) {
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-        <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+        <XAxis dataKey="month" tickFormatter={m => fmtMonth(m, true)} tick={{ fontSize: 11 }} />
         <YAxis tickFormatter={fmtAxis} tick={{ fontSize: 11 }} width={50} />
         <Tooltip content={<CustomTooltip />} />
         {/* Ordine per dataKey, uguale in ogni lingua (quello predefinito è alfabetico sull'etichetta). */}

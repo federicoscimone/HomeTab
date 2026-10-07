@@ -21,7 +21,7 @@ import { useFormat } from '@/lib/hooks/useFormat';
  */
 async function exportExcel(data, year, type, labels) {
   const XLSX = (await import('xlsx')).default;
-  const showElapsedAvg = Boolean(data?.isCurrentYear);
+  const showElapsedAvg = Boolean(data.isCurrentYear && data.elapsedMonths > 0);
   const header = [
     labels.category,
     ...labels.months,
@@ -41,9 +41,7 @@ async function exportExcel(data, year, type, labels) {
     ...Array.from({ length: 12 }, (_, i) => data.monthTotals[i + 1] || 0),
     data.grandTotal,
     data.grandTotal / 12,
-    ...(showElapsedAvg
-      ? [data.elapsedMonths > 0 ? data.grandTotal / data.elapsedMonths : 0]
-      : []),
+    ...(showElapsedAvg ? [data.grandAvgElapsed] : []),
   ];
   const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totRow]);
   const wb = XLSX.utils.book_new();
@@ -80,7 +78,8 @@ export default function PivotPage() {
     );
   }, [data, year, type, t, tCommon, monthsShort]);
 
-  const showElapsedAvg = Boolean(data?.isCurrentYear);
+  // A gennaio nessun mese è ancora chiuso: la colonna "Media/0m" non avrebbe senso.
+  const showElapsedAvg = Boolean(data?.isCurrentYear && data.elapsedMonths > 0);
   const elapsedAvgLabel = showElapsedAvg ? t('avgElapsed', { months: data.elapsedMonths }) : '';
 
   return (
@@ -192,9 +191,7 @@ export default function PivotPage() {
                   <td className="text-right">{fmt(data.grandTotal)}</td>
                   <td className="text-right text-base-content/60">{fmt(data.grandTotal / 12)}</td>
                   {showElapsedAvg && (
-                    <td className="text-right text-base-content/60">
-                      {fmt(data.elapsedMonths > 0 ? data.grandTotal / data.elapsedMonths : 0)}
-                    </td>
+                    <td className="text-right text-base-content/60">{fmt(data.grandAvgElapsed)}</td>
                   )}
                 </tr>
               </tfoot>

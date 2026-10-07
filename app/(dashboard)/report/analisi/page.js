@@ -61,7 +61,7 @@ export default function AnalisiPage() {
   const t = useTranslations('reports.analysis');
   const tCommon = useTranslations('common');
   const tGroups = useTranslations('paymentGroups');
-  const { fmt, fmtFull, fmtPct, fmtDate, deltaClass } = useFormat();
+  const { fmt, fmtFull, fmtPct, fmtDate, deltaClass, monthsShort } = useFormat();
 
   // Con una delle due date vuote non si carica nulla; «Analizza» ripete la richiesta corrente.
   const query = new URLSearchParams({ from, to, type });
@@ -84,6 +84,10 @@ export default function AnalisiPage() {
   }, [data, from, to, type, t, tCommon]);
 
   const proj = data?.projection;
+  // Mesi su cui è calcolata la media: "Gen–Set", o solo "Gen" a febbraio.
+  const closedRange = proj?.completeMonths > 1
+    ? `${monthsShort[0]}–${monthsShort[proj.completeMonths - 1]}`
+    : monthsShort[0];
 
   /** Il "+" solo sopra lo zero: a zero il formattatore restituisce già "—" o "0 €". */
   const signed = (value, format) => `${value > 0 ? '+' : ''}${format(value)}`;
@@ -203,31 +207,37 @@ export default function AnalisiPage() {
             <div className="card bg-base-100 border border-base-200 shadow-sm">
               <div className="card-body p-4">
                 <h3 className="text-sm font-semibold text-base-content/60 mb-3">
-                  {t('projectionTitle', { year: String(new Date().getFullYear()) })}
+                  {t('projectionTitle', { year: proj.today.slice(0, 4) })}
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                  {[
-                    { label: t('spentSoFar'),        val: fmt(proj.yearTotal),   sub: t('monthsCount', { count: proj.monthsElapsed }) },
-                    { label: tCommon('avgPerMonth'), val: fmt(proj.avgPerMonth), sub: '' },
-                    { label: t('yearProjection'),    val: fmt(proj.projection),  sub: t('linear'), primary: true },
-                    { label: t('remainingEstimate'), val: fmt(proj.remaining),   sub: t('monthsLeft', { count: proj.monthsRemaining }) },
-                  ].map(s => (
-                    <div key={s.label}
-                      className={`rounded-lg p-3 ${s.primary ? 'bg-primary/10 border border-primary/20' : 'bg-base-200'}`}>
-                      <p className="text-xs text-base-content/50 mb-1">{s.label}</p>
-                      <p className={`text-lg font-bold ${s.primary ? 'text-primary' : ''}`}>{s.val}</p>
-                      {s.sub && <p className="text-xs text-base-content/40">{s.sub}</p>}
+                {proj.projection == null ? (
+                  <p className="text-sm text-base-content/50">{t('projectionLater')}</p>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                      {[
+                        { label: t('spentSoFar'),        val: fmt(proj.yearTotal),   sub: t('untilDate', { date: fmtDate(proj.today) }) },
+                        { label: tCommon('avgPerMonth'), val: fmt(proj.avgPerMonth), sub: t('completeMonths', { range: closedRange }) },
+                        { label: t('yearProjection'),    val: fmt(proj.projection),  sub: t('projectionHow'), primary: true },
+                        { label: t('remainingEstimate'), val: fmt(proj.remaining),   sub: t('daysLeft', { count: proj.daysLeft }) },
+                      ].map(s => (
+                        <div key={s.label}
+                          className={`rounded-lg p-3 ${s.primary ? 'bg-primary/10 border border-primary/20' : 'bg-base-200'}`}>
+                          <p className="text-xs text-base-content/50 mb-1">{s.label}</p>
+                          <p className={`text-lg font-bold ${s.primary ? 'text-primary' : ''}`}>{s.val}</p>
+                          {s.sub && <p className="text-xs text-base-content/40">{s.sub}</p>}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs text-base-content/50 mb-1">
-                    <span>{t('progress', { pct: Math.round((proj.monthsElapsed / 12) * 100) })}</span>
-                    <span>{`${fmt(proj.yearTotal)} / ${fmt(proj.projection)}`}</span>
-                  </div>
-                  <progress className="progress progress-primary w-full"
-                    value={proj.yearTotal} max={proj.projection} />
-                </div>
+                    <div>
+                      <div className="flex justify-between text-xs text-base-content/50 mb-1">
+                        <span>{t('progress', { pct: proj.projection > 0 ? Math.round((proj.yearTotal / proj.projection) * 100) : 0 })}</span>
+                        <span>{`${fmt(proj.yearTotal)} / ${fmt(proj.projection)}`}</span>
+                      </div>
+                      <progress className="progress progress-primary w-full"
+                        value={proj.yearTotal} max={proj.projection} />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}

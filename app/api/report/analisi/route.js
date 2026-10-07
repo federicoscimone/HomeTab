@@ -13,6 +13,8 @@
 
 import { NextResponse } from 'next/server';
 import { serverTranslator } from '@/lib/i18n/server';
+import { sameDayPreviousYear, todayString } from '@/lib/utils/comparePeriods';
+import { projectYear } from '@/lib/utils/yearProjection';
 import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
@@ -35,13 +37,10 @@ export async function GET(req) {
     return NextResponse.json({ error: (await serverTranslator('errors'))('dateRangeRequired') }, { status: 400 });
   }
 
-  // Stesso periodo anno precedente
-  const fromDate = new Date(from);
-  const toDate   = new Date(to);
-  const prevFrom = new Date(fromDate); prevFrom.setFullYear(prevFrom.getFullYear() - 1);
-  const prevTo   = new Date(toDate);   prevTo  .setFullYear(prevTo  .getFullYear() - 1);
-  const prevFromStr = prevFrom.toISOString().split('T')[0];
-  const prevToStr   = prevTo  .toISOString().split('T')[0];
+  // Stesso periodo anno precedente. Con setFullYear il 29 febbraio diventava il 1° marzo,
+  // allargando il periodo di confronto di un giorno.
+  const prevFromStr = sameDayPreviousYear(from);
+  const prevToStr   = sameDayPreviousYear(to);
 
   const baseFilter = { type, excludeFromAnalysis: { $ne: true } };
   if (paymentGroup) baseFilter.paymentGroup = paymentGroup;
@@ -69,17 +68,12 @@ export async function GET(req) {
     return { id, name: cur.name, color: cur.color, cur: cur.amount, prev: prev.amount, delta, pct };
   }).sort((a, b) => b.cur - a.cur);
 
-  // Proiezione fine anno (basata sulla media mensile del periodo selezionato)
-  const curYear   = new Date().getFullYear();
-  const curMonth  = new Date().getMonth() + 1;
-  const yearFrom  = `${curYear}-01-01`;
-  const yearTo    = `${curYear}-12-31`;
-  const yearExp   = await Movement.find({ ...baseFilter, date: { $gte: yearFrom, $lte: yearTo } }).lean();
-  const yearTotal = yearExp.reduce((s,e) => s + e.amount, 0);
-  const monthsElapsed = curMonth;
-  const avgPerMonth   = monthsElapsed > 0 ? yearTotal / monthsElapsed : 0;
-  const projection    = avgPerMonth * 12;
-  const remaining     = projection - yearTotal;
+  // Proiezione a fine anno dell'anno in corso, indipendente dal periodo selezionato: speso
+  // finora più la media dei mesi chiusi per i giorni che mancano (vedi lib/utils/yearProjection).
+  const today   = todayString();
+  const yearExp = await Movement.find({ ...baseFilter, date: { $gte: `${today.slice(0, 4)}-01-01`, $lte: today } })
+    .select('date amount').lean();
+  const projection = { ...projectYear(yearExp, today), today };
 
   // Andamento per settimana nel range selezionato
   const weeklyMap = {};
@@ -101,10 +95,7 @@ export async function GET(req) {
     deltaPct: totalPrev > 0 ? ((totalCur - totalPrev) / totalPrev) * 100 : null,
     byCategory,
     weekly,
-    projection: {
-      yearTotal, avgPerMonth, projection, remaining,
-      monthsElapsed, monthsRemaining: 12 - monthsElapsed,
-    },
+    projection,
   });
 }
 

@@ -13,6 +13,7 @@
 
 import { NextResponse } from 'next/server';
 import { serverTranslator } from '@/lib/i18n/server';
+import { todayString } from '@/lib/utils/comparePeriods';
 import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
@@ -42,7 +43,15 @@ export async function GET(req) {
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear  = month === 1 ? year - 1 : year;
   const prevFrom  = `${prevYear}-${String(prevMonth).padStart(2,'0')}-01`;
-  const prevTo    = `${prevYear}-${String(prevMonth).padStart(2,'0')}-31`;
+
+  // Mese in corso: il confronto è con gli stessi giorni del mese prima. Il 7 ottobre una settimana
+  // di spese contro settembre intero dava sempre un calo (-52%), qualunque cosa fosse successo.
+  // Il giorno si ferma alla fine del mese precedente: il 31 marzo si confronta con tutto febbraio.
+  const today = todayString();
+  const inProgress = today >= curFrom && today <= curTo;
+  const daysInPrevMonth = new Date(Date.UTC(prevYear, prevMonth, 0)).getUTCDate();
+  const prevToDay = inProgress ? Math.min(Number(today.slice(8)), daysInPrevMonth) : null;
+  const prevTo    = `${prevYear}-${String(prevMonth).padStart(2,'0')}-${prevToDay ? String(prevToDay).padStart(2,'0') : '31'}`;
 
   const excludeFilter = { excludeFromAnalysis: { $ne: true } };
   const paymentGroupFilter = paymentGroup === 'all' ? {} : { paymentGroup };
@@ -133,27 +142,31 @@ export async function GET(req) {
     .filter(e => e.type !== 'income' && e.paymentGroup === 'alternative')
     .reduce((s, e) => s + e.amount, 0);
 
-  // Ultimi 6 mesi — andamento uscite/entrate
-  const trend = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(year, month - 1 - i, 1);
-    const m = d.getMonth() + 1;
-    const y = d.getFullYear();
-    const from = `${y}-${String(m).padStart(2,'0')}-01`;
-    const to   = `${y}-${String(m).padStart(2,'0')}-31`;
-    const docs = await Movement.find({ date: { $gte: from, $lte: to }, ...excludeFilter, ...paymentGroupFilter }).lean();
-    trend.push({
-      label: `${String(m).padStart(2,'0')}/${y}`,
-      expense: docs.filter(e => e.type !== 'income').reduce((s,e) => s + e.amount, 0),
-      income:  docs.filter(e => e.type === 'income').reduce((s,e) => s + e.amount, 0),
-    });
+  // Ultimi 6 mesi — andamento uscite/entrate. Una sola query per tutto l'intervallo invece di
+  // una per mese: sei andate e ritorni verso Atlas pesavano sul tempo di risposta.
+  // Il mese esce come YYYY-MM: il nome lo scrive il browser, nella lingua dell'interfaccia.
+  const trendMonths = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(Date.UTC(year, month - 6 + i, 1));
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2,'0')}`;
+  });
+  const trendDocs = await Movement.find({
+    date: { $gte: `${trendMonths[0]}-01`, $lte: `${trendMonths[5]}-31` }, ...excludeFilter, ...paymentGroupFilter,
+  }).select('date type amount').lean();
+  const trend = trendMonths.map(m => ({ month: m, expense: 0, income: 0 }));
+  const trendIndex = new Map(trendMonths.map((m, i) => [m, i]));
+  for (const e of trendDocs) {
+    const point = trend[trendIndex.get(e.date.slice(0, 7))];
+    if (!point) continue;
+    if (e.type === 'income') point.income += e.amount;
+    else point.expense += e.amount;
   }
 
   return NextResponse.json({
     month, year,
     paymentGroup,
     current:  { totalExpense: curTotalExpense,  totalIncome: curTotalIncome,  count: curExpenses.length },
-    previous: { totalExpense: prevTotalExpense, totalIncome: prevTotalIncome },
+    // toDay: ultimo giorno del mese precedente usato nel confronto, null se è il mese intero.
+    previous: { totalExpense: prevTotalExpense, totalIncome: prevTotalIncome, toDay: prevToDay },
     byCategory,
     byIncomeCategory,
     byMethod,
