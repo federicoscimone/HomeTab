@@ -7,13 +7,15 @@
 
 import { getRequestConfig } from 'next-intl/server';
 import { cookies, headers } from 'next/headers';
-import { LOCALE_COOKIE, resolveLocale } from '@/lib/i18n/locale';
+import { LOCALE_COOKIE, isLocale, resolveLocale } from '@/lib/i18n/locale';
 
-export default getRequestConfig(async () => {
-  const locale = resolveLocale(
-    (await cookies()).get(LOCALE_COOKIE)?.value,
-    (await headers()).get('accept-language'),
-  );
+export default getRequestConfig(async ({ locale: explicitLocale }) => {
+  // Una lingua esplicita (getTranslations({ locale })) vince su quella della richiesta: serve alle
+  // email, che partono nella lingua salvata sull'utente. Senza questo controllo i messaggi
+  // venivano caricati comunque nella lingua del browser.
+  const locale = isLocale(explicitLocale)
+    ? explicitLocale
+    : resolveLocale((await cookies()).get(LOCALE_COOKIE)?.value, (await headers()).get('accept-language'));
 
   return {
     locale,
