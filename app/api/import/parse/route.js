@@ -6,6 +6,7 @@ import ImportTemplate from '@/lib/models/ImportTemplate';
 import KeywordMapping from '@/lib/models/KeywordMapping';
 import { parseExcelBuffer, parsePasteText } from '@/lib/utils/importParser';
 import { autoCategorize } from '@/lib/utils/autoCategorize';
+import { importMaxBytes } from '@/lib/demoAccounts';
 
 export async function POST(req) {
   const { session, denied } = await requirePermission('movements:create');
@@ -31,6 +32,17 @@ export async function POST(req) {
     .populate('subCategory1Id', 'name')
     .sort({ priority: -1 })
     .lean();
+
+  // Il file intero passa in memoria per il parsing: senza limite un file enorme bloccherebbe la
+  // richiesta, e nella demo pubblica chiunque può caricarne uno.
+  const maxBytes = importMaxBytes();
+  const inputBytes = file && file.size > 0 ? file.size : Buffer.byteLength(pasteText || '', 'utf8');
+  if (inputBytes > maxBytes) {
+    return NextResponse.json(
+      { error: `File troppo grande: il limite è ${Math.round(maxBytes / 1024 / 1024)} MB` },
+      { status: 413 },
+    );
+  }
 
   let rows = [];
 

@@ -60,6 +60,7 @@ services:
       GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-}
       GOOGLE_DRIVE_TOKEN_SECRET: ${GOOGLE_DRIVE_TOKEN_SECRET:-}
       BACKUP_CRON_SECRET: ${BACKUP_CRON_SECRET:-}
+      CRON_SECRET: ${CRON_SECRET:-}
     # Porta sull'host. Dietro un reverse proxy conviene legarla a 127.0.0.1 (APP_BIND), così
     # l'app non è raggiungibile in rete aggirando il proxy.
     ports:

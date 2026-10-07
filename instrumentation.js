@@ -4,7 +4,11 @@
  *
  * Il seed della demo stava nel root layout: in DEMO_MODE ogni pagina faceva una query in più, e
  * due prime richieste parallele potevano trovare entrambe il database vuoto e ripopolarlo due
- * volte. Qui gira una sola volta, all'avvio.
+ * volte. Qui gira all'avvio, con un lucchetto su Mongo perché su Vercel più istanze possono
+ * partire insieme (lib/demoLock.js).
+ *
+ * Il seed parte solo su un database senza utenti. Prima bastava che mancasse l'account demo:
+ * un'installazione con dati veri avviata per errore con DEMO_MODE=true sarebbe stata svuotata.
  */
 
 export async function register() {
@@ -17,13 +21,16 @@ export async function register() {
   const { default: connectDB } = await import('./lib/mongodb.js');
   const { default: User } = await import('./lib/models/User.js');
   const { default: seedDemoMode } = await import('./lib/seed-demo-mode.js');
-  const { DEMO_ACCOUNTS } = await import('./lib/demoAccounts.js');
+  const { withDemoLock } = await import('./lib/demoLock.js');
   const { default: logger } = await import('./lib/logger.js');
 
   try {
     await connectDB();
-    const seeded = await User.exists({ email: DEMO_ACCOUNTS[0].email });
-    if (!seeded) await seedDemoMode();
+    if (await User.exists({})) return;
+    await withDemoLock(async () => {
+      // Ricontrollo con il lucchetto preso: un'altra istanza può aver appena finito.
+      if (!(await User.exists({}))) await seedDemoMode();
+    });
   } catch (err) {
     // L'app deve partire comunque: senza dati demo le pagine funzionano, solo vuote.
     logger.error('Seed della demo all\'avvio non riuscito', { error: err.message });

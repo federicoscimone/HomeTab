@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
+import { isDemoMode } from '@/lib/demoAccounts';
 import User from '@/lib/models/User';
 import PasswordResetToken from '@/lib/models/PasswordResetToken';
 import { hashToken } from '@/lib/utils/tokens';
@@ -31,7 +32,7 @@ export async function GET(req) {
 // POST: applica la nuova password
 export async function POST(req) {
   try {
-    if (process.env.DEMO_MODE === 'true') {
+    if (isDemoMode()) {
       return NextResponse.json(
         { error: 'Reset password disabilitato in modalità demo' },
         { status: 403 }

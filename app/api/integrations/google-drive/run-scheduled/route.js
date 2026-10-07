@@ -3,16 +3,12 @@ import connectDB from '@/lib/mongodb';
 import GoogleDriveIntegration from '@/lib/models/GoogleDriveIntegration';
 import { runBackupForIntegration } from '@/lib/services/googleDriveBackup';
 import logger from '@/lib/logger';
+import { bearerToken, secretMatches } from '@/lib/utils/secrets';
 
 function isAuthorized(req) {
   const secret = process.env.BACKUP_CRON_SECRET;
-  if (!secret) return false;
-
-  const authHeader = req.headers.get('authorization');
-  const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  const headerSecret = req.headers.get('x-backup-cron-secret');
-
-  return bearer === secret || headerSecret === secret;
+  return secretMatches(bearerToken(req), secret)
+    || secretMatches(req.headers.get('x-backup-cron-secret'), secret);
 }
 
 export async function POST(req) {

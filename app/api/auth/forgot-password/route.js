@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
+import { isDemoMode } from '@/lib/demoAccounts';
 import User from '@/lib/models/User';
 import PasswordResetToken from '@/lib/models/PasswordResetToken';
 import { generateToken, hashToken, tokenExpiry } from '@/lib/utils/tokens';
@@ -7,7 +8,7 @@ import { sendPasswordResetEmail } from '@/lib/email';
 
 export async function POST(req) {
   try {
-    if (process.env.DEMO_MODE === 'true') {
+    if (isDemoMode()) {
       return NextResponse.json(
         { message: 'Se l\'email è registrata, riceverai un link per il reset.' }
       );
@@ -35,7 +36,8 @@ export async function POST(req) {
 
     await PasswordResetToken.create({ email: user.email, tokenHash, expiresAt });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    // Stessa base del resto dell'app (vedi lib/services/googleDrive.js): così basta NEXTAUTH_URL, anche su Vercel.
+    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
     await sendPasswordResetEmail({ to: user.email, name: user.name, resetUrl });

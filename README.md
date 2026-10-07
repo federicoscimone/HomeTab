@@ -57,6 +57,11 @@ are created in Settings or, when running from source, with `npm run seed` (a def
 keyword rules) and `node lib/seed-income.js` (income categories). Both skip a database that
 already has categories.
 
+## Deploying a public demo
+
+The demo can run for free on Vercel with a MongoDB Atlas M0 cluster, restored every night by a
+cron job: see [docs/vercel.md](docs/vercel.md).
+
 ## Local development
 
 Requirements: Node.js 22 and a MongoDB 7 instance.

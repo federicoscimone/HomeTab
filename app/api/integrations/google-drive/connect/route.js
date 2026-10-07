@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth/guard';
+import { demoBlocked } from '@/lib/demoGuard';
 import { buildGoogleDriveAuthUrl, getGoogleDriveConfig } from '@/lib/services/googleDrive';
 import { generateToken } from '@/lib/utils/tokens';
 
 export async function POST() {
   const { session, denied } = await requirePermission('settings:manage');
   if (denied) return denied;
+  const blocked = demoBlocked();
+  if (blocked) return blocked;
 
   try {
     getGoogleDriveConfig();
