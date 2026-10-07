@@ -116,7 +116,17 @@
     "emailRequired": "Email obbligatoria",
     "invalidResetLink": "Link non valido o scaduto",
     "demoResetDisabled": "Reset password disabilitato in modalità demo",
-    "dateRangeRequired": "Indica sia la data di inizio sia quella di fine"
+    "dateRangeRequired": "Indica sia la data di inizio sia quella di fine",
+    "invalidMovement": "Dati del movimento non validi",
+    "invalidAmount": "L'importo deve essere un numero maggiore di zero",
+    "invalidPaymentMethod": "Metodo di pagamento non valido",
+    "invalidDate": "Data non valida: serve il formato AAAA-MM-GG",
+    "invalidTime": "Ora non valida: serve il formato HH:mm",
+    "invalidType": "Il tipo deve essere uscita o entrata",
+    "textTooLong": "Un campo di testo supera la lunghezza massima",
+    "invalidPatch": "Da qui si può cambiare solo l'esclusione dalle analisi",
+    "movementNotFound": "Movimento non trovato",
+    "movementSaveFailed": "Salvataggio del movimento non riuscito"
   },
   "auth": {
     "email": "Email",
@@ -189,7 +199,8 @@
   "apiMessages": {
     "passwordUpdated": "Password aggiornata con successo",
     "adminCreated": "Admin creato",
-    "resetRequested": "Se l'email è registrata, riceverai un link per il reset."
+    "resetRequested": "Se l'email è registrata, riceverai un link per il reset.",
+    "movementDeleted": "Movimento eliminato"
   },
   "email": {
     "team": "— Team {app}",

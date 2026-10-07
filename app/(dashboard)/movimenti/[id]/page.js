@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import mongoose from 'mongoose';
 import Link from 'next/link';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
@@ -6,6 +7,8 @@ import MovementForm from '@/components/movimenti/MovementForm';
 
 export default async function ModificaSpesaPage({ params }) {
   const { id } = await params;
+  // Un id malformato farebbe fallire findById con un errore di cast: è semplicemente un 404.
+  if (!mongoose.isValidObjectId(id)) notFound();
   await connectDB();
 
   const expense = await Movement.findById(id).lean();

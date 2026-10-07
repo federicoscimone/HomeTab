@@ -116,7 +116,17 @@
     "emailRequired": "Email is required",
     "invalidResetLink": "Invalid or expired link",
     "demoResetDisabled": "Password reset is disabled in demo mode",
-    "dateRangeRequired": "Both a start and an end date are required"
+    "dateRangeRequired": "Both a start and an end date are required",
+    "invalidMovement": "Invalid transaction data",
+    "invalidAmount": "The amount must be a number greater than zero",
+    "invalidPaymentMethod": "Invalid payment method",
+    "invalidDate": "Invalid date: use the YYYY-MM-DD format",
+    "invalidTime": "Invalid time: use the HH:mm format",
+    "invalidType": "The type must be expense or income",
+    "textTooLong": "A text field is longer than allowed",
+    "invalidPatch": "Only the analysis exclusion can be changed here",
+    "movementNotFound": "Transaction not found",
+    "movementSaveFailed": "Could not save the transaction"
   },
   "auth": {
     "email": "Email",
@@ -189,7 +199,8 @@
   "apiMessages": {
     "passwordUpdated": "Password updated",
     "adminCreated": "Admin created",
-    "resetRequested": "If the email is registered, you'll receive a reset link."
+    "resetRequested": "If the email is registered, you'll receive a reset link.",
+    "movementDeleted": "Transaction deleted"
   },
   "email": {
     "team": "— The {app} team",

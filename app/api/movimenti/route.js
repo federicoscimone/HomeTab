@@ -8,7 +8,8 @@ import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
-import { getPaymentGroup } from '@/lib/utils/payments';
+import { movementInput } from '@/lib/utils/movementInput';
+import { serverTranslator } from '@/lib/i18n/server';
 import logger, { logApiError } from '@/lib/logger';
 import { writeAudit } from '@/lib/utils/audit';
 import { buildMovementFilter } from '@/lib/utils/movementFilter';
@@ -50,17 +51,12 @@ export async function POST(req) {
 
   await connectDB();
 
-  const body = await req.json();
-  body.paymentGroup = getPaymentGroup(body.paymentMethod);
-  if (!body.type) body.type = 'expense';
-  if (!body.subCategory1Id) body.subCategory1Id = null;
-  if (!body.subCategory2Id) body.subCategory2Id = null;
-  if (!body.categoryId)     body.categoryId = null;
-  // Solo un'uscita tradizionale può pagare un obiettivo: è l'unica che entra nel risparmio.
-  if (!body.goalId || body.type !== 'expense' || body.paymentGroup !== 'traditional') body.goalId = null;
+  const tErrors = await serverTranslator('errors');
+  const { data, error } = movementInput(await req.json().catch(() => null));
+  if (error) return NextResponse.json({ error: tErrors(error) }, { status: 400 });
 
   try {
-    const expense = await Movement.create(body);
+    const expense = await Movement.create(data);
     logger.info('POST /api/movimenti', { id: expense._id, type: expense.type, userId: session.user?.id });
     await writeAudit(session, req, {
       action: 'CREATE',
@@ -72,6 +68,6 @@ export async function POST(req) {
     return NextResponse.json(expense, { status: 201 });
   } catch (err) {
     logApiError('POST /api/movimenti', err, { userId: session.user?.id });
-    return NextResponse.json({ error: 'Errore salvataggio movimento' }, { status: 500 });
+    return NextResponse.json({ error: tErrors('movementSaveFailed') }, { status: 500 });
   }
 }
