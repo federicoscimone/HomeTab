@@ -8,14 +8,17 @@ import { useState, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import GoalChart from '@/components/obiettivi/GoalChart';
-import GoalStateBadge, { GOAL_STATES } from '@/components/obiettivi/GoalStateBadge';
+import { useTranslations } from 'next-intl';
+import GoalStateBadge, { GOAL_STATE_CLASSES } from '@/components/obiettivi/GoalStateBadge';
 import GoalFormModal from '@/components/obiettivi/GoalFormModal';
-import { getPaymentMethod } from '@/lib/utils/payments';
-import { fmt, fmtFull, fmtMonth } from '@/lib/utils/format';
+import { useFormat } from '@/lib/hooks/useFormat';
 import useCan from '@/lib/auth/useCan';
 
 /** @param {string} d - YYYY-MM-DD */
 const formatDate = (d) => d.split('-').reverse().join('/');
+
+/** Grassetto per i tag <b> dei messaggi. */
+const b = (chunks) => <strong>{chunks}</strong>;
 
 /**
  * Conferma di chiusura: "concludi" restituisce l'avanzo al libero, "annulla" permette di
@@ -24,44 +27,44 @@ const formatDate = (d) => d.split('-').reverse().join('/');
 function CloseModal({ mode, goal, otherGoals, onConfirm, onClose }) {
   const [transferTo, setTransferTo] = useState('');
   const [saving, setSaving] = useState(false);
+  const t = useTranslations('goalDetail');
+  const { fmtFull } = useFormat();
   const isComplete = mode === 'complete';
 
   return (
     <div className="modal modal-open">
       <div className="modal-box w-11/12 max-w-md">
-        <h3 className="font-bold text-lg">{isComplete ? 'Concludi obiettivo' : 'Annulla obiettivo'}</h3>
+        <h3 className="font-bold text-lg">{isComplete ? t('completeTitle') : t('cancelTitle')}</h3>
         <div className="py-4 text-sm space-y-2">
           {isComplete ? (
             <p>
-              Segna <strong>{goal.name}</strong> come acquistato. Smette di ricevere quote e il disponibile
-              ({fmtFull(goal.available)}) torna nel risparmio libero
-              {goal.available < 0 ? ': essendo negativo, la spesa eccedente viene coperta dal libero' : ''}.
+              {t.rich(goal.available < 0 ? 'completeTextNegative' : 'completeText', {
+                name: goal.name, available: fmtFull(goal.available), b,
+              })}
             </p>
           ) : (
             <>
-              <p>
-                <strong>{goal.name}</strong> smette di ricevere quote. Il disponibile ({fmtFull(goal.available)}) va:
-              </p>
+              <p>{t.rich('cancelText', { name: goal.name, available: fmtFull(goal.available), b })}</p>
               <select
                 className="select select-bordered select-sm w-full"
                 value={transferTo} onChange={(e) => setTransferTo(e.target.value)}
-                aria-label="Destinazione del disponibile"
+                aria-label={t('destination')}
               >
-                <option value="">nel risparmio libero</option>
-                {otherGoals.map((g) => <option key={g.id} value={g.id}>a «{g.name}»</option>)}
+                <option value="">{t('toFreeOption')}</option>
+                {otherGoals.map((g) => <option key={g.id} value={g.id}>{t('toGoalOption', { name: g.name })}</option>)}
               </select>
             </>
           )}
-          <p className="text-xs text-base-content/50">Potrai riaprirlo in seguito.</p>
+          <p className="text-xs text-base-content/50">{t('reopenLater')}</p>
         </div>
         <div className="modal-action">
-          <button className="btn btn-ghost btn-sm" onClick={onClose}>Indietro</button>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>{t('goBack')}</button>
           <button
             className={`btn btn-sm ${isComplete ? 'btn-primary' : 'btn-warning'}`}
             disabled={saving}
             onClick={async () => { setSaving(true); await onConfirm({ action: mode, transferTo: transferTo || null }); }}
           >
-            {isComplete ? 'Concludi' : 'Annulla obiettivo'}
+            {isComplete ? t('confirmComplete') : t('confirmCancel')}
           </button>
         </div>
       </div>
@@ -78,6 +81,13 @@ export default function ObiettivoPage({ params }) {
   const [actionError, setActionError] = useState('');
   const [modal, setModal] = useState(null); // 'edit' | 'complete' | 'cancel' | 'delete'
   const canManage = useCan()('goals:manage');
+  const t = useTranslations('goalDetail');
+  const tGoals = useTranslations('goals');
+  const tStates = useTranslations('goalStates');
+  const tMov = useTranslations('movements');
+  const tPay = useTranslations('payments');
+  const tCommon = useTranslations('common');
+  const { fmt, fmtFull, fmtMonth } = useFormat();
 
   const load = useCallback(() => {
     return fetch(`/api/obiettivi/${id}`)
@@ -98,9 +108,9 @@ export default function ObiettivoPage({ params }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    const d = await res.json();
+    const d = await res.json().catch(() => ({}));
     setModal(null);
-    if (!res.ok) setActionError(d.error || 'Operazione non riuscita');
+    if (!res.ok) setActionError(d.error || t('actionFailed'));
     await load();
   };
 
@@ -111,15 +121,15 @@ export default function ObiettivoPage({ params }) {
       router.push('/obiettivi');
       return;
     }
-    const d = await res.json();
+    const d = await res.json().catch(() => ({}));
     setModal(null);
-    setActionError(d.error || 'Eliminazione non riuscita');
+    setActionError(d.error || t('deleteFailed'));
   };
 
   if (error) {
     return (
       <div>
-        <Link href="/obiettivi" className="btn btn-ghost btn-sm mb-4">← Obiettivi</Link>
+        <Link href="/obiettivi" className="btn btn-ghost btn-sm mb-4">{t('backShort')}</Link>
         <div className="alert alert-warning"><span>{error}</span></div>
       </div>
     );
@@ -138,28 +148,37 @@ export default function ObiettivoPage({ params }) {
   const canDelete = goal.createdMonth === currentMonth && linkedMovements.length === 0;
 
   const kpis = [
-    { label: 'Accantonato', val: fmtFull(goal.saved), sub: `${Math.round(goal.progress * 100)}% di ${fmt(goal.targetAmount)}`, primary: true },
-    { label: 'Disponibile', val: fmtFull(goal.available), sub: goal.spent > 0 ? `già spesi ${fmt(goal.spent)}` : 'nessuna spesa collegata' },
+    {
+      label: t('kpi.saved'), val: fmtFull(goal.saved), primary: true,
+      sub: t('kpi.savedSub', { pct: Math.round(goal.progress * 100), target: fmt(goal.targetAmount) }),
+    },
+    {
+      label: t('kpi.available'), val: fmtFull(goal.available),
+      sub: goal.spent > 0 ? t('kpi.spentSub', { amount: fmt(goal.spent) }) : t('kpi.noLinked'),
+    },
   ];
   if (isActive && p) {
     kpis.push(
       {
-        label: 'Quota attuale',
+        label: tGoals('currentShare'),
         val: goal.pct != null ? `${goal.pct}%` : '—',
-        sub: p.expectedQuota != null ? `≈ ${fmt(p.expectedQuota)}/mese` : 'nessun mese chiuso',
+        sub: p.expectedQuota != null ? t('kpi.shareSub', { amount: fmt(p.expectedQuota) }) : tGoals('kpi.noClosedMonth'),
       },
       goal.state === 'reached'
-        ? { label: 'Raggiunto', val: fmtMonth(goal.reachedMonth), sub: 'non riceve più quote' }
+        ? { label: t('kpi.reached'), val: fmtMonth(goal.reachedMonth), sub: t('kpi.noMoreShares') }
         : {
-          label: 'Servono',
-          val: p.requiredMonthly != null ? `${fmt(p.requiredMonthly)}/mese` : '—',
-          sub: `per ${p.monthsLeft} mesi, fino a ${fmtMonth(goal.deadline)}`,
+          label: tGoals('needed'),
+          val: p.requiredMonthly != null ? tGoals('perMonth', { amount: fmt(p.requiredMonthly) }) : '—',
+          sub: t('kpi.neededSub', { count: p.monthsLeft, deadline: fmtMonth(goal.deadline) }),
         },
     );
   } else {
     kpis.push(
-      { label: 'Chiuso a', val: fmtMonth(goal.closedMonth), sub: GOAL_STATES[goal.state]?.label },
-      { label: 'Restituito', val: fmtFull(goal.returned), sub: goal.transferTo ? 'a un altro obiettivo' : 'al risparmio libero' },
+      {
+        label: t('kpi.closedAt'), val: fmtMonth(goal.closedMonth),
+        sub: Object.hasOwn(GOAL_STATE_CLASSES, goal.state) ? tStates(`${goal.state}.label`) : '',
+      },
+      { label: t('kpi.returned'), val: fmtFull(goal.returned), sub: goal.transferTo ? t('kpi.toOtherGoal') : t('kpi.toFree') },
     );
   }
 
@@ -168,7 +187,7 @@ export default function ObiettivoPage({ params }) {
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between flex-wrap gap-3 mb-4 sm:mb-6">
         <div className="flex items-start gap-2 min-w-0">
-          <Link href="/obiettivi" className="btn btn-ghost btn-sm" aria-label="Torna agli obiettivi">
+          <Link href="/obiettivi" className="btn btn-ghost btn-sm" aria-label={t('back')}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
@@ -179,8 +198,10 @@ export default function ObiettivoPage({ params }) {
               <GoalStateBadge state={goal.state} size="md" />
             </div>
             <p className="text-sm text-base-content/50">
-              {fmt(goal.targetAmount)} entro {fmtMonth(goal.deadline)} · creato a {fmtMonth(goal.createdMonth)}
-              {goal.initialAmount > 0 && ` con ${fmt(goal.initialAmount)} già da parte`}
+              {t(goal.initialAmount > 0 ? 'headerInitial' : 'header', {
+                target: fmt(goal.targetAmount), deadline: fmtMonth(goal.deadline),
+                created: fmtMonth(goal.createdMonth), initial: fmt(goal.initialAmount),
+              })}
             </p>
           </div>
         </div>
@@ -188,15 +209,15 @@ export default function ObiettivoPage({ params }) {
         <div className="flex gap-2 flex-wrap">
           {isActive ? (
             <>
-              <button className="btn btn-outline btn-sm" onClick={() => setModal('edit')}>Modifica</button>
-              <button className="btn btn-primary btn-sm" onClick={() => setModal('complete')}>Acquistato</button>
-              <button className="btn btn-ghost btn-sm" onClick={() => setModal('cancel')}>Annulla</button>
+              <button className="btn btn-outline btn-sm" onClick={() => setModal('edit')}>{t('edit')}</button>
+              <button className="btn btn-primary btn-sm" onClick={() => setModal('complete')}>{t('purchased')}</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setModal('cancel')}>{t('cancel')}</button>
             </>
           ) : (
-            <button className="btn btn-outline btn-sm" onClick={() => patch({ action: 'reopen' })}>Riapri</button>
+            <button className="btn btn-outline btn-sm" onClick={() => patch({ action: 'reopen' })}>{t('reopen')}</button>
           )}
           {canDelete && (
-            <button className="btn btn-ghost btn-sm text-error" onClick={() => setModal('delete')}>Elimina</button>
+            <button className="btn btn-ghost btn-sm text-error" onClick={() => setModal('delete')}>{t('delete')}</button>
           )}
         </div>
         )}
@@ -221,16 +242,19 @@ export default function ObiettivoPage({ params }) {
         {isActive && p && goal.state !== 'reached' && (
           <div className={`alert text-sm ${goal.state === 'on_track' ? 'alert-success' : goal.state === 'unknown' ? '' : 'alert-warning'}`}>
             <span>
-              {goal.state === 'unknown' && 'Serve almeno un mese chiuso e una percentuale assegnata per stimare l\'andamento.'}
-              {goal.state === 'expired' && `La scadenza è passata: mancano ${fmt(p.remaining)}. Sposta la scadenza o concludi l'obiettivo.`}
+              {goal.state === 'unknown' && t('projection.unknown')}
+              {goal.state === 'expired' && t('projection.expired', { remaining: fmt(p.remaining) })}
               {(goal.state === 'on_track' || goal.state === 'behind') && (
                 <>
-                  Con il {goal.pct}% del risparmio medio ({fmt(avgSavings)}/mese, ultimi {avgMonths} mesi) arrivi a{' '}
-                  <strong>{fmt(p.projectedAtDeadline)}</strong> entro {fmtMonth(goal.deadline)}
+                  {t.rich('projection.base', {
+                    pct: goal.pct, avg: fmt(avgSavings), months: avgMonths,
+                    projected: fmt(p.projectedAtDeadline), deadline: fmtMonth(goal.deadline), b,
+                  })}
                   {goal.state === 'on_track'
-                    ? <>, raggiungendo l&apos;importo verso <strong>{fmtMonth(p.reachMonth)}</strong>.</>
-                    : <>: mancherebbero <strong>{fmt(goal.targetAmount - p.projectedAtDeadline)}</strong>
-                      {p.reachMonth ? <>. Al ritmo attuale ci arrivi verso <strong>{fmtMonth(p.reachMonth)}</strong>.</> : '.'}</>}
+                    ? t.rich('projection.onTrack', { reach: fmtMonth(p.reachMonth), b })
+                    : t.rich(p.reachMonth ? 'projection.behindReach' : 'projection.behind', {
+                      missing: fmt(goal.targetAmount - p.projectedAtDeadline), reach: fmtMonth(p.reachMonth), b,
+                    })}
                 </>
               )}
             </span>
@@ -239,10 +263,8 @@ export default function ObiettivoPage({ params }) {
 
         <div className="card bg-base-100 border border-base-200 shadow-sm">
           <div className="card-body p-4">
-            <h3 className="text-sm font-semibold text-base-content/60 mb-1">Andamento e proiezione</h3>
-            <p className="text-xs text-base-content/40 mb-2">
-              Linea piena: accantonato a fine mese. Tratteggio: proiezione con la quota attuale.
-            </p>
+            <h3 className="text-sm font-semibold text-base-content/60 mb-1">{t('chartTitle')}</h3>
+            <p className="text-xs text-base-content/40 mb-2">{t('chartLegend')}</p>
             <GoalChart goal={goal} currentMonth={currentMonth} />
           </div>
         </div>
@@ -251,18 +273,18 @@ export default function ObiettivoPage({ params }) {
           {/* ── Quote mensili ─────────────────────────────────────────── */}
           <div className="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
             <div className="card-body p-4">
-              <h3 className="text-sm font-semibold text-base-content/60 mb-2">Quote mensili</h3>
+              <h3 className="text-sm font-semibold text-base-content/60 mb-2">{t('monthlyTitle')}</h3>
               {goal.monthly.length === 0 ? (
-                <p className="text-sm text-base-content/40">Nessun mese ancora ripartito.</p>
+                <p className="text-sm text-base-content/40">{t('monthlyEmpty')}</p>
               ) : (
                 <div className="overflow-x-auto max-h-80">
                   <table className="table table-xs table-pin-rows">
                     <thead>
                       <tr>
-                        <th>Mese</th>
-                        <th className="text-right">Risparmio</th>
-                        <th className="text-right">%</th>
-                        <th className="text-right">Quota</th>
+                        <th>{tCommon('month')}</th>
+                        <th className="text-right">{t('columns.savings')}</th>
+                        <th className="text-right">{'%'}</th>
+                        <th className="text-right">{t('columns.share')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -270,7 +292,7 @@ export default function ObiettivoPage({ params }) {
                         <tr key={m.month} className="hover">
                           <td>{fmtMonth(m.month)}</td>
                           <td className={`text-right ${m.savings < 0 ? 'text-error' : ''}`}>{fmtFull(m.savings)}</td>
-                          <td className="text-right">{m.pct}%</td>
+                          <td className="text-right">{`${m.pct}%`}</td>
                           <td className={`text-right font-medium ${m.quota < 0 ? 'text-error' : ''}`}>{fmtFull(m.quota)}</td>
                         </tr>
                       ))}
@@ -284,21 +306,18 @@ export default function ObiettivoPage({ params }) {
           {/* ── Spese collegate ──────────────────────────────────────── */}
           <div className="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
             <div className="card-body p-4">
-              <h3 className="text-sm font-semibold text-base-content/60 mb-1">Spese collegate</h3>
-              <p className="text-xs text-base-content/40 mb-2">
-                Restano nei report, ma escono dal calcolo del risparmio e scalano il disponibile. Per collegarne una,
-                apri il movimento e scegli l&apos;obiettivo.
-              </p>
+              <h3 className="text-sm font-semibold text-base-content/60 mb-1">{t('linkedTitle')}</h3>
+              <p className="text-xs text-base-content/40 mb-2">{t('linkedHint')}</p>
               {linkedMovements.length === 0 ? (
-                <p className="text-sm text-base-content/40">Nessuna spesa collegata.</p>
+                <p className="text-sm text-base-content/40">{t('linkedEmpty')}</p>
               ) : (
                 <div className="overflow-x-auto max-h-80">
                   <table className="table table-xs table-pin-rows">
                     <thead>
                       <tr>
-                        <th>Data</th>
-                        <th>Descrizione</th>
-                        <th className="text-right">Importo</th>
+                        <th>{tMov('columns.date')}</th>
+                        <th>{t('columns.description')}</th>
+                        <th className="text-right">{t('columns.amount')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -309,7 +328,9 @@ export default function ObiettivoPage({ params }) {
                             <Link href={`/movimenti/${m._id}`} className="link link-hover">
                               {m.payee || m.description || '—'}
                             </Link>
-                            <span className="text-base-content/40"> · {getPaymentMethod(m.paymentMethod)?.label}</span>
+                            <span className="text-base-content/40">
+                              {` · ${tPay.has(m.paymentMethod) ? tPay(m.paymentMethod) : m.paymentMethod}`}
+                            </span>
                           </td>
                           <td className="text-right font-medium">{fmtFull(m.amount)}</td>
                         </tr>
@@ -340,14 +361,11 @@ export default function ObiettivoPage({ params }) {
       {modal === 'delete' && (
         <div className="modal modal-open">
           <div className="modal-box w-11/12 max-w-md">
-            <h3 className="font-bold text-lg">Elimina obiettivo</h3>
-            <p className="py-4 text-sm">
-              Eliminare <strong>{goal.name}</strong>? È possibile solo nel mese di creazione: da quando riceve la prima
-              quota ha una storia, e va annullato.
-            </p>
+            <h3 className="font-bold text-lg">{t('deleteTitle')}</h3>
+            <p className="py-4 text-sm">{t.rich('deleteText', { name: goal.name, b })}</p>
             <div className="modal-action">
-              <button className="btn btn-ghost btn-sm" onClick={() => setModal(null)}>Indietro</button>
-              <button className="btn btn-error btn-sm" onClick={remove}>Elimina</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setModal(null)}>{t('goBack')}</button>
+              <button className="btn btn-error btn-sm" onClick={remove}>{t('delete')}</button>
             </div>
           </div>
           <div className="modal-backdrop" onClick={() => setModal(null)} />

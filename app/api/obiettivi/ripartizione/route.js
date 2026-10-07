@@ -15,15 +15,18 @@ import AllocationPlan from '@/lib/models/AllocationPlan';
 import { getGoalsOverview } from '@/lib/services/goals';
 import { logApiError } from '@/lib/logger';
 import { writeAudit } from '@/lib/utils/audit';
+import { serverTranslator } from '@/lib/i18n/server';
 
 export async function PUT(req) {
   const { session, denied } = await requirePermission('goals:manage');
   if (denied) return denied;
 
   await connectDB();
-  const body = await req.json();
+  const tErrors = await serverTranslator('errors');
+  const fail = (key, values) => NextResponse.json({ error: tErrors(key, values) }, { status: 400 });
+  const body = await req.json().catch(() => null);
   const shares = Array.isArray(body?.shares) ? body.shares : null;
-  if (!shares) return NextResponse.json({ error: 'Ripartizione mancante' }, { status: 400 });
+  if (!shares) return fail('allocationMissing');
 
   const overview = await getGoalsOverview();
   const active = new Map(overview.goals.filter((g) => g.status === 'active').map((g) => [g.id, g]));
@@ -31,24 +34,21 @@ export async function PUT(req) {
   const seen = new Set();
   for (const s of shares) {
     if (!active.has(s?.goalId)) {
-      return NextResponse.json({ error: 'La ripartizione contiene un obiettivo non attivo' }, { status: 400 });
+      return fail('allocationInactiveGoal');
     }
-    if (seen.has(s.goalId)) return NextResponse.json({ error: 'Obiettivo ripetuto' }, { status: 400 });
+    if (seen.has(s.goalId)) return fail('allocationDuplicateGoal');
     seen.add(s.goalId);
     if (!Number.isInteger(s.pct) || s.pct < 0 || s.pct > 100) {
-      return NextResponse.json({ error: 'Le percentuali devono essere numeri interi tra 0 e 100' }, { status: 400 });
+      return fail('allocationInvalidPct');
     }
   }
 
   const total = shares.reduce((sum, s) => sum + s.pct, 0);
-  if (total > 100) return NextResponse.json({ error: `La somma delle percentuali è ${total}%: massimo 100%` }, { status: 400 });
+  if (total > 100) return fail('allocationOver100', { total });
 
   const missing = [...active.values()].filter((g) => g.state !== 'reached' && !seen.has(g.id));
   if (missing.length > 0) {
-    return NextResponse.json(
-      { error: `Manca la percentuale per: ${missing.map((g) => g.name).join(', ')}` },
-      { status: 400 },
-    );
+    return fail('allocationMissingGoals', { names: missing.map((g) => g.name).join(', ') });
   }
 
   try {
@@ -70,6 +70,6 @@ export async function PUT(req) {
     return NextResponse.json(plan);
   } catch (err) {
     logApiError('PUT /api/obiettivi/ripartizione', err, { userId: session.user?.id });
-    return NextResponse.json({ error: 'Errore salvataggio ripartizione' }, { status: 500 });
+    return NextResponse.json({ error: tErrors('allocationSaveFailed') }, { status: 500 });
   }
 }
