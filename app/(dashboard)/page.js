@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const tCommon = useTranslations('common');
   const tGroups = useTranslations('paymentGroups');
   const tPay = useTranslations('payments');
-  const { fmtFull, monthsLong } = useFormat();
+  const { locale, fmtFull, monthsShort, monthsLong } = useFormat();
   const now = new Date();
   const [month,   setMonth]   = useState(now.getMonth() + 1);
   const [year,    setYear]    = useState(now.getFullYear());
@@ -48,6 +48,12 @@ export default function DashboardPage() {
 
   const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
   const balance = (data?.current.totalIncome || 0) - (data?.current.totalExpense || 0);
+
+  // Nel mese in corso le card confrontano gli stessi giorni del mese prima, e lo dicono.
+  const prevMonthName = monthsShort[(month + 10) % 12];
+  const compareTo = data?.previous.toDay
+    ? t('sameDays', { day: String(data.previous.toDay), month: locale === 'en' ? prevMonthName : prevMonthName.toLowerCase() })
+    : undefined;
 
   /** Zero-padded month string for URL params, e.g. "03". */
   const mm = String(month).padStart(2, '0');
@@ -124,12 +130,14 @@ export default function DashboardPage() {
               title={tCommon('expenses')}
               value={data.current.totalExpense}
               prevValue={data.previous.totalExpense}
+              compareTo={compareTo}
               color="text-error"
             />
             <StatCard
               title={tCommon('income')}
               value={data.current.totalIncome}
               prevValue={data.previous.totalIncome}
+              compareTo={compareTo}
               color="text-success"
               higherIsBetter
             />

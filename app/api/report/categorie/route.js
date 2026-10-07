@@ -111,9 +111,11 @@ export async function GET(req) {
           .reduce((s,e) => s + e.amount, 0);
         return { month: m, cur, prev, prevToDate, partial: true };
       });
-      const monthsWithData = monthly.filter(m => m.cur > 0).length || 1;
+      // Media sui mesi chiusi con movimenti: il mese in corso, con pochi giorni di spese, la
+      // abbassava (al 7 ottobre la spesa alimentare media risultava 688 € invece di 749 €).
+      const closed = monthly.filter(m => !m.partial && m.cur > 0);
       catResult.monthly = monthly;
-      catResult.avg = totalCur / monthsWithData;
+      catResult.avg = closed.length ? closed.reduce((s, m) => s + m.cur, 0) / closed.length : null;
     }
 
     result.push(catResult);

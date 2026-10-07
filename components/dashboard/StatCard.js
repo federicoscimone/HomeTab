@@ -27,11 +27,13 @@ function pctDelta(cur, prev) {
  * @param {string}  [props.color]    - Tailwind text colour class for the value.
  * @param {string}  [props.prefix]   - Optional prefix string (e.g. "+").
  * @param {boolean} [props.higherIsBetter] - true when a rise is good news (income).
+ * @param {string}  [props.compareTo] - What the previous value covers (default: the previous month).
  */
-export default function StatCard({ title, value, prevValue, color = 'text-base-content', prefix = '', higherIsBetter = false }) {
+export default function StatCard({ title, value, prevValue, color = 'text-base-content', prefix = '', higherIsBetter = false, compareTo }) {
   const pct = pctDelta(value, prevValue);
   const t = useTranslations('dashboard');
   const { fmtRound, fmtPct } = useFormat();
+  const what = compareTo ?? t('prevMonthShort');
   // Più spese è un peggioramento, più entrate un miglioramento: prima ogni aumento era rosso,
   // comprese le entrate cresciute.
   const worse = higherIsBetter ? pct < 0 : pct > 0;
@@ -48,11 +50,11 @@ export default function StatCard({ title, value, prevValue, color = 'text-base-c
       </div>
       {pct !== null && (
         <div className={`stat-desc text-xs mt-1 ${tone}`}>
-          {arrow}{t('vsPrevMonth', { pct: fmtPct(pct, false) })}
+          {arrow}{t('vs', { pct: fmtPct(pct, false), what })}
         </div>
       )}
       {pct === null && prevValue === 0 && (
-        <div className="stat-desc text-xs mt-1 text-base-content/40">{t('noPrevMonth')}</div>
+        <div className="stat-desc text-xs mt-1 text-base-content/40">{t('noPrev', { what })}</div>
       )}
     </div>
   );
