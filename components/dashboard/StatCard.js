@@ -2,7 +2,8 @@
  * @fileoverview StatCard — a single KPI tile for the dashboard.
  */
 
-import { fmt } from '@/lib/utils/format';
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/hooks/useFormat';
 
 /**
  * Calculates the percentage change from `prev` to `cur`.
@@ -25,23 +26,33 @@ function pctDelta(cur, prev) {
  * @param {number}  props.prevValue  - Previous period amount (used for delta calc).
  * @param {string}  [props.color]    - Tailwind text colour class for the value.
  * @param {string}  [props.prefix]   - Optional prefix string (e.g. "+").
+ * @param {boolean} [props.higherIsBetter] - true when a rise is good news (income).
  */
-export default function StatCard({ title, value, prevValue, color = 'text-base-content', prefix = '' }) {
+export default function StatCard({ title, value, prevValue, color = 'text-base-content', prefix = '', higherIsBetter = false }) {
   const pct = pctDelta(value, prevValue);
+  const t = useTranslations('dashboard');
+  const { fmtRound, fmtPct } = useFormat();
+  // Più spese è un peggioramento, più entrate un miglioramento: prima ogni aumento era rosso,
+  // comprese le entrate cresciute.
+  const worse = higherIsBetter ? pct < 0 : pct > 0;
+  // Sotto lo 0,05% la variazione si legge "0,0%": nessuna freccia e nessun colore.
+  const flat = pct !== null && Math.abs(pct) < 0.05;
+  const tone = flat ? 'text-base-content/50' : worse ? 'text-error' : 'text-success';
+  const arrow = flat ? '' : pct > 0 ? '▲ ' : '▼ ';
 
   return (
     <div className="stat bg-base-100 rounded-xl border border-base-200 shadow-sm">
       <div className="stat-title text-xs">{title}</div>
       <div className={`stat-value text-xl sm:text-2xl ${color}`}>
-        {prefix}{fmt(value) !== '—' ? fmt(value) : '€0'}
+        {prefix}{fmtRound(value)}
       </div>
       {pct !== null && (
-        <div className={`stat-desc text-xs mt-1 ${pct > 0 ? 'text-error' : 'text-success'}`}>
-          {pct > 0 ? '▲' : '▼'} {Math.abs(pct).toFixed(1)}% vs mese prec.
+        <div className={`stat-desc text-xs mt-1 ${tone}`}>
+          {arrow}{t('vsPrevMonth', { pct: fmtPct(pct, false) })}
         </div>
       )}
       {pct === null && prevValue === 0 && (
-        <div className="stat-desc text-xs mt-1 text-base-content/40">Nessun dato mese prec.</div>
+        <div className="stat-desc text-xs mt-1 text-base-content/40">{t('noPrevMonth')}</div>
       )}
     </div>
   );

@@ -8,9 +8,8 @@ import { useState, useCallback } from 'react';
 import { useApiData } from '@/lib/hooks/useApiData';
 import MonthlyLineChart from '@/components/report/MonthlyLineChart';
 import CategoryBarChart from '@/components/report/CategoryBarChart';
-import { fmt, fmtPct, deltaClass, MONTHS_SHORT, MONTHS_FULL } from '@/lib/utils/format';
-
-const MONTHS = MONTHS_SHORT.slice(1); // ['Gen', ...]
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/hooks/useFormat';
 
 /**
  * Per-category analysis page.
@@ -25,6 +24,10 @@ export default function CategoriePage() {
   const [type,     setType]     = useState('expense');
   const [paymentGroup, setPaymentGroup] = useState('traditional'); // traditional | alternative | all
   const [compare,  setCompare]  = useState('period'); // 'period' | 'full', conta solo per un periodo in corso
+  const t = useTranslations('reports.categories');
+  const tCommon = useTranslations('common');
+  const tGroups = useTranslations('paymentGroups');
+  const { locale, fmt, fmtPct, deltaClass, monthsShort, monthsLong } = useFormat();
 
   let url = `/api/report/categorie?year=${year}&type=${type}`;
   if (mode === 'monthly') {
@@ -45,22 +48,24 @@ export default function CategoriePage() {
 
   // Periodo in corso: il confronto può essere con lo stesso periodo dell'anno prima o con il
   // periodo intero. Le etichette lo dicono sempre, così nessun numero resta ambiguo.
+  // Gli anni passano come stringhe: un numero nel messaggio verrebbe scritto "2,026" in inglese.
+  const monthInText = (index) => (locale === 'it' ? monthsLong[index].toLowerCase() : monthsLong[index]);
   const cutoff     = data?.cutoff ?? null;
-  const cutoffDay  = cutoff ? `${Number(cutoff.slice(8))} ${MONTHS_FULL[Number(cutoff.slice(5, 7)) - 1].toLowerCase()}` : '';
-  const monthName  = MONTHS_FULL[month - 1];
+  const cutoffDay  = cutoff ? `${Number(cutoff.slice(8))} ${monthInText(Number(cutoff.slice(5, 7)) - 1)}` : '';
+  const monthName  = monthsLong[month - 1];
   const periodName = mode === 'annual' ? String(year) : `${monthName} ${year}`;
   const prevName   = mode === 'annual' ? String(year - 1) : `${monthName} ${year - 1}`;
-  let subtitle = `Confronto ${periodName} vs ${prevName}`;
+  let subtitle = t('compare', { period: periodName, prev: prevName });
   if (cutoff && mode === 'annual') {
-    subtitle = compare === 'period'
-      ? `${year} fino al ${cutoffDay}, confrontato con lo stesso periodo del ${year - 1}`
-      : `${year} fino al ${cutoffDay}, confrontato con tutto il ${year - 1}`;
+    subtitle = t(compare === 'period' ? 'yearToDatePeriod' : 'yearToDateFull',
+      { year: String(year), day: cutoffDay, prevYear: String(year - 1) });
   } else if (cutoff) {
-    subtitle = compare === 'period'
-      ? `${monthName} ${year} fino al ${cutoffDay}, confrontato con gli stessi giorni di ${monthName.toLowerCase()} ${year - 1}`
-      : `${monthName} ${year} fino al ${cutoffDay}, confrontato con tutto ${monthName.toLowerCase()} ${year - 1}`;
+    subtitle = t(compare === 'period' ? 'monthToDatePeriod' : 'monthToDateFull', {
+      month: monthName, year: String(year), day: cutoffDay,
+      monthLower: monthInText(month - 1), prevYear: String(year - 1),
+    });
   }
-  const prevLabel  = !cutoff ? prevName : compare === 'period' ? `${prevName}, stesso periodo` : `${prevName} intero`;
+  const prevLabel  = !cutoff ? prevName : t(compare === 'period' ? 'prevSamePeriod' : 'prevWhole', { prev: prevName });
   const selectedCat = selected ? categories.find(c => c.categoryId === selected) : null;
 
   /** Toggles the selected category; clicking the same one deselects it. */
@@ -74,7 +79,7 @@ export default function CategoriePage() {
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Analisi per Categoria</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('title')}</h1>
           <p className="text-sm text-base-content/50">{subtitle}</p>
         </div>
       </div>
@@ -82,7 +87,7 @@ export default function CategoriePage() {
       {/* ── Filtri ──────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-2 mb-5">
         <select className="select select-bordered select-sm" value={year}
-          onChange={e => setYear(parseInt(e.target.value))} aria-label="Anno">
+          onChange={e => setYear(parseInt(e.target.value))} aria-label={tCommon('year')}>
           {Array.from({ length: 5 }, (_, i) => now.getFullYear() - i).map(y => (
             <option key={y} value={y}>{y}</option>
           ))}
@@ -90,15 +95,15 @@ export default function CategoriePage() {
 
         {mode === 'monthly' && (
           <select className="select select-bordered select-sm" value={month}
-            onChange={e => setMonth(parseInt(e.target.value))} aria-label="Mese">
-            {MONTHS.map((m, i) => (
+            onChange={e => setMonth(parseInt(e.target.value))} aria-label={tCommon('month')}>
+            {monthsShort.map((m, i) => (
               <option key={i} value={i + 1}>{m}</option>
             ))}
           </select>
         )}
 
         <div className="tabs tabs-boxed">
-          {[['expense', 'Uscite'], ['income', 'Entrate']].map(([v, l]) => (
+          {[['expense', tCommon('expenses')], ['income', tCommon('income')]].map(([v, l]) => (
             <button key={v} className={`tab tab-sm ${type === v ? 'tab-active' : ''}`}
               onClick={() => setType(v)}>{l}</button>
           ))}
@@ -108,24 +113,24 @@ export default function CategoriePage() {
           className="select select-bordered select-sm"
           value={paymentGroup}
           onChange={e => setPaymentGroup(e.target.value)}
-          aria-label="Metodi pagamento"
+          aria-label={tGroups('label')}
         >
-          <option value="traditional">Tradizionali</option>
-          <option value="alternative">Alternativi</option>
-          <option value="all">Tutti</option>
+          <option value="traditional">{tGroups('traditional')}</option>
+          <option value="alternative">{tGroups('alternative')}</option>
+          <option value="all">{tGroups('all')}</option>
         </select>
 
         {cutoff && (
-          <div className="tabs tabs-boxed" role="group" aria-label="Base del confronto">
-            {[['period', 'Stesso periodo'], ['full', 'Anno intero']].map(([v, l]) => (
+          <div className="tabs tabs-boxed" role="group" aria-label={t('comparisonBasis')}>
+            {[['period', t('samePeriod')], ['full', mode === 'monthly' ? t('fullMonth') : t('fullYear')]].map(([v, l]) => (
               <button key={v} className={`tab tab-sm ${compare === v ? 'tab-active' : ''}`}
-                onClick={() => setCompare(v)}>{mode === 'monthly' && v === 'full' ? 'Mese intero' : l}</button>
+                onClick={() => setCompare(v)}>{l}</button>
             ))}
           </div>
         )}
 
         <div className="ml-auto tabs tabs-boxed">
-          {[['annual', 'Annuale'], ['monthly', 'Mensile']].map(([v, l]) => (
+          {[['annual', t('yearly')], ['monthly', t('monthly')]].map(([v, l]) => (
             <button key={v} className={`tab tab-sm ${mode === v ? 'tab-active' : ''}`}
               onClick={() => setMode(v)}>{l}</button>
           ))}
@@ -137,11 +142,11 @@ export default function CategoriePage() {
           <span className="loading loading-spinner loading-lg text-primary" />
         </div>
       ) : error ? (
-        <div className="alert alert-warning"><span>Errore nel caricamento. Riprova.</span></div>
+        <div className="alert alert-warning"><span>{tCommon('loadError')}</span></div>
       ) : !categories.length ? (
         <div className="text-center py-16 text-base-content/40">
-          <p className="text-4xl mb-2">📂</p>
-          <p>Nessun dato per {year}</p>
+          <p className="text-4xl mb-2">{'📂'}</p>
+          <p>{tCommon('noDataForYear', { year: String(year) })}</p>
         </div>
       ) : (
         <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4">
@@ -151,7 +156,7 @@ export default function CategoriePage() {
             <div className="card bg-base-100 border border-base-200 shadow-sm">
               <div className="card-body p-3">
                 <h2 className="text-xs font-semibold text-base-content/50 uppercase tracking-wide mb-2 px-1">
-                  Categorie {mode === 'annual' ? year : `${MONTHS[month - 1]} ${year}`}
+                  {t('listTitle', { period: mode === 'annual' ? String(year) : `${monthsShort[month - 1]} ${year}` })}
                 </h2>
                 <ul className="space-y-0.5 max-h-64 lg:max-h-none overflow-y-auto">
                   {categories.map(cat => (
@@ -199,15 +204,15 @@ export default function CategoriePage() {
                       const delta = `${selectedCat.deltaAbs >= 0 ? '+' : ''}${fmt(selectedCat.deltaAbs)}`
                         + (selectedCat.deltaPct !== null ? ` (${fmtPct(selectedCat.deltaPct)})` : '');
                       const boxes = [
-                        { label: cutoff ? `${periodName} al ${cutoffDay}` : periodName, val: fmt(selectedCat.totalCur), cls: '' },
+                        { label: cutoff ? t('periodToDay', { period: periodName, day: cutoffDay }) : periodName, val: fmt(selectedCat.totalCur), cls: '' },
                         ...(cutoff
                           ? [
-                              { label: `${prevName}, stesso periodo`, val: fmt(selectedCat.totalPrevToDate), cls: 'text-base-content/60' },
-                              { label: `${prevName} intero`, val: fmt(selectedCat.totalPrevFull), cls: 'text-base-content/60' },
+                              { label: t('prevSamePeriod', { prev: prevName }), val: fmt(selectedCat.totalPrevToDate), cls: 'text-base-content/60' },
+                              { label: t('prevWhole', { prev: prevName }), val: fmt(selectedCat.totalPrevFull), cls: 'text-base-content/60' },
                             ]
                           : [{ label: prevName, val: fmt(selectedCat.totalPrev), cls: 'text-base-content/60' }]),
-                        { label: !cutoff ? 'Variazione' : compare === 'period' ? 'Variazione, stesso periodo' : 'Variazione, periodo intero', val: delta, cls: deltaClass(selectedCat.deltaAbs, type) },
-                        ...(mode === 'annual' ? [{ label: 'Media/mese', val: fmt(selectedCat.avg), cls: '' }] : []),
+                        { label: !cutoff ? tCommon('change') : compare === 'period' ? t('changeSamePeriod') : t('changeFullPeriod'), val: delta, cls: deltaClass(selectedCat.deltaAbs, type) },
+                        ...(mode === 'annual' ? [{ label: tCommon('avgPerMonth'), val: fmt(selectedCat.avg), cls: '' }] : []),
                       ];
                       return (
                         <div className={`grid grid-cols-2 gap-3 ${boxes.length === 5 ? 'sm:grid-cols-5' : 'sm:grid-cols-4'}`}>
@@ -227,7 +232,7 @@ export default function CategoriePage() {
                 {mode === 'annual' && (
                   <div className="card bg-base-100 border border-base-200 shadow-sm">
                     <div className="card-body p-4">
-                      <h3 className="text-sm font-semibold text-base-content/60 mb-3">Andamento Mensile</h3>
+                      <h3 className="text-sm font-semibold text-base-content/60 mb-3">{t('monthlyTrend')}</h3>
                       <MonthlyLineChart
                         data={selectedCat.monthly}
                         color={selectedCat.color}
@@ -236,7 +241,7 @@ export default function CategoriePage() {
                       />
                       {cutoff && (
                         <p className="text-xs text-base-content/40 mt-2">
-                          {MONTHS_FULL[Number(cutoff.slice(5, 7)) - 1]} è in corso: è nella tabella, non nel grafico.
+                          {t('inProgress', { month: monthsLong[Number(cutoff.slice(5, 7)) - 1] })}
                         </p>
                       )}
                     </div>
@@ -250,10 +255,10 @@ export default function CategoriePage() {
                       <table className="table table-xs text-xs">
                         <thead>
                           <tr className="bg-base-200">
-                            <th>Mese</th>
+                            <th>{tCommon('month')}</th>
                             <th className="text-right">{year}</th>
                             <th className="text-right text-base-content/50">{year - 1}</th>
-                            <th className="text-right">Δ assoluto</th>
+                            <th className="text-right">{t('absoluteDelta')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -265,7 +270,7 @@ export default function CategoriePage() {
                             const hasDelta = !future && (prev > 0 || m.cur > 0);
                             return (
                               <tr key={m.month} className="hover">
-                                <td className="font-medium">{MONTHS[m.month - 1]}{m.partial ? ` (al ${Number(cutoff.slice(8))})` : ''}</td>
+                                <td className="font-medium">{monthsShort[m.month - 1]}{m.partial ? ` ${t('toDay', { day: Number(cutoff.slice(8)) })}` : ''}</td>
                                 <td className="text-right">{m.cur > 0 ? fmt(m.cur) : '—'}</td>
                                 <td className="text-right text-base-content/50">{prev > 0 ? fmt(prev) : '—'}</td>
                                 <td className={`text-right ${hasDelta && delta !== 0 ? deltaClass(delta, type) : 'text-base-content/30'}`}>
@@ -285,10 +290,10 @@ export default function CategoriePage() {
               <div className="card bg-base-100 border border-base-200 shadow-sm">
                 <div className="card-body p-4">
                   <h3 className="text-sm font-semibold text-base-content/60 mb-1">
-                    Top Categorie — {periodName} vs {prevLabel}
+                    {t('topTitle', { period: periodName, prev: prevLabel })}
                   </h3>
                   <p className="text-xs text-base-content/40 mb-3">
-                    Tocca una categoria nella lista per il dettaglio
+                    {t('tapHint')}
                   </p>
                   <CategoryBarChart
                     data={categories.map(c => ({

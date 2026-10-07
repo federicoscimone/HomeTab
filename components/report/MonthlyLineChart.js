@@ -7,7 +7,8 @@
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { fmtFull, MONTHS_SHORT } from '@/lib/utils/format';
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/hooks/useFormat';
 
 /**
  * @typedef {Object} MonthlyDataPoint
@@ -22,6 +23,7 @@ import { fmtFull, MONTHS_SHORT } from '@/lib/utils/format';
  * @param {object} props - Recharts tooltip props.
  */
 const CustomTooltip = ({ active, payload, label }) => {
+  const { fmtFull } = useFormat();
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-base-100 border border-base-200 rounded-lg shadow px-3 py-2 text-sm">
@@ -44,16 +46,18 @@ const CustomTooltip = ({ active, payload, label }) => {
  * @param {number}             props.prevYear  - Previous year label.
  */
 export default function MonthlyLineChart({ data, color = '#6366f1', year, prevYear }) {
+  const t = useTranslations('common');
+  const { monthsShort, fmtAxis } = useFormat();
   if (!data?.length) {
     return (
       <div className="flex items-center justify-center h-48 text-base-content/30 text-sm">
-        Nessun dato
+        {t('noData')}
       </div>
     );
   }
 
   const chartData = data.map(d => ({
-    month:    MONTHS_SHORT[d.month],
+    month:    monthsShort[d.month - 1],
     // Il mese in corso non si disegna: pochi giorni accanto a mesi interi sembrerebbero un crollo.
     [year]:     d.partial ? null : d.cur,
     [prevYear]: d.prev,
@@ -64,7 +68,7 @@ export default function MonthlyLineChart({ data, color = '#6366f1', year, prevYe
       <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-        <YAxis tickFormatter={v => `€${(v / 1000).toFixed(1)}k`} tick={{ fontSize: 11 }} width={50} />
+        <YAxis tickFormatter={fmtAxis} tick={{ fontSize: 11 }} width={50} />
         <Tooltip content={<CustomTooltip />} />
         <Legend formatter={v => <span className="text-xs">{v}</span>} />
         <Line

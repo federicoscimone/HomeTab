@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolveLocale } from '../lib/i18n/locale.js';
-import { fmt, fmtFull, fmtMonth, fmtPct, monthNames } from '../lib/utils/format.js';
+import { fmt, fmtAxis, fmtDate, fmtFull, fmtMonth, fmtPct, monthNames } from '../lib/utils/format.js';
 
 const load = (locale) => JSON.parse(readFileSync(new URL(`../messages/${locale}.json`, import.meta.url), 'utf8'));
 
@@ -42,8 +42,8 @@ test('resolveLocale: cookie, poi lingue del browser, poi italiano', () => {
 test('formati di importi, percentuali e mesi nelle due lingue', () => {
   // Intl separa cifra e simbolo con uno spazio non divisibile: lo si normalizza per il confronto.
   const plain = (s) => s.replace(/ | /g, ' ');
-  // In italiano le migliaia si separano da cinque cifre in su (regola CLDR): 1234,50 ma 12.345,50.
-  assert.equal(plain(fmtFull(1234.5, 'it')), '1234,50 €');
+  // Separatore delle migliaia anche a quattro cifre, contro la regola CLDR italiana (vedi format.js).
+  assert.equal(plain(fmtFull(1234.5, 'it')), '1.234,50 €');
   assert.equal(plain(fmtFull(12345.5, 'it')), '12.345,50 €');
   assert.equal(fmtFull(12345.5, 'en'), '€12,345.50');
   assert.equal(fmt(0, 'en'), '—');
@@ -53,4 +53,11 @@ test('formati di importi, percentuali e mesi nelle due lingue', () => {
   assert.equal(fmtMonth('2027-08', false, 'it'), 'Ago 2027');
   assert.equal(fmtMonth('2027-08', true, 'en'), 'Aug 27');
   assert.equal(monthNames('en', 'long')[8], 'September');
+  assert.equal(fmtDate('2026-10-07', 'it'), '7 ott 2026');
+  assert.equal(fmtDate('2026-09-01T00:00:00Z', 'en'), '1 Sep 2026');
+  assert.equal(fmtDate(null, 'en'), '—');
+  assert.equal(plain(fmtAxis(1500, 'it')), '1,5k €');
+  assert.equal(fmtAxis(1500, 'en'), '€1.5k');
+  assert.equal(plain(fmtAxis(800, 'it')), '800 €');
+  assert.equal(fmtAxis(-2000, 'en'), '-€2k');
 });
