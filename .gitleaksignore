@@ -1,0 +1,3 @@
+# Falso positivo: alfabeto delle password provvisorie (lettere e cifre senza 0/O, 1/l/I),
+# non un segreto. app/(dashboard)/impostazioni/utenti/page.js, riga 11.
+4eb21ee9946c0b5dd8856684641a803a7db38296:app/(dashboard)/impostazioni/utenti/page.js:generic-api-key:11
