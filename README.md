@@ -50,8 +50,12 @@ docker compose up -d
 Open <http://localhost:3000> and sign in as **mario@test.it** / **Asdf_lkjH**. The first start
 builds the image and generates the demo data, so allow a few minutes.
 
-Demo mode (`DEMO_MODE=true`) is meant for trying the app. Set it to `false` in `.env` before
-entering real data.
+Demo mode (`DEMO_MODE=true`) is meant for trying the app. For real data set it to `false`
+before the first start, then open <http://localhost:3000/setup> to create the administrator
+account (the page works only while no user exists). Categories
+are created in Settings or, when running from source, with `npm run seed` (a default tree with
+keyword rules) and `node lib/seed-income.js` (income categories). Both skip a database that
+already has categories.
 
 ## Local development
 
