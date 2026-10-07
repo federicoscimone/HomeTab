@@ -13,7 +13,7 @@ function serializeIntegration(integration) {
       isConnected: false,
       autoBackupEnabled: false,
       backupFrequency: 'weekly',
-      folderName: 'HomeBI Backups',
+      folderName: 'HomeTab Backups',
       lastBackupAt: null,
       lastBackupStatus: 'idle',
       lastBackupFileName: null,

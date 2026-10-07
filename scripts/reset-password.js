@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { createInterface } from 'readline';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/homebi';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/hometab';
 
 // ── Argomenti da riga di comando ──────────────────────────────────────────────
 

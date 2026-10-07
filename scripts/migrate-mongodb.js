@@ -64,8 +64,8 @@ async function getConnectionStrings() {
   if (!SOURCE_URL) {
     console.log('🔹 Database di ORIGINE (sorgente)');
     console.log('   Esempi:');
-    console.log('   • MongoDB locale: mongodb://localhost:27017/homebi');
-    console.log('   • Con autenticazione: mongodb://user:pass@localhost:27017/homebi\n');
+    console.log('   • MongoDB locale: mongodb://localhost:27017/hometab');
+    console.log('   • Con autenticazione: mongodb://user:pass@localhost:27017/hometab\n');
     SOURCE_URL = await askQuestion('Inserisci connection string di origine: ');
 
     if (!SOURCE_URL) {
@@ -77,8 +77,8 @@ async function getConnectionStrings() {
   if (!DEST_URL) {
     console.log('\n🔹 Database di DESTINAZIONE (target)');
     console.log('   Esempi:');
-    console.log('   • MongoDB Atlas: mongodb+srv://user:password@cluster.mongodb.net/homebi');
-    console.log('   • MongoDB local: mongodb://localhost:27018/homebi\n');
+    console.log('   • MongoDB Atlas: mongodb+srv://user:password@cluster.mongodb.net/hometab');
+    console.log('   • MongoDB local: mongodb://localhost:27018/hometab\n');
     DEST_URL = await askQuestion('Inserisci connection string di destinazione: ');
 
     if (!DEST_URL) {

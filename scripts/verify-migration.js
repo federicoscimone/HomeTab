@@ -62,7 +62,7 @@ async function getConnectionStrings() {
 
   if (!SOURCE_URL) {
     console.log('🔹 Database di ORIGINE');
-    console.log('   Esempi: mongodb://localhost:27017/homebi\n');
+    console.log('   Esempi: mongodb://localhost:27017/hometab\n');
     SOURCE_URL = await askQuestion('Inserisci connection string di origine: ');
 
     if (!SOURCE_URL) {
@@ -73,7 +73,7 @@ async function getConnectionStrings() {
 
   if (!DEST_URL) {
     console.log('\n🔹 Database di DESTINAZIONE');
-    console.log('   Esempi: mongodb+srv://user:pass@cluster.mongodb.net/homebi\n');
+    console.log('   Esempi: mongodb+srv://user:pass@cluster.mongodb.net/hometab\n');
     DEST_URL = await askQuestion('Inserisci connection string di destinazione: ');
 
     if (!DEST_URL) {

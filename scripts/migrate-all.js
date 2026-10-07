@@ -44,8 +44,8 @@ Uso:
 
 Esempio:
   node scripts/migrate-all.js \\
-    --source "mongodb://localhost:27017/homebi" \\
-    --destination "mongodb+srv://user:pass@cluster.mongodb.net/homebi"
+    --source "mongodb://localhost:27017/hometab" \\
+    --destination "mongodb+srv://user:pass@cluster.mongodb.net/hometab"
 
 Opzioni:
   --skip-backup   Salta il backup locale

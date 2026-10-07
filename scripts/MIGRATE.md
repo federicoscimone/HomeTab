@@ -21,8 +21,8 @@ node scripts/migrate-mongodb.js
 ```
 
 Lo script ti chiederà:
-1. **Connection string di origine** (es. `mongodb://localhost:27017/homebi`)
-2. **Connection string di destinazione** (es. `mongodb+srv://user:pass@cluster.mongodb.net/homebi`)
+1. **Connection string di origine** (es. `mongodb://localhost:27017/hometab`)
+2. **Connection string di destinazione** (es. `mongodb+srv://user:pass@cluster.mongodb.net/hometab`)
 3. Se **cancellare** i dati nella destinazione (con conferma extra)
 
 ### Con Parametri da CLI (Opzionale)
@@ -31,16 +31,16 @@ Se preferisci passare gli URI direttamente:
 
 ```bash
 node scripts/migrate-mongodb.js \
-  --source "mongodb://localhost:27017/homebi" \
-  --destination "mongodb+srv://user:password@cluster.mongodb.net/homebi"
+  --source "mongodb://localhost:27017/hometab" \
+  --destination "mongodb+srv://user:password@cluster.mongodb.net/hometab"
 ```
 
 ### Con Cancellazione della Destinazione
 
 ```bash
 node scripts/migrate-mongodb.js \
-  --source "mongodb://localhost:27017/homebi" \
-  --destination "mongodb+srv://user:password@cluster.mongodb.net/homebi" \
+  --source "mongodb://localhost:27017/hometab" \
+  --destination "mongodb+srv://user:password@cluster.mongodb.net/hometab" \
   --clear
 ```
 
@@ -114,7 +114,7 @@ backup-2024-04-25-1234567890/
 
 Sarà qualcosa come:
 ```
-mongodb+srv://username:password@my-cluster.mongodb.net/homebi?retryWrites=true&w=majority
+mongodb+srv://username:password@my-cluster.mongodb.net/hometab?retryWrites=true&w=majority
 ```
 
 ### Step 2: Esegui la migrazione
@@ -124,8 +124,8 @@ node scripts/migrate-mongodb.js
 ```
 
 Quando richiesto:
-- **Origine**: `mongodb://localhost:27017/homebi`
-- **Destinazione**: `mongodb+srv://username:password@my-cluster.mongodb.net/homebi`
+- **Origine**: `mongodb://localhost:27017/hometab`
+- **Destinazione**: `mongodb+srv://username:password@my-cluster.mongodb.net/hometab`
 - **Cancellare**: Rispondi "sì" se vuoi cancellare i dati precedenti in Atlas
 
 ### Step 3: Verifica
@@ -229,7 +229,7 @@ Dettagli:
 ### "Errore di connessione" a MongoDB locale
 
 - Assicurati che MongoDB stia girando: `mongod`
-- Verifica che l'URI sia corretto (es. `mongodb://localhost:27017/homebi`)
+- Verifica che l'URI sia corretto (es. `mongodb://localhost:27017/hometab`)
 
 ### "Errore di autenticazione" ad Atlas
 
@@ -255,10 +255,10 @@ Se preferisci uno strumento standard MongoDB:
 
 ```bash
 # Backup locale
-mongodump --uri "mongodb://localhost:27017/homebi" -o ./backup
+mongodump --uri "mongodb://localhost:27017/hometab" -o ./backup
 
 # Restore su Atlas
-mongorestore --uri "mongodb+srv://user:pass@cluster.mongodb.net/homebi" ./backup/homebi
+mongorestore --uri "mongodb+srv://user:pass@cluster.mongodb.net/hometab" ./backup/hometab
 ```
 
 ## Collezioni Migrate

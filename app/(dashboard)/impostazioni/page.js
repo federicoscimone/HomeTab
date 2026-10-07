@@ -160,7 +160,7 @@ export default function ImpostazioniPage() {
             </div>
             <div className="rounded-xl border border-base-200 p-4">
               <p className="text-sm font-medium">Cartella Drive</p>
-              <p className="text-sm text-base-content/70 mt-1">{driveStatus?.folderName || 'HomeBI Backups'}</p>
+              <p className="text-sm text-base-content/70 mt-1">{driveStatus?.folderName || 'HomeTab Backups'}</p>
             </div>
             <div className="rounded-xl border border-base-200 p-4">
               <p className="text-sm font-medium">Ultimo backup</p>
