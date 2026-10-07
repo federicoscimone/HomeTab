@@ -12,6 +12,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { serverTranslator } from '@/lib/i18n/server';
 import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
@@ -21,6 +22,8 @@ export async function GET(req) {
   if (denied) return denied;
 
   await connectDB();
+  // Etichetta dei movimenti senza categoria: è testo dell'interfaccia, quindi nella lingua della richiesta.
+  const uncategorized = (await serverTranslator('reports'))('uncategorized');
 
   const { searchParams } = new URL(req.url);
   const from = searchParams.get('from');
@@ -28,7 +31,9 @@ export async function GET(req) {
   const type = searchParams.get('type') || 'expense';
   const paymentGroup = searchParams.get('paymentGroup') || '';
 
-  if (!from || !to) return NextResponse.json({ error: 'from e to obbligatori' }, { status: 400 });
+  if (!from || !to) {
+    return NextResponse.json({ error: (await serverTranslator('errors'))('dateRangeRequired') }, { status: 400 });
+  }
 
   // Stesso periodo anno precedente
   const fromDate = new Date(from);
@@ -52,12 +57,12 @@ export async function GET(req) {
   const totalPrev = prevExp.reduce((s,e) => s + e.amount, 0);
 
   // Per categoria
-  const byCatCur  = groupByCategory(curExp);
-  const byCatPrev = groupByCategory(prevExp);
+  const byCatCur  = groupByCategory(curExp, uncategorized);
+  const byCatPrev = groupByCategory(prevExp, uncategorized);
   const allCatIds = new Set([...Object.keys(byCatCur), ...Object.keys(byCatPrev)]);
 
   const byCategory = [...allCatIds].map(id => {
-    const cur  = byCatCur [id] || { name: 'Senza categoria', color: '#94a3b8', amount: 0 };
+    const cur  = byCatCur [id] || { name: uncategorized, color: '#94a3b8', amount: 0 };
     const prev = byCatPrev[id] || { amount: 0 };
     const delta = cur.amount - prev.amount;
     const pct   = prev.amount > 0 ? (delta / prev.amount) * 100 : null;
@@ -103,11 +108,11 @@ export async function GET(req) {
   });
 }
 
-function groupByCategory(expenses) {
+function groupByCategory(expenses, uncategorized) {
   const map = {};
   for (const e of expenses) {
     const id    = e.categoryId?._id?.toString() || 'uncategorized';
-    const name  = e.categoryId?.name  || 'Senza categoria';
+    const name  = e.categoryId?.name  || uncategorized;
     const color = e.categoryId?.color || '#94a3b8';
     if (!map[id]) map[id] = { name, color, amount: 0 };
     map[id].amount += e.amount;

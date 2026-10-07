@@ -7,7 +7,8 @@
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { fmt } from '@/lib/utils/format';
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/hooks/useFormat';
 
 /**
  * @typedef {Object} TrendDataPoint
@@ -22,6 +23,7 @@ import { fmt } from '@/lib/utils/format';
  * @param {object} props - Recharts tooltip props.
  */
 const CustomTooltip = ({ active, payload, label }) => {
+  const { fmt } = useFormat();
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-base-100 border border-base-200 rounded-lg shadow px-3 py-2 text-sm">
@@ -40,10 +42,12 @@ const CustomTooltip = ({ active, payload, label }) => {
  * @param {TrendDataPoint[]} props.data - Monthly trend data points.
  */
 export default function TrendChart({ data }) {
+  const t = useTranslations('common');
+  const { fmtAxis } = useFormat();
   if (!data?.length) {
     return (
       <div className="flex items-center justify-center h-48 text-base-content/30 text-sm">
-        Nessun dato
+        {t('noData')}
       </div>
     );
   }
@@ -63,12 +67,13 @@ export default function TrendChart({ data }) {
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-        <YAxis tickFormatter={v => `€${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11 }} width={45} />
+        <YAxis tickFormatter={fmtAxis} tick={{ fontSize: 11 }} width={50} />
         <Tooltip content={<CustomTooltip />} />
-        <Legend formatter={v => <span className="text-xs">{v}</span>} />
-        <Area type="monotone" dataKey="expense" name="Uscite"
+        {/* Ordine per dataKey, uguale in ogni lingua (quello predefinito è alfabetico sull'etichetta). */}
+        <Legend itemSorter="dataKey" formatter={v => <span className="text-xs">{v}</span>} />
+        <Area type="monotone" dataKey="expense" name={t('expenses')}
           stroke="#ef4444" fill="url(#gradExpense)" strokeWidth={2} dot={{ r: 3 }} />
-        <Area type="monotone" dataKey="income"  name="Entrate"
+        <Area type="monotone" dataKey="income"  name={t('income')}
           stroke="#22c55e" fill="url(#gradIncome)"  strokeWidth={2} dot={{ r: 3 }} />
       </AreaChart>
     </ResponsiveContainer>

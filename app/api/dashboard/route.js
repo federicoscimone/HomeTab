@@ -12,6 +12,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { serverTranslator } from '@/lib/i18n/server';
 import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
@@ -22,6 +23,8 @@ export async function GET(req) {
   if (denied) return denied;
 
   await connectDB();
+  // Etichetta dei movimenti senza categoria: è testo dell'interfaccia, quindi nella lingua della richiesta.
+  const uncategorized = (await serverTranslator('reports'))('uncategorized');
 
   const { searchParams } = new URL(req.url);
   const now    = new Date();
@@ -72,7 +75,7 @@ export async function GET(req) {
   const byCategoryMap = {};
   for (const e of curExpenses.filter(e => e.type !== 'income')) {
     const key   = e.categoryId?._id?.toString() || 'uncategorized';
-    const name  = e.categoryId?.name  || 'Senza categoria';
+    const name  = e.categoryId?.name  || uncategorized;
     const color = e.categoryId?.color || '#94a3b8';
     if (!byCategoryMap[key]) {
       byCategoryMap[key] = {
@@ -96,7 +99,7 @@ export async function GET(req) {
   const byIncomeCategoryMap = {};
   for (const e of curExpenses.filter(e => e.type === 'income')) {
     const key   = e.categoryId?._id?.toString() || 'uncategorized';
-    const name  = e.categoryId?.name  || 'Senza categoria';
+    const name  = e.categoryId?.name  || uncategorized;
     const color = e.categoryId?.color || '#94a3b8';
     if (!byIncomeCategoryMap[key]) {
       byIncomeCategoryMap[key] = {

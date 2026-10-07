@@ -5,7 +5,8 @@
 'use client';
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { fmtFull } from '@/lib/utils/format';
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/hooks/useFormat';
 
 /**
  * @typedef {Object} PieDataPoint
@@ -21,6 +22,7 @@ import { fmtFull } from '@/lib/utils/format';
  * @param {object} props - Recharts tooltip props.
  */
 const CustomTooltip = ({ active, payload }) => {
+  const { fmtFull } = useFormat();
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-base-100 border border-base-200 rounded-lg shadow px-3 py-2 text-sm">
@@ -39,17 +41,19 @@ const CustomTooltip = ({ active, payload }) => {
  * @param {(entry: PieDataPoint) => void} [props.onCategoryClick] - Click handler for a pie slice.
  */
 export default function CategoryPieChart({ data, onCategoryClick }) {
+  const t = useTranslations('common');
   if (!data?.length) {
     return (
       <div className="flex items-center justify-center h-48 text-base-content/30 text-sm">
-        Nessun dato
+        {t('noData')}
       </div>
     );
   }
 
   return (
-    <ResponsiveContainer width="100%" height={260}>
-      <PieChart>
+    <ResponsiveContainer width="100%" height={280}>
+      {/* Margine in alto: l'etichetta di una fetta in cima finiva fuori dall'area e veniva tagliata. */}
+      <PieChart margin={{ top: 16 }}>
         <Pie
           data={data}
           dataKey="amount"

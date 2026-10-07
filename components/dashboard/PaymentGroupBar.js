@@ -4,7 +4,8 @@
 
 'use client';
 
-import { fmtFull } from '@/lib/utils/format';
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/hooks/useFormat';
 
 /**
  * Horizontal split bar comparing traditional and alternative payment method totals.
@@ -14,6 +15,9 @@ import { fmtFull } from '@/lib/utils/format';
  * @param {number} [props.alternative=0] - Total spent via alternative methods (€).
  */
 export default function PaymentGroupBar({ traditional = 0, alternative = 0 }) {
+  const t = useTranslations('paymentGroups');
+  const tDash = useTranslations('dashboard');
+  const { fmtFull } = useFormat();
   const total    = traditional + alternative;
   const tradPct  = total > 0 ? (traditional / total) * 100 : 0;
   const altPct   = total > 0 ? (alternative / total) * 100 : 0;
@@ -22,12 +26,12 @@ export default function PaymentGroupBar({ traditional = 0, alternative = 0 }) {
     <div className="flex flex-col gap-3">
       <div className="flex justify-between text-sm flex-wrap gap-1">
         <div>
-          <span className="badge badge-info badge-sm mr-1">Tradizionali</span>
+          <span className="badge badge-info badge-sm mr-1">{t('traditional')}</span>
           <span className="font-semibold">{fmtFull(traditional)}</span>
           <span className="text-base-content/40 text-xs ml-1">({tradPct.toFixed(0)}%)</span>
         </div>
         <div className="text-right">
-          <span className="badge badge-warning badge-sm mr-1">Alternativi</span>
+          <span className="badge badge-warning badge-sm mr-1">{t('alternative')}</span>
           <span className="font-semibold">{fmtFull(alternative)}</span>
           <span className="text-base-content/40 text-xs ml-1">({altPct.toFixed(0)}%)</span>
         </div>
@@ -42,7 +46,7 @@ export default function PaymentGroupBar({ traditional = 0, alternative = 0 }) {
         <div className="w-full h-4 bg-base-200 rounded-full" />
       )}
 
-      <p className="text-xs text-base-content/40 text-center">Totale uscite: {fmtFull(total)}</p>
+      <p className="text-xs text-base-content/40 text-center">{tDash('totalExpenses', { amount: fmtFull(total) })}</p>
     </div>
   );
 }

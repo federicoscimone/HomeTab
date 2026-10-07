@@ -11,6 +11,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { serverTranslator } from '@/lib/i18n/server';
 import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
@@ -21,6 +22,8 @@ export async function GET(req) {
   if (denied) return denied;
 
   await connectDB();
+  // Etichetta dei movimenti senza categoria: è testo dell'interfaccia, quindi nella lingua della richiesta.
+  const uncategorized = (await serverTranslator('reports'))('uncategorized');
 
   const { searchParams } = new URL(req.url);
   const year         = parseInt(searchParams.get('year') || new Date().getFullYear());
@@ -70,7 +73,7 @@ export async function GET(req) {
   const rows = Object.entries(matrix)
     .map(([catId, data]) => ({
       categoryId:   catId,
-      categoryName: catMap[catId]?.name  || 'Senza categoria',
+      categoryName: catMap[catId]?.name  || uncategorized,
       color:        catMap[catId]?.color || '#94a3b8',
       monthly:      data.monthly,
       total:        data.total,
