@@ -2,6 +2,7 @@ import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import { loadSessionUser } from '@/lib/auth/sessionUser';
 import { pageRedirectFor } from '@/lib/auth/permissions';
+import { hasUsers } from '@/lib/auth/setupState';
 
 const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password', '/setup', '/offline'];
 const FIRST_ACCESS = '/primo-accesso';
@@ -28,6 +29,10 @@ export async function proxy(req) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
   if (!token) {
+    // Prima installazione: senza utenti il login è un vicolo cieco, quindi si va a creare
+    // l'amministratore. Dopo, /setup non serve più e rimanda al login.
+    if (pathname === '/login' && !(await hasUsers())) return redirect('/setup');
+    if (pathname === '/setup' && (await hasUsers())) return redirect('/login');
     if (isPublic || SELF_AUTHENTICATED_API.includes(pathname)) return NextResponse.next();
     return redirect('/login');
   }
@@ -44,7 +49,7 @@ export async function proxy(req) {
   }
 
   if (user.mustChangePassword) return pathname === FIRST_ACCESS ? NextResponse.next() : redirect(FIRST_ACCESS);
-  if (pathname === FIRST_ACCESS || pathname === '/login') return redirect('/');
+  if (pathname === FIRST_ACCESS || pathname === '/login' || pathname === '/setup') return redirect('/');
 
   const fallback = pageRedirectFor(pathname, user.role);
   if (fallback) return redirect(fallback);
