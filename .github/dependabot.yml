@@ -8,9 +8,13 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
-    # xlsx comes from the SheetJS CDN, not from npm: Dependabot would propose the stale 0.18.5.
     ignore:
+      # xlsx comes from the SheetJS CDN, not from npm: Dependabot would propose the stale 0.18.5.
       - dependency-name: xlsx
+      # typescript-eslint (through eslint-config-next) does not support TypeScript 7 yet:
+      # https://github.com/typescript-eslint/typescript-eslint/issues/10940
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
