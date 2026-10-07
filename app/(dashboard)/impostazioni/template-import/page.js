@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useApiData } from '@/lib/hooks/useApiData';
 
 const FIELDS = [
   { key: 'date',        label: 'Data' },
@@ -45,23 +46,14 @@ const EMPTY_FORM = {
 };
 
 export default function TemplateImportPage() {
-  const [templates, setTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, reload: load } = useApiData('/api/impostazioni/template-import', 'impostazioni/template-import');
+  const templates = data ?? [];
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
-
-  const load = async () => {
-    setLoading(true);
-    const res = await fetch('/api/impostazioni/template-import');
-    setTemplates(await res.json());
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); }, []);
 
   const openAdd = () => {
     setForm(EMPTY_FORM);
@@ -153,7 +145,7 @@ export default function TemplateImportPage() {
                       <span className="badge badge-ghost badge-sm">{t.fileType.toUpperCase()}</span>
                       <span className="badge badge-ghost badge-sm">Salta {t.skipRows} righe</span>
                       <span className="badge badge-ghost badge-sm">Data: {DATE_FORMAT_LABEL[t.dateFormat] || t.dateFormat}</span>
-                      {t.fileType === 'csv' && <span className="badge badge-ghost badge-sm">Sep: "{t.delimiter}"</span>}
+                      {t.fileType === 'csv' && <span className="badge badge-ghost badge-sm">Sep: &quot;{t.delimiter}&quot;</span>}
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -276,7 +268,7 @@ export default function TemplateImportPage() {
               )}
 
               <div className="alert alert-info text-xs py-2 col-span-2">
-                <span>Se la banca usa colonne separate per Uscite/Entrate, compila entrambe e lascia vuoto "Importo". Altrimenti usa solo "Importo" e configura il segno.</span>
+                <span>Se la banca usa colonne separate per Uscite/Entrate, compila entrambe e lascia vuoto &quot;Importo&quot;. Altrimenti usa solo &quot;Importo&quot; e configura il segno.</span>
               </div>
 
               <div className="divider text-xs my-1">Metodo di pagamento</div>

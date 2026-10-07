@@ -1,13 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useApiData } from '@/lib/hooks/useApiData';
 
 const EMPTY_FORM = { keyword: '', categoryId: '', subCategory1Id: '', priority: 10, caseSensitive: false };
 
 export default function KeywordMappingPage() {
-  const [mappings, setMappings] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const mappingsApi = useApiData('/api/impostazioni/keyword-mapping', 'impostazioni/keyword-mapping');
+  const categoriesApi = useApiData('/api/categorie', 'impostazioni/keyword-mapping');
+  const mappings = mappingsApi.data ?? [];
+  const categories = categoriesApi.data ?? [];
+  const loading = mappingsApi.loading || categoriesApi.loading;
+  // Da questa pagina cambiano solo le regole: le categorie non serve ricaricarle.
+  const load = mappingsApi.reload;
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -15,19 +20,6 @@ export default function KeywordMappingPage() {
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
-
-  const load = async () => {
-    setLoading(true);
-    const [mRes, cRes] = await Promise.all([
-      fetch('/api/impostazioni/keyword-mapping'),
-      fetch('/api/categorie'),
-    ]);
-    setMappings(await mRes.json());
-    setCategories(await cRes.json());
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); }, []);
 
   const level1 = categories.filter(c => c.level === 1);
   const level2ofSelected = categories.filter(c => c.level === 2 && c.parentId?.toString() === form.categoryId);

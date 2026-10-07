@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useApiData } from '@/lib/hooks/useApiData';
 
 const COLORS = ['#3b82f6','#22c55e','#f97316','#ef4444','#ec4899','#8b5cf6',
                  '#06b6d4','#64748b','#f59e0b','#10b981','#84cc16','#a855f7','#0ea5e9','#94a3b8'];
@@ -8,8 +9,8 @@ const COLORS = ['#3b82f6','#22c55e','#f97316','#ef4444','#ec4899','#8b5cf6',
 const EMPTY = { name: '', color: '#6366f1', level: 1, parentId: null };
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, reload: load } = useApiData('/api/categorie', 'impostazioni/categorie');
+  const categories = data ?? [];
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -18,15 +19,6 @@ export default function CategoriesPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [expanded, setExpanded] = useState({});
-
-  const load = async () => {
-    setLoading(true);
-    const res = await fetch('/api/categorie');
-    setCategories(await res.json());
-    setLoading(false);
-  };
-
-  useEffect(() => { load(); }, []);
 
   const level1 = categories.filter(c => c.level === 1).sort((a,b) => (a.order - b.order) || a.name.localeCompare(b.name));
   const childrenOf = (id) => categories.filter(c => c.parentId?.toString() === id?.toString());

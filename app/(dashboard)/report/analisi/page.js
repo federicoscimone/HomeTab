@@ -4,7 +4,8 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useApiData } from '@/lib/hooks/useApiData';
 import CategoryBarChart from '@/components/report/CategoryBarChart';
 import { fmt, fmtFull, fmtPct, deltaClass } from '@/lib/utils/format';
 
@@ -54,34 +55,16 @@ export default function AnalisiPage() {
   const [to,      setTo]      = useState(todayStr());
   const [type,    setType]    = useState('expense');
   const [paymentGroup, setPaymentGroup] = useState('traditional'); // traditional | alternative | all
-  const [data,    setData]    = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState(false);
 
-  /** Fetches analysis data for the currently selected range + type. */
-  const fetchData = useCallback(() => {
-    if (!from || !to) return;
-    setLoading(true);
-    setError(false);
-    const p = new URLSearchParams({ from, to, type });
-    if (paymentGroup !== 'all') {
-      p.set('paymentGroup', paymentGroup);
-    }
-    fetch(`/api/report/analisi?${p}`)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(d  => { setData(d); setLoading(false); })
-      .catch(err => {
-        console.error('[report/analisi] fetch error:', err);
-        setError(true);
-        setLoading(false);
-      });
-  }, [from, to, type, paymentGroup]);
-
-  // Initial load on mount
-  useEffect(() => { fetchData(); }, [fetchData]);
+  // Con una delle due date vuote non si carica nulla; «Analizza» ripete la richiesta corrente.
+  const query = new URLSearchParams({ from, to, type });
+  if (paymentGroup !== 'all') {
+    query.set('paymentGroup', paymentGroup);
+  }
+  const { data, loading, error, reload: fetchData } = useApiData(
+    from && to ? `/api/report/analisi?${query}` : null,
+    'report/analisi',
+  );
 
   const handleExport = useCallback(() => {
     if (!data) return;
