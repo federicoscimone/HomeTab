@@ -140,7 +140,29 @@
     "templateNotFound": "Template not found",
     "fileTooLarge": "File too large: the limit is {mb} MB",
     "noDataProvided": "No data provided",
-    "parseError": "Could not read the file: {message}"
+    "parseError": "Could not read the file: {message}",
+    "goalNotFound": "Goal not found",
+    "goalsComputeFailed": "Could not compute the goals",
+    "goalComputeFailed": "Could not compute the goal",
+    "goalSaveFailed": "Could not save the goal",
+    "goalAlreadyClosed": "The goal is already closed",
+    "goalAlreadyActive": "The goal is already active",
+    "invalidTransferTarget": "Invalid destination goal",
+    "invalidAction": "Invalid action",
+    "goalClosedNoEdit": "A closed goal can't be edited: reopen it first",
+    "goalHasHistory": "The goal already has a history (shares received or linked expenses): cancel it instead of deleting it",
+    "goalNameRequired": "The name is required (up to 100 characters)",
+    "goalAmountMin": "The amount must be at least €1",
+    "goalDeadlineInvalid": "Invalid deadline",
+    "goalDeadlinePast": "The deadline can't be in the past",
+    "goalInitialNegative": "The amount already set aside can't be negative",
+    "allocationMissing": "Allocation missing",
+    "allocationInactiveGoal": "The allocation includes a goal that isn't active",
+    "allocationDuplicateGoal": "A goal is listed twice",
+    "allocationInvalidPct": "Percentages must be whole numbers between 0 and 100",
+    "allocationOver100": "The percentages add up to {total}%: the maximum is 100%",
+    "allocationMissingGoals": "Missing percentage for: {names}",
+    "allocationSaveFailed": "Could not save the allocation"
   },
   "auth": {
     "email": "Email",
@@ -214,7 +236,8 @@
     "passwordUpdated": "Password updated",
     "adminCreated": "Admin created",
     "resetRequested": "If the email is registered, you'll receive a reset link.",
-    "movementDeleted": "Transaction deleted"
+    "movementDeleted": "Transaction deleted",
+    "goalDeleted": "Goal deleted"
   },
   "email": {
     "team": "— The {app} team",
@@ -536,5 +559,183 @@
     "excludeTitle": "Exclude from monthly analysis",
     "editDetails": "Edit details",
     "amount": "Amount (€)"
+  },
+  "goalStates": {
+    "on_track": {
+      "label": "On track",
+      "hint": "At the current pace you'll make the deadline"
+    },
+    "behind": {
+      "label": "Behind",
+      "hint": "At the current pace you won't make the deadline"
+    },
+    "reached": {
+      "label": "Reached",
+      "hint": "Amount reached: no longer receives shares"
+    },
+    "expired": {
+      "label": "Expired",
+      "hint": "The deadline passed before the amount was reached"
+    },
+    "unknown": {
+      "label": "To plan",
+      "hint": "No percentage yet, or no closed months yet"
+    },
+    "completed": {
+      "label": "Completed",
+      "hint": "Purchased: the surplus went back to unallocated savings"
+    },
+    "cancelled": {
+      "label": "Cancelled",
+      "hint": "Cancelled: the available amount was moved"
+    }
+  },
+  "goals": {
+    "title": "Goals",
+    "subtitle": "The savings of closed months, shared among the things you want to buy",
+    "allocation": "Allocation",
+    "new": "New goal",
+    "byDeadline": "by {month}",
+    "ofTarget": "of {amount}",
+    "progressAria": "Progress {pct}%",
+    "currentShare": "Current share",
+    "perMonth": "{amount}/month",
+    "shareValue": "{pct}% ≈ {amount}/month",
+    "needed": "Needed",
+    "eta": "Expected",
+    "alreadySpent": "Already spent",
+    "kpi": {
+      "avgSavings": "Average savings",
+      "lastClosedMonths": "{count, plural, one {last closed month} other {last # closed months}}",
+      "noClosedMonth": "no closed month yet",
+      "inProgress": "{month} (in progress)",
+      "provisional": "provisional, allocated at month end",
+      "neededForAll": "Needed for all",
+      "toBeOnTime": "to make it on time",
+      "freeSavings": "Unallocated savings",
+      "unassignedPct": "{pct}% of savings not assigned"
+    },
+    "definition": "Savings = income − expenses paid with traditional methods. Meal tickets and vouchers don't count, and neither do transactions excluded from analysis (e.g. transfers to a savings account).",
+    "notFeasible": "To reach every goal on time you need {required} a month, but on average you save {avg}. Move a deadline, lower an amount or review your spending.",
+    "needsPlan": "Some goals have no savings percentage: an administrator needs to choose the allocation.",
+    "idleShares": "{list} {count, plural, one {is closed} other {are closed}}: the share now goes to unallocated savings.",
+    "redistribute": "Redistribute",
+    "noActive": "No active goals.",
+    "createFirst": "Create your first goal",
+    "closedTitle": "Completed and cancelled",
+    "columns": {
+      "goal": "Goal",
+      "state": "Status",
+      "saved": "Saved",
+      "spent": "Spent",
+      "closedAt": "Closed in"
+    }
+  },
+  "goalDetail": {
+    "back": "Back to goals",
+    "backShort": "← Goals",
+    "header": "{target} by {deadline} · created in {created}",
+    "headerInitial": "{target} by {deadline} · created in {created} with {initial} already set aside",
+    "edit": "Edit",
+    "purchased": "Purchased",
+    "cancel": "Cancel goal",
+    "reopen": "Reopen",
+    "delete": "Delete",
+    "actionFailed": "The operation failed",
+    "deleteFailed": "Could not delete",
+    "kpi": {
+      "saved": "Saved",
+      "savedSub": "{pct}% of {target}",
+      "available": "Available",
+      "spentSub": "{amount} already spent",
+      "noLinked": "no linked expenses",
+      "shareSub": "≈ {amount}/month",
+      "reached": "Reached",
+      "noMoreShares": "no longer receives shares",
+      "neededSub": "for {count, plural, one {# month} other {# months}}, until {deadline}",
+      "closedAt": "Closed in",
+      "returned": "Returned",
+      "toOtherGoal": "to another goal",
+      "toFree": "to unallocated savings"
+    },
+    "projection": {
+      "unknown": "Estimating progress needs at least one closed month and an assigned percentage.",
+      "expired": "The deadline has passed: {remaining} still missing. Move the deadline or complete the goal.",
+      "base": "With {pct}% of average savings ({avg}/month, {months, plural, one {last month} other {last # months}}) you reach <b>{projected}</b> by {deadline}",
+      "onTrack": ", hitting the amount around <b>{reach}</b>.",
+      "behind": ": <b>{missing}</b> would still be missing.",
+      "behindReach": ": <b>{missing}</b> would still be missing. At the current pace you get there around <b>{reach}</b>."
+    },
+    "chartTitle": "Progress and projection",
+    "chartLegend": "Solid line: saved at the end of each month. Dashed: projection with the current share.",
+    "monthlyTitle": "Monthly shares",
+    "monthlyEmpty": "No month allocated yet.",
+    "columns": {
+      "savings": "Savings",
+      "share": "Share",
+      "description": "Description",
+      "amount": "Amount"
+    },
+    "linkedTitle": "Linked expenses",
+    "linkedHint": "They stay in the reports, but leave the savings calculation and reduce the available amount. To link one, open the transaction and choose the goal.",
+    "linkedEmpty": "No linked expenses.",
+    "deleteTitle": "Delete goal",
+    "deleteText": "Delete <b>{name}</b>? This is only possible in the month it was created: once it receives its first share it has a history, and must be cancelled instead.",
+    "goBack": "Back",
+    "completeTitle": "Complete goal",
+    "cancelTitle": "Cancel goal",
+    "completeText": "Mark <b>{name}</b> as purchased. It stops receiving shares and the available amount ({available}) goes back to unallocated savings.",
+    "completeTextNegative": "Mark <b>{name}</b> as purchased. It stops receiving shares and the available amount ({available}) goes back to unallocated savings: since it's negative, the overspend is covered by unallocated savings.",
+    "cancelText": "<b>{name}</b> stops receiving shares. The available amount ({available}) goes:",
+    "destination": "Where the available amount goes",
+    "toFreeOption": "to unallocated savings",
+    "toGoalOption": "to “{name}”",
+    "reopenLater": "You can reopen it later.",
+    "confirmComplete": "Complete",
+    "confirmCancel": "Cancel goal"
+  },
+  "goalForm": {
+    "saveFailed": "Could not save",
+    "editTitle": "Edit goal",
+    "newTitle": "New goal",
+    "intro": "Something to buy by a date: a trip, a car, a home. It's funded by the savings of closed months, with the percentage you'll choose.",
+    "name": "What do you want to buy *",
+    "namePlaceholder": "E.g. Trip to Japan",
+    "amount": "Amount (€) *",
+    "deadline": "By *",
+    "deadlinePlaceholder": "YYYY-MM",
+    "initial": "Already set aside (€) <muted>(optional)</muted>",
+    "initialHint": "Money you had already put aside for this goal before today.",
+    "save": "Save",
+    "create": "Create goal"
+  },
+  "allocation": {
+    "title": "Savings allocation",
+    "introForced": "Some goals have no percentage. Choose how much of the monthly savings goes to each: it applies from the current month ({month}) on, closed months stay as they were. Whatever you don't assign stays unallocated.",
+    "intro": "How much of the monthly savings goes to each goal: it applies from the current month ({month}) on, closed months stay as they were. Whatever you don't assign stays unallocated.",
+    "notFeasible": "To reach every goal on time you'd need {required} a month, but average savings are {avg}. The suggestion still splits 100%: consider moving a deadline or lowering an amount.",
+    "columns": {
+      "neededPerMonth": "Needed/month",
+      "suggested": "Suggested",
+      "percentage": "Percentage",
+      "perMonth": "≈ €/month"
+    },
+    "pctFor": "Percentage for {name}",
+    "totalAssigned": "Total assigned",
+    "over100": "The total is over 100%: lower some percentages or use the suggestion.",
+    "reached": "Already reached, no longer receiving shares: {names}.",
+    "basis": "Euro amounts are based on the average savings of the {months, plural, one {last closed month} other {last # closed months}} ({avg}/month).",
+    "noBasis": "There are no closed months with transactions yet: euro amounts will appear after the first month.",
+    "useSuggestion": "Use the suggestion",
+    "save": "Save allocation"
+  },
+  "goalChart": {
+    "empty": "The chart appears after the first closed month with an assigned share.",
+    "saved": "Saved: {amount}",
+    "projected": "Projection: {amount}",
+    "target": "Goal {amount}",
+    "deadline": "Deadline",
+    "savedSeries": "Saved",
+    "projectedSeries": "Projection"
   }
 }

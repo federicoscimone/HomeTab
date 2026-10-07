@@ -9,7 +9,8 @@ import Link from 'next/link';
 import GoalStateBadge from '@/components/obiettivi/GoalStateBadge';
 import GoalFormModal from '@/components/obiettivi/GoalFormModal';
 import AllocationModal from '@/components/obiettivi/AllocationModal';
-import { fmt, fmtMonth } from '@/lib/utils/format';
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/hooks/useFormat';
 import useCan from '@/lib/auth/useCan';
 
 /**
@@ -18,6 +19,8 @@ import useCan from '@/lib/auth/useCan';
  * @param {{ goal: object }} props
  */
 function GoalCard({ goal }) {
+  const t = useTranslations('goals');
+  const { fmt, fmtRound, fmtMonth } = useFormat();
   const p = goal.projection;
   return (
     <Link
@@ -28,39 +31,41 @@ function GoalCard({ goal }) {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h3 className="font-semibold truncate">{goal.name}</h3>
-            <p className="text-xs text-base-content/50">entro {fmtMonth(goal.deadline)}</p>
+            <p className="text-xs text-base-content/50">{t('byDeadline', { month: fmtMonth(goal.deadline) })}</p>
           </div>
           <GoalStateBadge state={goal.state} />
         </div>
 
         <div>
           <div className="flex justify-between text-sm mb-1">
-            <span className="font-bold">{fmt(goal.saved) === '—' ? '€0' : fmt(goal.saved)}</span>
-            <span className="text-base-content/50">di {fmt(goal.targetAmount)}</span>
+            <span className="font-bold">{fmtRound(goal.saved)}</span>
+            <span className="text-base-content/50">{t('ofTarget', { amount: fmt(goal.targetAmount) })}</span>
           </div>
           <progress
             className={`progress w-full ${goal.state === 'behind' || goal.state === 'expired' ? 'progress-warning' : 'progress-primary'}`}
             value={goal.progress * 100} max={100}
-            aria-label={`Avanzamento ${Math.round(goal.progress * 100)}%`}
+            aria-label={t('progressAria', { pct: Math.round(goal.progress * 100) })}
           />
         </div>
 
         <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-          <dt className="text-base-content/50">Quota attuale</dt>
+          <dt className="text-base-content/50">{t('currentShare')}</dt>
           <dd className="text-right">
-            {goal.pct != null ? `${goal.pct}%${p?.expectedQuota != null ? ` ≈ ${fmt(p.expectedQuota)}/mese` : ''}` : '—'}
+            {goal.pct == null ? '—'
+              : p?.expectedQuota != null ? t('shareValue', { pct: goal.pct, amount: fmt(p.expectedQuota) })
+                : `${goal.pct}%`}
           </dd>
           {goal.state !== 'reached' && (
             <>
-              <dt className="text-base-content/50">Servono</dt>
-              <dd className="text-right">{p?.requiredMonthly != null ? `${fmt(p.requiredMonthly)}/mese` : '—'}</dd>
-              <dt className="text-base-content/50">Stima arrivo</dt>
+              <dt className="text-base-content/50">{t('needed')}</dt>
+              <dd className="text-right">{p?.requiredMonthly != null ? t('perMonth', { amount: fmt(p.requiredMonthly) }) : '—'}</dd>
+              <dt className="text-base-content/50">{t('eta')}</dt>
               <dd className="text-right">{fmtMonth(p?.reachMonth)}</dd>
             </>
           )}
           {goal.spent > 0 && (
             <>
-              <dt className="text-base-content/50">Già speso</dt>
+              <dt className="text-base-content/50">{t('alreadySpent')}</dt>
               <dd className="text-right">{fmt(goal.spent)}</dd>
             </>
           )}
@@ -77,6 +82,9 @@ export default function ObiettiviPage() {
   const [showForm, setShowForm] = useState(false);
   const [showPlan, setShowPlan] = useState(false);
   const canManage = useCan()('goals:manage');
+  const t = useTranslations('goals');
+  const tCommon = useTranslations('common');
+  const { fmt, fmtRound, fmtMonth } = useFormat();
 
   const load = useCallback(() => {
     return fetch('/api/obiettivi')
@@ -109,17 +117,15 @@ export default function ObiettiviPage() {
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Obiettivi</h1>
-          <p className="text-sm text-base-content/50">
-            Il risparmio dei mesi chiusi, diviso tra ciò che vuoi acquistare
-          </p>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('title')}</h1>
+          <p className="text-sm text-base-content/50">{t('subtitle')}</p>
         </div>
         {canManage && (
         <div className="flex gap-2">
           {active.length > 0 && (
-            <button className="btn btn-outline btn-sm" onClick={() => setShowPlan(true)}>Ripartizione</button>
+            <button className="btn btn-outline btn-sm" onClick={() => setShowPlan(true)}>{t('allocation')}</button>
           )}
-          <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Nuovo obiettivo</button>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>{'+'} {t('new')}</button>
         </div>
         )}
       </div>
@@ -131,7 +137,7 @@ export default function ObiettiviPage() {
       )}
 
       {!loading && error && (
-        <div className="alert alert-warning"><span>Errore nel caricamento. Riprova.</span></div>
+        <div className="alert alert-warning"><span>{tCommon('loadError')}</span></div>
       )}
 
       {!loading && !error && data && (
@@ -140,27 +146,27 @@ export default function ObiettiviPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               {
-                label: 'Risparmio medio',
-                val: data.avgSavings != null ? `${fmt(data.avgSavings)}/mese` : '—',
-                sub: data.avgMonths ? `ultimi ${data.avgMonths} mesi chiusi` : 'nessun mese chiuso',
+                label: t('kpi.avgSavings'),
+                val: data.avgSavings != null ? t('perMonth', { amount: fmt(data.avgSavings) }) : '—',
+                sub: data.avgMonths ? t('kpi.lastClosedMonths', { count: data.avgMonths }) : t('kpi.noClosedMonth'),
                 cls: data.avgSavings < 0 ? 'text-error' : '',
               },
               {
-                label: `${fmtMonth(data.currentMonth)} (in corso)`,
-                val: fmt(data.currentMonthSavings) === '—' ? '€0' : fmt(data.currentMonthSavings),
-                sub: 'provvisorio, si ripartisce a fine mese',
+                label: t('kpi.inProgress', { month: fmtMonth(data.currentMonth) }),
+                val: fmtRound(data.currentMonthSavings),
+                sub: t('kpi.provisional'),
                 cls: data.currentMonthSavings < 0 ? 'text-error' : '',
               },
               {
-                label: 'Servono per tutti',
-                val: data.totalRequired > 0 ? `${fmt(data.totalRequired)}/mese` : '—',
-                sub: 'per arrivare in tempo',
+                label: t('kpi.neededForAll'),
+                val: data.totalRequired > 0 ? t('perMonth', { amount: fmt(data.totalRequired) }) : '—',
+                sub: t('kpi.toBeOnTime'),
                 cls: data.feasible === false ? 'text-warning' : '',
               },
               {
-                label: 'Risparmio libero',
-                val: fmt(data.free) === '—' ? '€0' : fmt(data.free),
-                sub: `${100 - assignedPct}% del risparmio non assegnato`,
+                label: t('kpi.freeSavings'),
+                val: fmtRound(data.free),
+                sub: t('kpi.unassignedPct', { pct: 100 - assignedPct }),
                 cls: data.free < 0 ? 'text-error' : '',
               },
             ].map((s) => (
@@ -174,33 +180,26 @@ export default function ObiettiviPage() {
             ))}
           </div>
 
-          <p className="text-xs text-base-content/50">
-            Risparmio = entrate − uscite con metodi di pagamento tradizionali. Ticket e buoni non contano, e nemmeno i
-            movimenti esclusi dalle analisi (es. giroconti verso il conto deposito).
-          </p>
+          <p className="text-xs text-base-content/50">{t('definition')}</p>
 
           {data.feasible === false && (
             <div className="alert alert-warning text-sm">
-              <span>
-                Per arrivare in tempo su tutti gli obiettivi servono {fmt(data.totalRequired)} al mese, ma ne risparmi in
-                media {fmt(data.avgSavings)}. Sposta una scadenza, riduci un importo o rivedi le spese.
-              </span>
+              <span>{t('notFeasible', { required: fmt(data.totalRequired), avg: fmt(data.avgSavings) })}</span>
             </div>
           )}
 
           {forced && !canManage && (
             <div className="alert alert-info text-sm">
-              <span>Ci sono obiettivi senza percentuale di risparmio: un amministratore deve scegliere la ripartizione.</span>
+              <span>{t('needsPlan')}</span>
             </div>
           )}
 
           {idleShares.length > 0 && (
             <div className="alert text-sm">
               <span>
-                {idleShares.map((s) => `${s.name} (${s.pct}%)`).join(', ')} {idleShares.length > 1 ? 'sono chiusi' : 'è chiuso'}:
-                la quota ora va nel risparmio libero.
+                {t('idleShares', { list: idleShares.map((s) => `${s.name} (${s.pct}%)`).join(', '), count: idleShares.length })}
               </span>
-              {canManage && <button className="btn btn-sm" onClick={() => setShowPlan(true)}>Ridistribuisci</button>}
+              {canManage && <button className="btn btn-sm" onClick={() => setShowPlan(true)}>{t('redistribute')}</button>}
             </div>
           )}
 
@@ -211,9 +210,9 @@ export default function ObiettiviPage() {
             </div>
           ) : (
             <div className="text-center py-12 text-base-content/50">
-              <p className="mb-3">Nessun obiettivo attivo.</p>
+              <p className="mb-3">{t('noActive')}</p>
               {canManage && (
-                <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>Crea il primo obiettivo</button>
+                <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>{t('createFirst')}</button>
               )}
             </div>
           )}
@@ -222,16 +221,16 @@ export default function ObiettiviPage() {
           {closed.length > 0 && (
             <div className="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
               <div className="card-body p-4">
-                <h3 className="text-sm font-semibold text-base-content/60 mb-2">Conclusi e annullati</h3>
+                <h3 className="text-sm font-semibold text-base-content/60 mb-2">{t('closedTitle')}</h3>
                 <div className="overflow-x-auto">
                   <table className="table table-sm">
                     <thead>
                       <tr>
-                        <th>Obiettivo</th>
-                        <th>Stato</th>
-                        <th className="text-right">Accantonato</th>
-                        <th className="text-right">Speso</th>
-                        <th className="text-right hidden sm:table-cell">Chiuso a</th>
+                        <th>{t('columns.goal')}</th>
+                        <th>{t('columns.state')}</th>
+                        <th className="text-right">{t('columns.saved')}</th>
+                        <th className="text-right">{t('columns.spent')}</th>
+                        <th className="text-right hidden sm:table-cell">{t('columns.closedAt')}</th>
                       </tr>
                     </thead>
                     <tbody>

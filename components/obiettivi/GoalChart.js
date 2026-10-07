@@ -10,7 +10,8 @@
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
 } from 'recharts';
-import { fmt, fmtFull, fmtMonth } from '@/lib/utils/format';
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/hooks/useFormat';
 import { addMonths } from '@/lib/utils/goalMath';
 
 const SERIES_COLOR = '#6366f1'; // stesso primario dei grafici esistenti
@@ -30,19 +31,17 @@ function niceAxis(max) {
   return { top: step * 4, ticks: [0, 1, 2, 3, 4].map((i) => i * step) };
 }
 
-const fmtAxis = (v) => (Math.abs(v) >= 1000
-  ? `€${(v / 1000).toLocaleString('it-IT', { maximumFractionDigits: 1 })}k`
-  : `€${v}`);
-
 const CustomTooltip = ({ active, payload, label }) => {
+  const t = useTranslations('goalChart');
+  const { fmtFull, fmtMonth } = useFormat();
   if (!active || !payload?.length) return null;
   const row = payload[0].payload;
   return (
     <div className="bg-base-100 border border-base-200 rounded-lg shadow px-3 py-2 text-sm">
       <p className="font-medium mb-1">{fmtMonth(label)}</p>
-      {row.saved != null && <p>Accantonato: {fmtFull(row.saved)}</p>}
+      {row.saved != null && <p>{t('saved', { amount: fmtFull(row.saved) })}</p>}
       {row.projected != null && row.saved == null && (
-        <p className="text-base-content/70">Proiezione: {fmtFull(row.projected)}</p>
+        <p className="text-base-content/70">{t('projected', { amount: fmtFull(row.projected) })}</p>
       )}
     </div>
   );
@@ -54,6 +53,8 @@ const CustomTooltip = ({ active, payload, label }) => {
  * @param {string} props.currentMonth - 'YYYY-MM'.
  */
 export default function GoalChart({ goal, currentMonth }) {
+  const t = useTranslations('goalChart');
+  const { fmt, fmtMonth, fmtAxis } = useFormat();
   const lastClosed = addMonths(currentMonth, -1);
 
   // Storico: fine di ogni mese chiuso. Il punto del mese in corso è escluso perché non è ancora
@@ -72,7 +73,7 @@ export default function GoalChart({ goal, currentMonth }) {
   if (data.length < 2) {
     return (
       <div className="flex items-center justify-center h-48 text-base-content/40 text-sm text-center px-4">
-        Il grafico compare dopo il primo mese chiuso con una quota assegnata.
+        {t('empty')}
       </div>
     );
   }
@@ -97,20 +98,20 @@ export default function GoalChart({ goal, currentMonth }) {
         <Tooltip content={<CustomTooltip />} />
         <ReferenceLine
           y={goal.targetAmount} stroke={REFERENCE_COLOR} strokeDasharray="6 3"
-          label={{ value: `Obiettivo ${fmt(goal.targetAmount)}`, position: 'insideTopLeft', fontSize: 11, fill: REFERENCE_COLOR }}
+          label={{ value: t('target', { amount: fmt(goal.targetAmount) }), position: 'insideTopLeft', fontSize: 11, fill: REFERENCE_COLOR }}
         />
         {deadlineVisible && (
           <ReferenceLine
             x={goal.deadline} stroke={REFERENCE_COLOR} strokeDasharray="6 3"
-            label={{ value: 'Scadenza', position: 'insideTopRight', fontSize: 11, fill: REFERENCE_COLOR }}
+            label={{ value: t('deadline'), position: 'insideTopRight', fontSize: 11, fill: REFERENCE_COLOR }}
           />
         )}
         <Line
-          type="monotone" dataKey="saved" name="Accantonato" stroke={SERIES_COLOR}
+          type="monotone" dataKey="saved" name={t('savedSeries')} stroke={SERIES_COLOR}
           strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls={false} isAnimationActive={false}
         />
         <Line
-          type="monotone" dataKey="projected" name="Proiezione" stroke={SERIES_COLOR}
+          type="monotone" dataKey="projected" name={t('projectedSeries')} stroke={SERIES_COLOR}
           strokeWidth={2} strokeDasharray="5 4" strokeOpacity={0.6} dot={false} activeDot={{ r: 4 }}
           connectNulls={false} isAnimationActive={false}
         />

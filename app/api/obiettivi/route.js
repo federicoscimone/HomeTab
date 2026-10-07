@@ -14,6 +14,7 @@ import { getGoalsOverview, parseGoalFields } from '@/lib/services/goals';
 import { monthOf } from '@/lib/utils/goalMath';
 import { logApiError } from '@/lib/logger';
 import { writeAudit } from '@/lib/utils/audit';
+import { serverTranslator } from '@/lib/i18n/server';
 
 export async function GET() {
   const { session, denied } = await requirePermission('data:read');
@@ -23,7 +24,7 @@ export async function GET() {
     return NextResponse.json(await getGoalsOverview());
   } catch (err) {
     logApiError('GET /api/obiettivi', err, { userId: session.user?.id });
-    return NextResponse.json({ error: 'Errore nel calcolo degli obiettivi' }, { status: 500 });
+    return NextResponse.json({ error: (await serverTranslator('errors'))('goalsComputeFailed') }, { status: 500 });
   }
 }
 
@@ -32,9 +33,10 @@ export async function POST(req) {
   if (denied) return denied;
 
   await connectDB();
+  const tErrors = await serverTranslator('errors');
   const currentMonth = monthOf(new Date());
-  const { data, error } = parseGoalFields(await req.json(), currentMonth);
-  if (error) return NextResponse.json({ error }, { status: 400 });
+  const { data, error } = parseGoalFields(await req.json().catch(() => null), currentMonth);
+  if (error) return NextResponse.json({ error: tErrors(error) }, { status: 400 });
 
   try {
     const goal = await Goal.create({ ...data, createdMonth: currentMonth, status: 'active' });
@@ -48,6 +50,6 @@ export async function POST(req) {
     return NextResponse.json(goal, { status: 201 });
   } catch (err) {
     logApiError('POST /api/obiettivi', err, { userId: session.user?.id });
-    return NextResponse.json({ error: 'Errore salvataggio obiettivo' }, { status: 500 });
+    return NextResponse.json({ error: tErrors('goalSaveFailed') }, { status: 500 });
   }
 }

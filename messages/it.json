@@ -140,7 +140,29 @@
     "templateNotFound": "Template non trovato",
     "fileTooLarge": "File troppo grande: il limite è {mb} MB",
     "noDataProvided": "Nessun dato fornito",
-    "parseError": "Analisi del file non riuscita: {message}"
+    "parseError": "Analisi del file non riuscita: {message}",
+    "goalNotFound": "Obiettivo non trovato",
+    "goalsComputeFailed": "Errore nel calcolo degli obiettivi",
+    "goalComputeFailed": "Errore nel calcolo dell'obiettivo",
+    "goalSaveFailed": "Salvataggio dell'obiettivo non riuscito",
+    "goalAlreadyClosed": "L'obiettivo è già chiuso",
+    "goalAlreadyActive": "L'obiettivo è già attivo",
+    "invalidTransferTarget": "Obiettivo di destinazione non valido",
+    "invalidAction": "Azione non valida",
+    "goalClosedNoEdit": "Un obiettivo chiuso non si modifica: riaprilo prima",
+    "goalHasHistory": "L'obiettivo ha già una storia (quote ricevute o spese collegate): annullalo invece di eliminarlo",
+    "goalNameRequired": "Il nome è obbligatorio (massimo 100 caratteri)",
+    "goalAmountMin": "L'importo deve essere almeno 1 €",
+    "goalDeadlineInvalid": "Scadenza non valida",
+    "goalDeadlinePast": "La scadenza non può essere nel passato",
+    "goalInitialNegative": "Il già accantonato non può essere negativo",
+    "allocationMissing": "Ripartizione mancante",
+    "allocationInactiveGoal": "La ripartizione contiene un obiettivo non attivo",
+    "allocationDuplicateGoal": "Obiettivo ripetuto",
+    "allocationInvalidPct": "Le percentuali devono essere numeri interi tra 0 e 100",
+    "allocationOver100": "La somma delle percentuali è {total}%: massimo 100%",
+    "allocationMissingGoals": "Manca la percentuale per: {names}",
+    "allocationSaveFailed": "Salvataggio della ripartizione non riuscito"
   },
   "auth": {
     "email": "Email",
@@ -214,7 +236,8 @@
     "passwordUpdated": "Password aggiornata con successo",
     "adminCreated": "Admin creato",
     "resetRequested": "Se l'email è registrata, riceverai un link per il reset.",
-    "movementDeleted": "Movimento eliminato"
+    "movementDeleted": "Movimento eliminato",
+    "goalDeleted": "Obiettivo eliminato"
   },
   "email": {
     "team": "— Team {app}",
@@ -536,5 +559,183 @@
     "excludeTitle": "Escludi dalle analisi mensili",
     "editDetails": "Modifica dettagli",
     "amount": "Importo (€)"
+  },
+  "goalStates": {
+    "on_track": {
+      "label": "In linea",
+      "hint": "Con il ritmo attuale arrivi entro la scadenza"
+    },
+    "behind": {
+      "label": "In ritardo",
+      "hint": "Con il ritmo attuale non arrivi entro la scadenza"
+    },
+    "reached": {
+      "label": "Raggiunto",
+      "hint": "Importo raggiunto: non riceve più quote"
+    },
+    "expired": {
+      "label": "Scaduto",
+      "hint": "Scadenza passata senza raggiungere l'importo"
+    },
+    "unknown": {
+      "label": "Da pianificare",
+      "hint": "Manca la percentuale o non ci sono ancora mesi chiusi"
+    },
+    "completed": {
+      "label": "Concluso",
+      "hint": "Acquistato: l'avanzo è tornato al risparmio libero"
+    },
+    "cancelled": {
+      "label": "Annullato",
+      "hint": "Annullato: il disponibile è stato spostato"
+    }
+  },
+  "goals": {
+    "title": "Obiettivi",
+    "subtitle": "Il risparmio dei mesi chiusi, diviso tra ciò che vuoi acquistare",
+    "allocation": "Ripartizione",
+    "new": "Nuovo obiettivo",
+    "byDeadline": "entro {month}",
+    "ofTarget": "di {amount}",
+    "progressAria": "Avanzamento {pct}%",
+    "currentShare": "Quota attuale",
+    "perMonth": "{amount}/mese",
+    "shareValue": "{pct}% ≈ {amount}/mese",
+    "needed": "Servono",
+    "eta": "Stima arrivo",
+    "alreadySpent": "Già speso",
+    "kpi": {
+      "avgSavings": "Risparmio medio",
+      "lastClosedMonths": "{count, plural, one {ultimo mese chiuso} other {ultimi # mesi chiusi}}",
+      "noClosedMonth": "nessun mese chiuso",
+      "inProgress": "{month} (in corso)",
+      "provisional": "provvisorio, si ripartisce a fine mese",
+      "neededForAll": "Servono per tutti",
+      "toBeOnTime": "per arrivare in tempo",
+      "freeSavings": "Risparmio libero",
+      "unassignedPct": "{pct}% del risparmio non assegnato"
+    },
+    "definition": "Risparmio = entrate − uscite con metodi di pagamento tradizionali. Ticket e buoni non contano, e nemmeno i movimenti esclusi dalle analisi (es. giroconti verso il conto deposito).",
+    "notFeasible": "Per arrivare in tempo su tutti gli obiettivi servono {required} al mese, ma ne risparmi in media {avg}. Sposta una scadenza, riduci un importo o rivedi le spese.",
+    "needsPlan": "Ci sono obiettivi senza percentuale di risparmio: un amministratore deve scegliere la ripartizione.",
+    "idleShares": "{list} {count, plural, one {è chiuso} other {sono chiusi}}: la quota ora va nel risparmio libero.",
+    "redistribute": "Ridistribuisci",
+    "noActive": "Nessun obiettivo attivo.",
+    "createFirst": "Crea il primo obiettivo",
+    "closedTitle": "Conclusi e annullati",
+    "columns": {
+      "goal": "Obiettivo",
+      "state": "Stato",
+      "saved": "Accantonato",
+      "spent": "Speso",
+      "closedAt": "Chiuso a"
+    }
+  },
+  "goalDetail": {
+    "back": "Torna agli obiettivi",
+    "backShort": "← Obiettivi",
+    "header": "{target} entro {deadline} · creato a {created}",
+    "headerInitial": "{target} entro {deadline} · creato a {created} con {initial} già da parte",
+    "edit": "Modifica",
+    "purchased": "Acquistato",
+    "cancel": "Annulla",
+    "reopen": "Riapri",
+    "delete": "Elimina",
+    "actionFailed": "Operazione non riuscita",
+    "deleteFailed": "Eliminazione non riuscita",
+    "kpi": {
+      "saved": "Accantonato",
+      "savedSub": "{pct}% di {target}",
+      "available": "Disponibile",
+      "spentSub": "già spesi {amount}",
+      "noLinked": "nessuna spesa collegata",
+      "shareSub": "≈ {amount}/mese",
+      "reached": "Raggiunto",
+      "noMoreShares": "non riceve più quote",
+      "neededSub": "per {count, plural, one {# mese} other {# mesi}}, fino a {deadline}",
+      "closedAt": "Chiuso a",
+      "returned": "Restituito",
+      "toOtherGoal": "a un altro obiettivo",
+      "toFree": "al risparmio libero"
+    },
+    "projection": {
+      "unknown": "Serve almeno un mese chiuso e una percentuale assegnata per stimare l'andamento.",
+      "expired": "La scadenza è passata: mancano {remaining}. Sposta la scadenza o concludi l'obiettivo.",
+      "base": "Con il {pct}% del risparmio medio ({avg}/mese, {months, plural, one {ultimo mese} other {ultimi # mesi}}) arrivi a <b>{projected}</b> entro {deadline}",
+      "onTrack": ", raggiungendo l'importo verso <b>{reach}</b>.",
+      "behind": ": mancherebbero <b>{missing}</b>.",
+      "behindReach": ": mancherebbero <b>{missing}</b>. Al ritmo attuale ci arrivi verso <b>{reach}</b>."
+    },
+    "chartTitle": "Andamento e proiezione",
+    "chartLegend": "Linea piena: accantonato a fine mese. Tratteggio: proiezione con la quota attuale.",
+    "monthlyTitle": "Quote mensili",
+    "monthlyEmpty": "Nessun mese ancora ripartito.",
+    "columns": {
+      "savings": "Risparmio",
+      "share": "Quota",
+      "description": "Descrizione",
+      "amount": "Importo"
+    },
+    "linkedTitle": "Spese collegate",
+    "linkedHint": "Restano nei report, ma escono dal calcolo del risparmio e scalano il disponibile. Per collegarne una, apri il movimento e scegli l'obiettivo.",
+    "linkedEmpty": "Nessuna spesa collegata.",
+    "deleteTitle": "Elimina obiettivo",
+    "deleteText": "Eliminare <b>{name}</b>? È possibile solo nel mese di creazione: da quando riceve la prima quota ha una storia, e va annullato.",
+    "goBack": "Indietro",
+    "completeTitle": "Concludi obiettivo",
+    "cancelTitle": "Annulla obiettivo",
+    "completeText": "Segna <b>{name}</b> come acquistato. Smette di ricevere quote e il disponibile ({available}) torna nel risparmio libero.",
+    "completeTextNegative": "Segna <b>{name}</b> come acquistato. Smette di ricevere quote e il disponibile ({available}) torna nel risparmio libero: essendo negativo, la spesa eccedente viene coperta dal libero.",
+    "cancelText": "<b>{name}</b> smette di ricevere quote. Il disponibile ({available}) va:",
+    "destination": "Destinazione del disponibile",
+    "toFreeOption": "nel risparmio libero",
+    "toGoalOption": "a «{name}»",
+    "reopenLater": "Potrai riaprirlo in seguito.",
+    "confirmComplete": "Concludi",
+    "confirmCancel": "Annulla obiettivo"
+  },
+  "goalForm": {
+    "saveFailed": "Errore durante il salvataggio",
+    "editTitle": "Modifica obiettivo",
+    "newTitle": "Nuovo obiettivo",
+    "intro": "Qualcosa da acquistare entro una data: un viaggio, un'auto, la casa. Si finanzia con il risparmio dei mesi chiusi, secondo la percentuale che sceglierai.",
+    "name": "Cosa vuoi acquistare *",
+    "namePlaceholder": "Es. Viaggio in Giappone",
+    "amount": "Importo (€) *",
+    "deadline": "Entro *",
+    "deadlinePlaceholder": "AAAA-MM",
+    "initial": "Già messo da parte (€) <muted>(opzionale)</muted>",
+    "initialHint": "Soldi che hai già accantonato per questo obiettivo prima di oggi.",
+    "save": "Salva",
+    "create": "Crea obiettivo"
+  },
+  "allocation": {
+    "title": "Ripartizione del risparmio",
+    "introForced": "Ci sono obiettivi senza percentuale. Scegli quanta parte del risparmio mensile va a ciascuno: vale dal mese in corso ({month}) in poi, i mesi già chiusi restano com'erano. Quello che non assegni resta risparmio libero.",
+    "intro": "Quanta parte del risparmio mensile va a ciascun obiettivo: vale dal mese in corso ({month}) in poi, i mesi già chiusi restano com'erano. Quello che non assegni resta risparmio libero.",
+    "notFeasible": "Per arrivare in tempo su tutti gli obiettivi servirebbero {required} al mese, ma il risparmio medio è {avg}. Il suggerimento divide comunque il 100%: valuta di spostare una scadenza o ridurre un importo.",
+    "columns": {
+      "neededPerMonth": "Servono/mese",
+      "suggested": "Suggerito",
+      "percentage": "Percentuale",
+      "perMonth": "≈ €/mese"
+    },
+    "pctFor": "Percentuale per {name}",
+    "totalAssigned": "Totale assegnato",
+    "over100": "La somma supera il 100%: riduci qualche percentuale o usa il suggerimento.",
+    "reached": "Già raggiunti, non ricevono più quote: {names}.",
+    "basis": "Importi in euro calcolati sul risparmio medio {months, plural, one {dell'ultimo mese chiuso} other {degli ultimi # mesi chiusi}} ({avg}/mese).",
+    "noBasis": "Non ci sono ancora mesi chiusi con movimenti: gli importi in euro compariranno dopo il primo mese.",
+    "useSuggestion": "Usa il suggerimento",
+    "save": "Salva ripartizione"
+  },
+  "goalChart": {
+    "empty": "Il grafico compare dopo il primo mese chiuso con una quota assegnata.",
+    "saved": "Accantonato: {amount}",
+    "projected": "Proiezione: {amount}",
+    "target": "Obiettivo {amount}",
+    "deadline": "Scadenza",
+    "savedSeries": "Accantonato",
+    "projectedSeries": "Proiezione"
   }
 }
