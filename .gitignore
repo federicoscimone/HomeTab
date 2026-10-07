@@ -26,8 +26,6 @@
 
 # logs applicazione
 /logs
-/deploy/nginx/certs/*.crt
-/deploy/nginx/certs/*.key
 
 # debug
 npm-debug.log*
@@ -55,6 +53,9 @@ AGENTS.md
 # VS Code (local editor settings)
 .vscode/
 
-# GitHub (local workflows and prompts)
-.github/
-Lista_movimenti.csv
+# Estratti conto ed export bancari: contengono dati reali e non vanno mai versionati.
+# Il 2026-04 un export finì nella history e per toglierlo è servito riscriverla.
+# I file di prova dei test si generano in memoria, quindi qui non serve alcuna eccezione.
+*.xlsx
+*.xls
+*.csv

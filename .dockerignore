@@ -7,7 +7,6 @@ coverage
 # Environment and secrets
 .env
 .env.*
-!.env.production.example
 
 # Local logs and backups
 logs

@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # One pull request for all minor and patch updates, one per major.
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    # xlsx comes from the SheetJS CDN, not from npm: Dependabot would propose the stale 0.18.5.
+    ignore:
+      - dependency-name: xlsx
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
