@@ -2,8 +2,6 @@ import './globals.css';
 import { cookies } from 'next/headers';
 import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';
-import User from '@/lib/models/User';
-import seedDemoMode from '@/lib/seed-demo-mode';
 import SessionProvider from '@/components/layout/SessionProvider';
 import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistration';
 
@@ -41,16 +39,9 @@ export default async function RootLayout({ children }) {
   // Durante la build dell'immagine container non esiste un database raggiungibile:
   // BUILD_TARGET è impostato solo nello stage builder del Dockerfile, mai a runtime
   // né su Vercel, dove questo blocco si comporta esattamente come prima.
+  // Il seed della demo è in instrumentation.js, eseguito una volta all'avvio del server.
   if (process.env.BUILD_TARGET !== 'container') {
     await connectDB();
-
-    // Demo mode: seed automatico al primo avvio
-    if (process.env.DEMO_MODE === 'true') {
-      const marioExists = await User.findOne({ email: 'mario@test.it' });
-      if (!marioExists) {
-        await seedDemoMode();
-      }
-    }
   }
 
   const session = await auth();

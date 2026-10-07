@@ -5,6 +5,13 @@ import { pageRedirectFor } from '@/lib/auth/permissions';
 
 const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password', '/setup', '/offline'];
 const FIRST_ACCESS = '/primo-accesso';
+/**
+ * Rotte API chiamate senza sessione che verificano da sole chi le chiama (un segreto condiviso
+ * nell'header). Senza questa eccezione il cron del backup riceveva un 307 verso /login e il
+ * controllo del segreto nella rotta non veniva mai raggiunto. Elenco esplicito e non "tutte le
+ * API": una rotta nuova che dimenticasse il proprio controllo resta comunque chiusa qui.
+ */
+const SELF_AUTHENTICATED_API = ['/api/integrations/google-drive/run-scheduled'];
 const SESSION_COOKIES = ['next-auth.session-token', '__Secure-next-auth.session-token'];
 
 /**
@@ -20,7 +27,10 @@ export async function proxy(req) {
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-  if (!token) return isPublic ? NextResponse.next() : redirect('/login');
+  if (!token) {
+    if (isPublic || SELF_AUTHENTICATED_API.includes(pathname)) return NextResponse.next();
+    return redirect('/login');
+  }
   if (pathname.startsWith('/api/')) return NextResponse.next();
 
   // Il token dice solo chi sei: ruolo, attivazione e password provvisoria si leggono dal database,

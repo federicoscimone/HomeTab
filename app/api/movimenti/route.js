@@ -11,6 +11,7 @@ import Movement from '@/lib/models/Movement';
 import { getPaymentGroup } from '@/lib/utils/payments';
 import logger, { logApiError } from '@/lib/logger';
 import { writeAudit } from '@/lib/utils/audit';
+import { buildMovementFilter } from '@/lib/utils/movementFilter';
 
 export async function GET(req) {
   const { session, denied } = await requirePermission('data:read');
@@ -21,46 +22,11 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const page      = Math.max(1, parseInt(searchParams.get('page') || '1'));
   const limit     = Math.min(100, parseInt(searchParams.get('limit') || '20'));
-  const from      = searchParams.get('from');
-  const to        = searchParams.get('to');
-  const categoryIds   = searchParams.get('categoryIds') ? searchParams.get('categoryIds').split(',').filter(Boolean) : [];
-  const paymentMethod = searchParams.get('paymentMethod');
-  const paymentGroup  = searchParams.get('paymentGroup');
-  const search        = searchParams.get('search');
-  const type          = searchParams.get('type');
-  const incomplete    = searchParams.get('incomplete') === '1';
-  const excludeFromAnalysis = searchParams.get('excludeFromAnalysis') === '1';
-
   const SORT_FIELDS = { date: 'date', payee: 'payee', amount: 'amount' };
   const sortField = SORT_FIELDS[searchParams.get('sort')] || 'date';
   const sortDir   = searchParams.get('sortDir') === 'asc' ? 1 : -1;
 
-  const filter = {};
-  if (from || to) {
-    filter.date = {};
-    if (from) filter.date.$gte = from;
-    if (to)   filter.date.$lte = to;
-  }
-  if (categoryIds.length > 0) {
-    filter.$or = [
-      { categoryId: { $in: categoryIds } },
-      { subCategory1Id: { $in: categoryIds } },
-      { subCategory2Id: { $in: categoryIds } }
-    ];
-  }
-  if (paymentMethod) filter.paymentMethod = paymentMethod;
-  if (paymentGroup)  filter.paymentGroup  = paymentGroup;
-  if (type)          filter.type = type;
-  if (search) {
-    const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    filter.$or = [{ payee: rx }, { description: rx }, { place: rx }, { notes: rx }];
-  }
-  if (incomplete) {
-    filter.categoryId = null;
-  }
-  if (excludeFromAnalysis) {
-    filter.excludeFromAnalysis = true;
-  }
+  const filter = buildMovementFilter(searchParams);
 
   const [expenses, total] = await Promise.all([
     Movement.find(filter)
