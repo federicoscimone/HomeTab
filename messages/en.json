@@ -13,7 +13,9 @@
   },
   "common": {
     "tagline": "Family Manager",
-    "version": "Version {version}"
+    "version": "Version {version}",
+    "networkError": "Network error. Please try again.",
+    "emailPlaceholder": "name@email.com"
   },
   "nav": {
     "main": "Main navigation",
@@ -86,6 +88,113 @@
     "notAuthenticated": "Not signed in",
     "pendingPassword": "You must replace your temporary password first",
     "forbidden": "You don't have permission for this operation",
-    "invalidLocale": "Invalid language"
+    "invalidLocale": "Invalid language",
+    "internal": "Internal error",
+    "missingData": "Missing data",
+    "passwordTooShort": "The password must be at least 8 characters long",
+    "newPasswordTooShort": "The new password must be at least 8 characters long",
+    "newPasswordSame": "The new password must be different from the current one",
+    "userNotFound": "User not found",
+    "wrongCurrentPassword": "The current password is incorrect",
+    "demoPasswordLocked": "The demo accounts' password can't be changed",
+    "setupDone": "Setup already completed",
+    "allFieldsRequired": "All fields are required",
+    "emailRequired": "Email is required",
+    "invalidResetLink": "Invalid or expired link",
+    "demoResetDisabled": "Password reset is disabled in demo mode"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "passwordsMismatch": "The passwords don't match",
+    "passwordTooShort": "The password must be at least 8 characters long",
+    "minLength": "At least 8 characters",
+    "repeatPassword": "Repeat the password",
+    "backToLogin": "Back to sign in",
+    "login": {
+      "subtitle": "Sign in to your account",
+      "forgot": "Forgot your password?",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "invalid": "Incorrect email or password"
+    },
+    "forgot": {
+      "subtitle": "Recover your password",
+      "intro": "Enter your email and we'll send you a link to reset your password.",
+      "submit": "Send reset link",
+      "submitting": "Sending…",
+      "sendError": "Couldn't send the email",
+      "sentTitle": "Email sent",
+      "sentText": "If the address is registered, you'll receive a link to reset your password. The link is valid for <b>60 minutes</b>.",
+      "spam": "Check your spam folder too."
+    },
+    "reset": {
+      "subtitle": "Set a new password",
+      "checking": "Checking the link…",
+      "invalidTitle": "Invalid link",
+      "invalidText": "The link has expired or has already been used. Request a new one.",
+      "requestNew": "Request a new link",
+      "doneTitle": "Password updated",
+      "doneText": "Redirecting to sign in in a few seconds…",
+      "goToLogin": "Go to sign in",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "submit": "Update password",
+      "submitting": "Updating…",
+      "resetError": "Couldn't reset the password"
+    },
+    "firstAccess": {
+      "subtitleNamed": "Hi {name}, choose your password",
+      "subtitle": "Choose your password",
+      "intro": "You're using a temporary password set by an administrator. Replace it with one only you know to continue.",
+      "currentLabel": "Temporary password",
+      "submit": "Set my password",
+      "signOut": "Sign out"
+    },
+    "setup": {
+      "subtitle": "First-time setup — Create the admin account",
+      "info": "This form is available only on the first start, while no user exists yet.",
+      "name": "Name",
+      "namePlaceholder": "Your name",
+      "submit": "Create admin account",
+      "submitting": "Creating…",
+      "doneTitle": "Account created!",
+      "doneText": "Redirecting to sign in…",
+      "createError": "Couldn't create the account"
+    },
+    "changePassword": {
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Update password",
+      "mismatch": "The new passwords don't match",
+      "updateError": "Couldn't update the password"
+    }
+  },
+  "apiMessages": {
+    "passwordUpdated": "Password updated",
+    "adminCreated": "Admin created",
+    "resetRequested": "If the email is registered, you'll receive a reset link."
+  },
+  "email": {
+    "team": "— The {app} team",
+    "reset": {
+      "subject": "{app} — Password reset",
+      "greeting": "Hi {name},",
+      "intro": "You asked to reset the password of your {app} account.",
+      "linkIntro": "Open the following link to set a new password:",
+      "buttonIntro": "You asked to reset your password. Click the button to set a new one:",
+      "button": "Reset password",
+      "validity": "The link is valid for {minutes} minutes and can be used only once.",
+      "ignore": "If you didn't ask for a reset, ignore this email — your password won't change.",
+      "ignoreShort": "If you didn't ask for a reset, ignore this email.",
+      "alternative": "Alternative link:"
+    },
+    "changed": {
+      "subject": "{app} — Password changed",
+      "greeting": "Hi {name},",
+      "text": "Your password has been changed.",
+      "warning": "If it wasn't you, contact the administrator right away."
+    }
   }
 }

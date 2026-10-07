@@ -13,7 +13,9 @@
   },
   "common": {
     "tagline": "Family Manager",
-    "version": "Versione {version}"
+    "version": "Versione {version}",
+    "networkError": "Errore di rete. Riprova.",
+    "emailPlaceholder": "nome@email.com"
   },
   "nav": {
     "main": "Navigazione principale",
@@ -86,6 +88,113 @@
     "notAuthenticated": "Non autenticato",
     "pendingPassword": "Devi prima sostituire la password provvisoria",
     "forbidden": "Non hai i permessi per questa operazione",
-    "invalidLocale": "Lingua non valida"
+    "invalidLocale": "Lingua non valida",
+    "internal": "Errore interno",
+    "missingData": "Dati mancanti",
+    "passwordTooShort": "La password deve essere di almeno 8 caratteri",
+    "newPasswordTooShort": "La nuova password deve essere di almeno 8 caratteri",
+    "newPasswordSame": "La nuova password deve essere diversa da quella attuale",
+    "userNotFound": "Utente non trovato",
+    "wrongCurrentPassword": "Password attuale non corretta",
+    "demoPasswordLocked": "La password degli account demo non si può cambiare",
+    "setupDone": "Setup già completato",
+    "allFieldsRequired": "Tutti i campi sono obbligatori",
+    "emailRequired": "Email obbligatoria",
+    "invalidResetLink": "Link non valido o scaduto",
+    "demoResetDisabled": "Reset password disabilitato in modalità demo"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "passwordsMismatch": "Le password non coincidono",
+    "passwordTooShort": "La password deve essere di almeno 8 caratteri",
+    "minLength": "Minimo 8 caratteri",
+    "repeatPassword": "Ripeti la password",
+    "backToLogin": "Torna al login",
+    "login": {
+      "subtitle": "Accedi al tuo account",
+      "forgot": "Password dimenticata?",
+      "submit": "Accedi",
+      "submitting": "Accesso in corso…",
+      "invalid": "Email o password non corretti"
+    },
+    "forgot": {
+      "subtitle": "Recupera la tua password",
+      "intro": "Inserisci la tua email e ti invieremo un link per reimpostare la password.",
+      "submit": "Invia link di reset",
+      "submitting": "Invio in corso…",
+      "sendError": "Errore durante l'invio",
+      "sentTitle": "Email inviata",
+      "sentText": "Se l'indirizzo è registrato, riceverai un link per reimpostare la password. Il link è valido per <b>60 minuti</b>.",
+      "spam": "Controlla anche la cartella spam."
+    },
+    "reset": {
+      "subtitle": "Imposta nuova password",
+      "checking": "Verifica link in corso…",
+      "invalidTitle": "Link non valido",
+      "invalidText": "Il link è scaduto o è già stato utilizzato. Richiedine uno nuovo.",
+      "requestNew": "Richiedi nuovo link",
+      "doneTitle": "Password aggiornata",
+      "doneText": "Reindirizzamento al login tra pochi secondi…",
+      "goToLogin": "Vai al login",
+      "newPassword": "Nuova password",
+      "confirmPassword": "Conferma password",
+      "submit": "Aggiorna password",
+      "submitting": "Aggiornamento…",
+      "resetError": "Errore durante il reset"
+    },
+    "firstAccess": {
+      "subtitleNamed": "Ciao {name}, scegli la tua password",
+      "subtitle": "Scegli la tua password",
+      "intro": "Stai usando una password provvisoria assegnata da un amministratore. Sostituiscila con una che conosci solo tu per continuare.",
+      "currentLabel": "Password provvisoria",
+      "submit": "Imposta la mia password",
+      "signOut": "Esci"
+    },
+    "setup": {
+      "subtitle": "Configurazione iniziale — Crea l'account admin",
+      "info": "Questo form è disponibile solo al primo avvio, quando non esiste ancora nessun utente.",
+      "name": "Nome",
+      "namePlaceholder": "Il tuo nome",
+      "submit": "Crea account admin",
+      "submitting": "Creazione…",
+      "doneTitle": "Account creato!",
+      "doneText": "Reindirizzamento al login…",
+      "createError": "Errore durante la creazione"
+    },
+    "changePassword": {
+      "current": "Password attuale",
+      "new": "Nuova password",
+      "confirm": "Conferma nuova password",
+      "submit": "Aggiorna password",
+      "mismatch": "Le nuove password non coincidono",
+      "updateError": "Errore durante l'aggiornamento"
+    }
+  },
+  "apiMessages": {
+    "passwordUpdated": "Password aggiornata con successo",
+    "adminCreated": "Admin creato",
+    "resetRequested": "Se l'email è registrata, riceverai un link per il reset."
+  },
+  "email": {
+    "team": "— Team {app}",
+    "reset": {
+      "subject": "{app} — Reset della password",
+      "greeting": "Ciao {name},",
+      "intro": "Hai richiesto il reset della password per il tuo account {app}.",
+      "linkIntro": "Clicca sul link seguente per impostare una nuova password:",
+      "buttonIntro": "Hai richiesto il reset della password. Clicca sul pulsante per impostarne una nuova:",
+      "button": "Reimposta Password",
+      "validity": "Il link è valido per {minutes} minuti e può essere usato una sola volta.",
+      "ignore": "Se non hai richiesto il reset, ignora questa email — la tua password non verrà modificata.",
+      "ignoreShort": "Se non hai richiesto il reset, ignora questa email.",
+      "alternative": "Link alternativo:"
+    },
+    "changed": {
+      "subject": "{app} — Password modificata",
+      "greeting": "Ciao {name},",
+      "text": "La tua password è stata modificata con successo.",
+      "warning": "Se non sei stato tu, contatta immediatamente l'amministratore."
+    }
   }
 }

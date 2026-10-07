@@ -9,11 +9,13 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import ChangePasswordForm from '@/components/account/ChangePasswordForm';
 
 export default function PrimoAccessoPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const t = useTranslations('auth.firstAccess');
 
   return (
     <div className="card bg-base-100 shadow-xl w-full max-w-sm">
@@ -21,25 +23,22 @@ export default function PrimoAccessoPage() {
         <div className="text-center mb-2">
           <h1 className="text-2xl font-bold text-primary">HomeTab</h1>
           <p className="text-sm text-base-content/60">
-            {session?.user?.name ? `Ciao ${session.user.name}, ` : ''}scegli la tua password
+            {session?.user?.name ? t('subtitleNamed', { name: session.user.name }) : t('subtitle')}
           </p>
         </div>
-        <p className="text-sm text-base-content/70">
-          Stai usando una password provvisoria assegnata da un amministratore. Sostituiscila con una
-          che conosci solo tu per continuare.
-        </p>
+        <p className="text-sm text-base-content/70">{t('intro')}</p>
 
         {session?.user?.email && (
           <ChangePasswordForm
             email={session.user.email}
-            currentLabel="Password provvisoria"
-            submitLabel="Imposta la mia password"
+            currentLabel={t('currentLabel')}
+            submitLabel={t('submit')}
             onDone={() => { router.replace('/'); router.refresh(); }}
           />
         )}
 
         <button className="btn btn-ghost btn-sm" onClick={() => signOut({ callbackUrl: '/login' })}>
-          Esci
+          {t('signOut')}
         </button>
       </div>
     </div>

@@ -4,12 +4,15 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 export default function LoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +28,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (res?.error) {
-      setError('Email o password non corretti');
+      setError(t('login.invalid'));
     } else {
       router.push('/');
       router.refresh();
@@ -37,7 +40,7 @@ export default function LoginPage() {
       <div className="card-body gap-4">
         <div className="text-center mb-2">
           <h1 className="text-2xl font-bold text-primary">HomeTab</h1>
-          <p className="text-sm text-base-content/60">Accedi al tuo account</p>
+          <p className="text-sm text-base-content/60">{t('login.subtitle')}</p>
         </div>
 
         {error && (
@@ -48,11 +51,11 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <label className="form-control">
-            <div className="label"><span className="label-text">Email</span></div>
+            <div className="label"><span className="label-text">{t('email')}</span></div>
             <input
               type="email"
               className="input input-bordered"
-              placeholder="nome@email.com"
+              placeholder={tCommon('emailPlaceholder')}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
@@ -61,7 +64,7 @@ export default function LoginPage() {
           </label>
 
           <label className="form-control">
-            <div className="label"><span className="label-text">Password</span></div>
+            <div className="label"><span className="label-text">{t('password')}</span></div>
             <input
               type="password"
               className="input input-bordered"
@@ -75,12 +78,12 @@ export default function LoginPage() {
 
           <div className="text-right">
             <Link href="/forgot-password" className="text-xs text-primary hover:underline">
-              Password dimenticata?
+              {t('login.forgot')}
             </Link>
           </div>
 
           <button type="submit" className={`btn btn-primary mt-1 ${loading ? 'loading' : ''}`} disabled={loading}>
-            {loading ? 'Accesso in corso…' : 'Accedi'}
+            {loading ? t('login.submitting') : t('login.submit')}
           </button>
         </form>
       </div>
