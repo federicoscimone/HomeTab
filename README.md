@@ -51,8 +51,8 @@ Open <http://localhost:3000> and sign in as **mario@test.it** / **Asdf_lkjH**. T
 builds the image and generates the demo data, so allow a few minutes.
 
 Demo mode (`DEMO_MODE=true`) is meant for trying the app. For real data set it to `false`
-before the first start, then open <http://localhost:3000/setup> to create the administrator
-account (the page works only while no user exists). Categories
+before the first start: with no users yet, the app opens the page that creates the
+administrator account. Categories
 are created in Settings or, when running from source, with `npm run seed` (a default tree with
 keyword rules) and `node lib/seed-income.js` (income categories). Both skip a database that
 already has categories.
