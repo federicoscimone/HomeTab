@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useApiData } from '@/lib/hooks/useApiData';
 
 const ACTION_LABELS = {
   CREATE:          { label: 'Creazione',      color: 'badge-success' },
@@ -23,39 +24,23 @@ const RESOURCE_LABELS = {
 const LIMIT = 25;
 
 export default function AuditLogPage() {
-  const [logs, setLogs]       = useState([]);
-  const [total, setTotal]     = useState(0);
   const [page, setPage]       = useState(1);
-  const [loading, setLoading] = useState(false);
   const [sortDir, setSortDir] = useState('desc');
 
   const [filters, setFilters] = useState({ search: '', action: '', resource: '', from: '', to: '' });
   const [applied, setApplied] = useState(filters);
 
+  const query = new URLSearchParams({ page, limit: LIMIT, sortDir });
+  if (applied.search)   query.set('search',   applied.search);
+  if (applied.action)   query.set('action',   applied.action);
+  if (applied.resource) query.set('resource', applied.resource);
+  if (applied.from)     query.set('from',     applied.from);
+  if (applied.to)       query.set('to',       applied.to);
+  const { data, loading } = useApiData(`/api/audit?${query}`, 'audit-log');
+  const logs  = data?.logs ?? [];
+  const total = data?.total ?? 0;
+
   const pages = Math.ceil(total / LIMIT);
-
-  const fetchLogs = useCallback(async (currentPage, f, dir) => {
-    setLoading(true);
-    try {
-      const p = new URLSearchParams({ page: currentPage, limit: LIMIT, sortDir: dir });
-      if (f.search)   p.set('search',   f.search);
-      if (f.action)   p.set('action',   f.action);
-      if (f.resource) p.set('resource', f.resource);
-      if (f.from)     p.set('from',     f.from);
-      if (f.to)       p.set('to',       f.to);
-
-      const res  = await fetch(`/api/audit?${p}`);
-      const data = await res.json();
-      setLogs(data.logs ?? []);
-      setTotal(data.total ?? 0);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchLogs(page, applied, sortDir);
-  }, [page, applied, sortDir, fetchLogs]);
 
   const handleSearch = (e) => {
     e.preventDefault();

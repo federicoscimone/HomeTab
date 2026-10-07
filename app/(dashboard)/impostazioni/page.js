@@ -1,26 +1,45 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+
+/** @returns {Promise<object>} Stato dell'integrazione Google Drive. */
+async function fetchDriveStatus() {
+  const res = await fetch('/api/integrations/google-drive', { cache: 'no-store' });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Errore caricamento stato Google Drive');
+  return data;
+}
 
 export default function ImpostazioniPage() {
   const [driveStatus, setDriveStatus] = useState(null);
   const [driveSettings, setDriveSettings] = useState({ autoBackupEnabled: false, backupFrequency: 'weekly' });
   const [driveBusy, setDriveBusy] = useState(false);
   const [driveSaving, setDriveSaving] = useState(false);
-  const [driveMessage, setDriveMessage] = useState('');
-  const [driveError, setDriveError] = useState('');
+  // L'esito del collegamento OAuth arriva nell'URL di ritorno da Google: il messaggio iniziale si
+  // legge da lì al primo render, poi l'effetto ripulisce l'URL senza toccare lo stato.
+  const searchParams = useSearchParams();
+  const [driveMessage, setDriveMessage] = useState(
+    () => (searchParams.get('driveConnected') === '1' ? 'Google Drive collegato correttamente.' : ''),
+  );
+  const [driveError, setDriveError] = useState(
+    () => (searchParams.get('driveError') ? 'Collegamento Google Drive non completato. Riprova.' : ''),
+  );
+
+  const applyDriveStatus = (data) => {
+    setDriveStatus(data);
+    setDriveSettings({
+      autoBackupEnabled: !!data.autoBackupEnabled,
+      backupFrequency: data.backupFrequency || 'weekly',
+    });
+  };
+  const showDriveStatusError = (err) => setDriveError(err.message || 'Errore caricamento stato Google Drive');
+
+  /** Ricarica lo stato dopo un'azione dell'utente (collega, scollega, salva, backup). */
+  const refreshDriveStatus = () => fetchDriveStatus().then(applyDriveStatus, showDriveStatusError);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-
-    if (params.get('driveConnected') === '1') {
-      setDriveMessage('Google Drive collegato correttamente.');
-    }
-
-    if (params.get('driveError')) {
-      setDriveError('Collegamento Google Drive non completato. Riprova.');
-    }
-
     if (params.get('driveConnected') || params.get('driveError')) {
       params.delete('driveConnected');
       params.delete('driveError');
@@ -29,24 +48,9 @@ export default function ImpostazioniPage() {
       window.history.replaceState({}, '', nextUrl);
     }
 
-    void refreshDriveStatus();
+    // Lo stato si aggiorna solo nei callback, quando la risposta arriva.
+    fetchDriveStatus().then(applyDriveStatus, showDriveStatusError);
   }, []);
-
-  const refreshDriveStatus = async () => {
-    try {
-      const res = await fetch('/api/integrations/google-drive', { cache: 'no-store' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Errore caricamento stato Google Drive');
-
-      setDriveStatus(data);
-      setDriveSettings({
-        autoBackupEnabled: !!data.autoBackupEnabled,
-        backupFrequency: data.backupFrequency || 'weekly',
-      });
-    } catch (err) {
-      setDriveError(err.message || 'Errore caricamento stato Google Drive');
-    }
-  };
 
   const handleConnectDrive = async () => {
     setDriveError('');
