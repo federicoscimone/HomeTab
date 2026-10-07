@@ -55,6 +55,15 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM: ${SMTP_FROM}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+      GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-}
+      GOOGLE_DRIVE_TOKEN_SECRET: ${GOOGLE_DRIVE_TOKEN_SECRET:-}
+      BACKUP_CRON_SECRET: ${BACKUP_CRON_SECRET:-}
+    # Porta sull'host. Dietro un reverse proxy conviene legarla a 127.0.0.1 (APP_BIND), così
+    # l'app non è raggiungibile in rete aggirando il proxy.
+    ports:
+      - "${APP_BIND:-0.0.0.0}:${APP_PORT:-3000}:3000"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000').then(r=>process.exit(r.ok||r.status<500?0:1)).catch(()=>process.exit(1))"]
       interval: 20s
@@ -63,11 +72,12 @@ services:
       start_period: 45s
     networks:
       - internal
-      - edge
+      - public
+    # Etichette per Traefik: senza Traefik sono inerti. Spente di default (TRAEFIK_ENABLE).
     labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=edge"
-      - "traefik.http.routers.hometab.rule=Host(`hometab.192.168.1.53.sslip.io`)"
+      - "traefik.enable=${TRAEFIK_ENABLE:-false}"
+      - "traefik.docker.network=${PUBLIC_NETWORK:-hometab_public}"
+      - "traefik.http.routers.hometab.rule=Host(`${APP_HOST:-localhost}`)"
       - "traefik.http.services.hometab.loadbalancer.server.port=3000"
 
 volumes:
@@ -75,5 +85,10 @@ volumes:
 
 networks:
   internal:
-  edge:
-    external: true
+  # Rete da cui l'app è raggiungibile. Di default compose la crea per il progetto. Dietro un
+  # reverse proxy che vive su una rete già esistente (es. Traefik sulla rete "edge") si
+  # impostano PUBLIC_NETWORK=edge e PUBLIC_NETWORK_EXTERNAL=true: stesso file per tutti, la
+  # differenza fra ambienti sta solo nelle variabili.
+  public:
+    name: ${PUBLIC_NETWORK:-hometab_public}
+    external: ${PUBLIC_NETWORK_EXTERNAL:-false}
