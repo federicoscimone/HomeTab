@@ -8,7 +8,7 @@ import { useState, useCallback } from 'react';
 import { useApiData } from '@/lib/hooks/useApiData';
 import MonthlyLineChart from '@/components/report/MonthlyLineChart';
 import CategoryBarChart from '@/components/report/CategoryBarChart';
-import { fmt, fmtPct, deltaClass, MONTHS_SHORT } from '@/lib/utils/format';
+import { fmt, fmtPct, deltaClass, MONTHS_SHORT, MONTHS_FULL } from '@/lib/utils/format';
 
 const MONTHS = MONTHS_SHORT.slice(1); // ['Gen', ...]
 
@@ -24,6 +24,7 @@ export default function CategoriePage() {
   const [mode,     setMode]     = useState('annual'); // 'annual' | 'monthly'
   const [type,     setType]     = useState('expense');
   const [paymentGroup, setPaymentGroup] = useState('traditional'); // traditional | alternative | all
+  const [compare,  setCompare]  = useState('period'); // 'period' | 'full', conta solo per un periodo in corso
 
   let url = `/api/report/categorie?year=${year}&type=${type}`;
   if (mode === 'monthly') {
@@ -32,14 +33,34 @@ export default function CategoriePage() {
   if (paymentGroup !== 'all') {
     url += `&paymentGroup=${paymentGroup}`;
   }
-  const { data, loading, error } = useApiData(url, 'report/categorie');
+  const { data, loading, error } = useApiData(`${url}&compare=${compare}`, 'report/categorie');
 
   // La selezione vale solo per i filtri con cui è stata fatta: cambiando anno, tipo o mese la
-  // categoria scelta potrebbe non esistere più nei nuovi dati, quindi decade da sola.
+  // categoria scelta potrebbe non esistere più nei nuovi dati, quindi decade da sola. La base del
+  // confronto non conta: le categorie mostrate restano le stesse.
   const [selection, setSelection] = useState({ url: null, id: null });
   const selected = selection.url === url ? selection.id : null;
 
   const categories  = data?.categories || [];
+
+  // Periodo in corso: il confronto può essere con lo stesso periodo dell'anno prima o con il
+  // periodo intero. Le etichette lo dicono sempre, così nessun numero resta ambiguo.
+  const cutoff     = data?.cutoff ?? null;
+  const cutoffDay  = cutoff ? `${Number(cutoff.slice(8))} ${MONTHS_FULL[Number(cutoff.slice(5, 7)) - 1].toLowerCase()}` : '';
+  const monthName  = MONTHS_FULL[month - 1];
+  const periodName = mode === 'annual' ? String(year) : `${monthName} ${year}`;
+  const prevName   = mode === 'annual' ? String(year - 1) : `${monthName} ${year - 1}`;
+  let subtitle = `Confronto ${periodName} vs ${prevName}`;
+  if (cutoff && mode === 'annual') {
+    subtitle = compare === 'period'
+      ? `${year} fino al ${cutoffDay}, confrontato con lo stesso periodo del ${year - 1}`
+      : `${year} fino al ${cutoffDay}, confrontato con tutto il ${year - 1}`;
+  } else if (cutoff) {
+    subtitle = compare === 'period'
+      ? `${monthName} ${year} fino al ${cutoffDay}, confrontato con gli stessi giorni di ${monthName.toLowerCase()} ${year - 1}`
+      : `${monthName} ${year} fino al ${cutoffDay}, confrontato con tutto ${monthName.toLowerCase()} ${year - 1}`;
+  }
+  const prevLabel  = !cutoff ? prevName : compare === 'period' ? `${prevName}, stesso periodo` : `${prevName} intero`;
   const selectedCat = selected ? categories.find(c => c.categoryId === selected) : null;
 
   /** Toggles the selected category; clicking the same one deselects it. */
@@ -54,11 +75,7 @@ export default function CategoriePage() {
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4 sm:mb-6">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold">Analisi per Categoria</h1>
-          <p className="text-sm text-base-content/50">
-            {mode === 'annual'
-              ? `Confronto anno corrente vs anno precedente`
-              : `Confronto ${MONTHS[month - 1]} ${year} vs ${MONTHS[month - 1]} ${year - 1}`}
-          </p>
+          <p className="text-sm text-base-content/50">{subtitle}</p>
         </div>
       </div>
 
@@ -97,6 +114,15 @@ export default function CategoriePage() {
           <option value="alternative">Alternativi</option>
           <option value="all">Tutti</option>
         </select>
+
+        {cutoff && (
+          <div className="tabs tabs-boxed" role="group" aria-label="Base del confronto">
+            {[['period', 'Stesso periodo'], ['full', 'Anno intero']].map(([v, l]) => (
+              <button key={v} className={`tab tab-sm ${compare === v ? 'tab-active' : ''}`}
+                onClick={() => setCompare(v)}>{mode === 'monthly' && v === 'full' ? 'Mese intero' : l}</button>
+            ))}
+          </div>
+        )}
 
         <div className="ml-auto tabs tabs-boxed">
           {[['annual', 'Annuale'], ['monthly', 'Mensile']].map(([v, l]) => (
@@ -169,45 +195,31 @@ export default function CategoriePage() {
                       <span className="w-3 h-3 rounded-full" style={{ backgroundColor: selectedCat.color }} />
                       <h2 className="text-lg font-bold">{selectedCat.categoryName}</h2>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {mode === 'annual' ? (
-                        <>
-                          {[
-                            { label: String(year),     val: fmt(selectedCat.totalCur), cls: '' },
-                            { label: String(year - 1), val: fmt(selectedCat.totalPrev), cls: 'text-base-content/60' },
-                            {
-                              label: 'Variazione',
-                              val: `${selectedCat.deltaAbs >= 0 ? '+' : ''}${fmt(selectedCat.deltaAbs)}`,
-                              cls: deltaClass(selectedCat.deltaAbs, type),
-                            },
-                            { label: 'Media/mese', val: fmt(selectedCat.avg), cls: '' },
-                          ].map(s => (
+                    {(() => {
+                      const delta = `${selectedCat.deltaAbs >= 0 ? '+' : ''}${fmt(selectedCat.deltaAbs)}`
+                        + (selectedCat.deltaPct !== null ? ` (${fmtPct(selectedCat.deltaPct)})` : '');
+                      const boxes = [
+                        { label: cutoff ? `${periodName} al ${cutoffDay}` : periodName, val: fmt(selectedCat.totalCur), cls: '' },
+                        ...(cutoff
+                          ? [
+                              { label: `${prevName}, stesso periodo`, val: fmt(selectedCat.totalPrevToDate), cls: 'text-base-content/60' },
+                              { label: `${prevName} intero`, val: fmt(selectedCat.totalPrevFull), cls: 'text-base-content/60' },
+                            ]
+                          : [{ label: prevName, val: fmt(selectedCat.totalPrev), cls: 'text-base-content/60' }]),
+                        { label: !cutoff ? 'Variazione' : compare === 'period' ? 'Variazione, stesso periodo' : 'Variazione, periodo intero', val: delta, cls: deltaClass(selectedCat.deltaAbs, type) },
+                        ...(mode === 'annual' ? [{ label: 'Media/mese', val: fmt(selectedCat.avg), cls: '' }] : []),
+                      ];
+                      return (
+                        <div className={`grid grid-cols-2 gap-3 ${boxes.length === 5 ? 'sm:grid-cols-5' : 'sm:grid-cols-4'}`}>
+                          {boxes.map(s => (
                             <div key={s.label} className="bg-base-200 rounded-lg p-3">
                               <p className="text-xs text-base-content/50 mb-1">{s.label}</p>
                               <p className={`text-lg font-bold ${s.cls}`}>{s.val}</p>
                             </div>
                           ))}
-                        </>
-                      ) : (
-                        <>
-                          {[
-                            { label: `${MONTHS[month - 1]} ${year}`, val: fmt(selectedCat.totalCur), cls: '' },
-                            { label: `${MONTHS[month - 1]} ${year - 1}`, val: fmt(selectedCat.totalPrev), cls: 'text-base-content/60' },
-                            {
-                              label: 'Variazione',
-                              val: `${selectedCat.deltaAbs >= 0 ? '+' : ''}${fmt(selectedCat.deltaAbs)}`,
-                              cls: deltaClass(selectedCat.deltaAbs, type),
-                            },
-                            { label: 'Variazione %', val: selectedCat.deltaPct !== null ? fmtPct(selectedCat.deltaPct) : '—', cls: selectedCat.deltaPct !== null ? deltaClass(selectedCat.deltaPct, type) : '' },
-                          ].map(s => (
-                            <div key={s.label} className="bg-base-200 rounded-lg p-3">
-                              <p className="text-xs text-base-content/50 mb-1">{s.label}</p>
-                              <p className={`text-lg font-bold ${s.cls}`}>{s.val}</p>
-                            </div>
-                          ))}
-                        </>
-                      )}
-                    </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -222,6 +234,11 @@ export default function CategoriePage() {
                         year={year}
                         prevYear={year - 1}
                       />
+                      {cutoff && (
+                        <p className="text-xs text-base-content/40 mt-2">
+                          {MONTHS_FULL[Number(cutoff.slice(5, 7)) - 1]} è in corso: è nella tabella, non nel grafico.
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -241,13 +258,16 @@ export default function CategoriePage() {
                         </thead>
                         <tbody>
                           {selectedCat.monthly.map(m => {
-                            const delta    = m.cur - m.prev;
-                            const hasDelta = m.prev > 0 || m.cur > 0;
+                            const future   = m.cur === null;
+                            // Mese in corso: con "stesso periodo" si confronta con gli stessi giorni dell'anno prima.
+                            const prev     = m.partial && compare === 'period' ? m.prevToDate : m.prev;
+                            const delta    = future ? 0 : m.cur - prev;
+                            const hasDelta = !future && (prev > 0 || m.cur > 0);
                             return (
                               <tr key={m.month} className="hover">
-                                <td className="font-medium">{MONTHS[m.month - 1]}</td>
+                                <td className="font-medium">{MONTHS[m.month - 1]}{m.partial ? ` (al ${Number(cutoff.slice(8))})` : ''}</td>
                                 <td className="text-right">{m.cur > 0 ? fmt(m.cur) : '—'}</td>
-                                <td className="text-right text-base-content/50">{m.prev > 0 ? fmt(m.prev) : '—'}</td>
+                                <td className="text-right text-base-content/50">{prev > 0 ? fmt(prev) : '—'}</td>
                                 <td className={`text-right ${hasDelta && delta !== 0 ? deltaClass(delta, type) : 'text-base-content/30'}`}>
                                   {hasDelta && delta !== 0 ? `${delta > 0 ? '+' : ''}${fmt(delta)}` : '—'}
                                 </td>
@@ -265,7 +285,7 @@ export default function CategoriePage() {
               <div className="card bg-base-100 border border-base-200 shadow-sm">
                 <div className="card-body p-4">
                   <h3 className="text-sm font-semibold text-base-content/60 mb-1">
-                    Top Categorie — {mode === 'annual' ? `${year} vs ${year - 1}` : `${MONTHS[month - 1]} ${year} vs ${year - 1}`}
+                    Top Categorie — {periodName} vs {prevLabel}
                   </h3>
                   <p className="text-xs text-base-content/40 mb-3">
                     Tocca una categoria nella lista per il dettaglio

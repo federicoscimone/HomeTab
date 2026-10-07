@@ -12,7 +12,7 @@ import { fmtFull, MONTHS_SHORT } from '@/lib/utils/format';
 /**
  * @typedef {Object} MonthlyDataPoint
  * @property {number} month - Month number (1–12).
- * @property {number} cur   - Current year amount.
+ * @property {number|null} cur - Current year amount; null for months not yet reached.
  * @property {number} prev  - Previous year amount.
  */
 
@@ -26,7 +26,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return (
     <div className="bg-base-100 border border-base-200 rounded-lg shadow px-3 py-2 text-sm">
       <p className="font-medium mb-1">{label}</p>
-      {payload.map((p, i) => (
+      {payload.filter(p => p.value !== null && p.value !== undefined).map((p, i) => (
         <p key={i} style={{ color: p.color }}>{p.name}: {fmtFull(p.value)}</p>
       ))}
     </div>
@@ -54,7 +54,8 @@ export default function MonthlyLineChart({ data, color = '#6366f1', year, prevYe
 
   const chartData = data.map(d => ({
     month:    MONTHS_SHORT[d.month],
-    [year]:     d.cur,
+    // Il mese in corso non si disegna: pochi giorni accanto a mesi interi sembrerebbero un crollo.
+    [year]:     d.partial ? null : d.cur,
     [prevYear]: d.prev,
   }));
 

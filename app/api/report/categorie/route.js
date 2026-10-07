@@ -8,10 +8,17 @@
  *   paymentGroup {string} - Optional: 'traditional' | 'alternative'.
  *   month      {number} - Optional (1-12): if set, returns data for that month vs same month of previous year.
  *   categoryId {string} - Optional: restrict to a single category ObjectId.
+ *   compare    {string} - 'period' (default) | 'full': base del confronto quando il periodo è
+ *                         in corso. Vedi lib/utils/comparePeriods.js.
  *
- * Response: { year, type, month?, categories[] } where each category has:
- *   - If month not set: monthly[], totalCur, totalPrev, avg, deltaAbs, deltaPct
- *   - If month set: totalCur, totalPrev, deltaAbs, deltaPct (single month, no breakdown)
+ * Response: { year, type, month?, compare, cutoff, categories[] } where each category has:
+ *   - totalCur, totalPrevToDate, totalPrevFull, e totalPrev / deltaAbs / deltaPct calcolati
+ *     sulla base scelta con `compare`
+ *   - If month not set: monthly[] e avg. In monthly, cur è null per i mesi successivi a oggi, e
+ *     il mese in corso ha partial: true e prevToDate (l'anno prima fino allo stesso giorno)
+ *
+ * `cutoff` è la data di oggi se il periodo scelto è in corso, altrimenti null: in quel caso le
+ * due basi di confronto coincidono.
  */
 
 import { NextResponse } from 'next/server';
@@ -19,6 +26,7 @@ import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
 import Category from '@/lib/models/Category';
+import { comparisonPeriods, todayString } from '@/lib/utils/comparePeriods';
 
 export async function GET(req) {
   const { session, denied } = await requirePermission('data:read');
@@ -32,6 +40,10 @@ export async function GET(req) {
   const type       = searchParams.get('type') || 'expense';
   const paymentGroup = searchParams.get('paymentGroup') || '';
   const month      = searchParams.get('month') ? parseInt(searchParams.get('month')) : null;
+  const compare    = searchParams.get('compare') === 'full' ? 'full' : 'period';
+
+  const periods = comparisonPeriods(year, month, todayString());
+  const cutoffMonth = periods.cutoff ? parseInt(periods.cutoff.split('-')[1]) : 13;
 
   const categories = await Category.find({ level: 1 }).sort({ name: 1 }).lean();
 
@@ -43,23 +55,6 @@ export async function GET(req) {
     : categories;
 
   for (const cat of catsToProcess) {
-    let fromCur, toCur, fromPrev, toPrev;
-
-    if (month) {
-      // Filtro per mese specifico
-      const monthStr = String(month).padStart(2, '0');
-      fromCur  = `${year}-${monthStr}-01`;
-      toCur    = `${year}-${monthStr}-31`;
-      fromPrev = `${year - 1}-${monthStr}-01`;
-      toPrev   = `${year - 1}-${monthStr}-31`;
-    } else {
-      // Filtro per anno intero
-      fromCur  = `${year}-01-01`;
-      toCur    = `${year}-12-31`;
-      fromPrev = `${year - 1}-01-01`;
-      toPrev   = `${year - 1}-12-31`;
-    }
-
     const baseFilter = {
       $or: [{ categoryId: cat._id }, { subCategory1Id: cat._id }],
       type,
@@ -70,18 +65,22 @@ export async function GET(req) {
     const [curExp, prevExp] = await Promise.all([
       Movement.find({
         ...baseFilter,
-        date: { $gte: fromCur, $lte: toCur },
+        date: { $gte: periods.current.from, $lte: periods.current.to },
       }).lean(),
       Movement.find({
         ...baseFilter,
-        date: { $gte: fromPrev, $lte: toPrev },
+        date: { $gte: periods.previousFull.from, $lte: periods.previousFull.to },
       }).lean(),
     ]);
 
     if (curExp.length === 0 && prevExp.length === 0) continue;
 
-    const totalCur  = curExp .reduce((s,e) => s + e.amount, 0);
-    const totalPrev = prevExp.reduce((s,e) => s + e.amount, 0);
+    const totalCur        = curExp .reduce((s,e) => s + e.amount, 0);
+    const totalPrevFull   = prevExp.reduce((s,e) => s + e.amount, 0);
+    const totalPrevToDate = prevExp
+      .filter(e => e.date <= periods.previousToDate.to)
+      .reduce((s,e) => s + e.amount, 0);
+    const totalPrev = compare === 'full' ? totalPrevFull : totalPrevToDate;
 
     const catResult = {
       categoryId:   cat._id.toString(),
@@ -89,6 +88,8 @@ export async function GET(req) {
       color:        cat.color,
       totalCur,
       totalPrev,
+      totalPrevToDate,
+      totalPrevFull,
       deltaAbs: totalCur - totalPrev,
       deltaPct: totalPrev > 0 ? ((totalCur - totalPrev) / totalPrev) * 100 : null,
     };
@@ -97,9 +98,18 @@ export async function GET(req) {
     if (!month) {
       const monthly = Array.from({ length: 12 }, (_, i) => {
         const m = i + 1;
-        const cur  = curExp .filter(e => parseInt(e.date.split('-')[1]) === m).reduce((s,e) => s + e.amount, 0);
-        const prev = prevExp.filter(e => parseInt(e.date.split('-')[1]) === m).reduce((s,e) => s + e.amount, 0);
-        return { month: m, cur, prev };
+        // I mesi dopo oggi non sono a zero: non sono ancora arrivati.
+        const cur  = m > cutoffMonth
+          ? null
+          : curExp.filter(e => parseInt(e.date.split('-')[1]) === m).reduce((s,e) => s + e.amount, 0);
+        const prevOfMonth = prevExp.filter(e => parseInt(e.date.split('-')[1]) === m);
+        const prev = prevOfMonth.reduce((s,e) => s + e.amount, 0);
+        if (m !== cutoffMonth) return { month: m, cur, prev };
+        // Il mese in corso porta anche l'anno prima fino allo stesso giorno, per confrontarlo alla pari.
+        const prevToDate = prevOfMonth
+          .filter(e => e.date <= periods.previousToDate.to)
+          .reduce((s,e) => s + e.amount, 0);
+        return { month: m, cur, prev, prevToDate, partial: true };
       });
       const monthsWithData = monthly.filter(m => m.cur > 0).length || 1;
       catResult.monthly = monthly;
@@ -111,7 +121,7 @@ export async function GET(req) {
 
   result.sort((a, b) => b.totalCur - a.totalCur);
 
-  const response = { year, type, categories: result };
+  const response = { year, type, compare, cutoff: periods.cutoff, categories: result };
   if (paymentGroup) response.paymentGroup = paymentGroup;
   if (month) response.month = month;
 
