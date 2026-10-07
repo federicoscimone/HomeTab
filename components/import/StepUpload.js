@@ -83,7 +83,7 @@ export default function StepUpload({ templates, onParsed, onError }) {
             Fornisci i dati
           </h3>
 
-          <div className="tabs tabs-boxed w-fit">
+          <div className="tabs tabs-box w-fit">
             <button className={`tab tab-sm ${mode === 'file' ? 'tab-active' : ''}`} onClick={() => setMode('file')}>
               Carica file
             </button>

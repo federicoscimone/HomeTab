@@ -102,7 +102,7 @@ export default function CategoriePage() {
           </select>
         )}
 
-        <div className="tabs tabs-boxed">
+        <div className="tabs tabs-box">
           {[['expense', tCommon('expenses')], ['income', tCommon('income')]].map(([v, l]) => (
             <button key={v} className={`tab tab-sm ${type === v ? 'tab-active' : ''}`}
               onClick={() => setType(v)}>{l}</button>
@@ -121,7 +121,7 @@ export default function CategoriePage() {
         </select>
 
         {cutoff && (
-          <div className="tabs tabs-boxed" role="group" aria-label={t('comparisonBasis')}>
+          <div className="tabs tabs-box" role="group" aria-label={t('comparisonBasis')}>
             {[['period', t('samePeriod')], ['full', mode === 'monthly' ? t('fullMonth') : t('fullYear')]].map(([v, l]) => (
               <button key={v} className={`tab tab-sm ${compare === v ? 'tab-active' : ''}`}
                 onClick={() => setCompare(v)}>{l}</button>
@@ -129,7 +129,7 @@ export default function CategoriePage() {
           </div>
         )}
 
-        <div className="ml-auto tabs tabs-boxed">
+        <div className="ml-auto tabs tabs-box">
           {[['annual', t('yearly')], ['monthly', t('monthly')]].map(([v, l]) => (
             <button key={v} className={`tab tab-sm ${mode === v ? 'tab-active' : ''}`}
               onClick={() => setMode(v)}>{l}</button>
