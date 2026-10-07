@@ -76,7 +76,7 @@ export async function GET(req) {
           lastBackupError: null,
         },
         $setOnInsert: {
-          folderName: 'HomeBI Backups',
+          folderName: 'HomeTab Backups',
           autoBackupEnabled: false,
           backupFrequency: 'weekly',
         },

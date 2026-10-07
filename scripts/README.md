@@ -21,16 +21,16 @@ node scripts/migrate-mongodb.js
 ```
 
 Lo script ti chiederà:
-1. **Connection string di origine** (es. mongodb://localhost:27017/homebi)
-2. **Connection string di destinazione** (es. mongodb+srv://user:pass@cluster.mongodb.net/homebi)
+1. **Connection string di origine** (es. mongodb://localhost:27017/hometab)
+2. **Connection string di destinazione** (es. mongodb+srv://user:pass@cluster.mongodb.net/hometab)
 3. Se **cancellare** i dati nella destinazione (chiede conferma extra)
 
 ### Opzione 2: Con parametri da CLI
 
 ```bash
 node scripts/migrate-mongodb.js \
-  --source "mongodb://localhost:27017/homebi" \
-  --destination "mongodb+srv://user:pass@cluster.mongodb.net/homebi" \
+  --source "mongodb://localhost:27017/hometab" \
+  --destination "mongodb+srv://user:pass@cluster.mongodb.net/hometab" \
   --clear
 ```
 

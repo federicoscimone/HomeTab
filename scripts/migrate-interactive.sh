@@ -26,7 +26,7 @@ echo ""
 
 # Database locale
 echo "Database di ORIGINE (locale):"
-echo "Esempio: mongodb://localhost:27017/homebi"
+echo "Esempio: mongodb://localhost:27017/hometab"
 read -p "Inserisci l'URL di origine: " SOURCE_URL
 
 if [ -z "$SOURCE_URL" ]; then
@@ -36,7 +36,7 @@ fi
 
 echo ""
 echo "Database di DESTINAZIONE (MongoDB Atlas):"
-echo "Esempio: mongodb+srv://user:password@cluster.mongodb.net/homebi"
+echo "Esempio: mongodb+srv://user:password@cluster.mongodb.net/hometab"
 read -p "Inserisci l'URL di destinazione: " DEST_URL
 
 if [ -z "$DEST_URL" ]; then

@@ -69,8 +69,8 @@ async function getConnectionString() {
 
   console.log('🔹 Database da backuppare');
   console.log('   Esempi:');
-  console.log('   • MongoDB locale: mongodb://localhost:27017/homebi');
-  console.log('   • Con autenticazione: mongodb://user:pass@localhost:27017/homebi\n');
+  console.log('   • MongoDB locale: mongodb://localhost:27017/hometab');
+  console.log('   • Con autenticazione: mongodb://user:pass@localhost:27017/hometab\n');
   SOURCE_URL = await askQuestion('Inserisci connection string: ');
 
   if (!SOURCE_URL) {

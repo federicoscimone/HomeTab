@@ -8,13 +8,13 @@ Segui questi passi per ottenere le credenziali OAuth da inserire in `.env`.
    Vai su https://console.cloud.google.com
 
 2. **Crea o seleziona un progetto**
-   Usa un progetto dedicato, per esempio `HomeBI Local`.
+   Usa un progetto dedicato, per esempio `HomeTab Local`.
 
 3. **Configura la schermata di consenso OAuth**
    Vai in *APIs & Services > OAuth consent screen*.
    Scegli **External** se vuoi usare account Google normali.
    Compila almeno:
-   - App name: `HomeBI`
+   - App name: `HomeTab`
    - User support email: la tua email
    - Developer contact information: la tua email
 
@@ -89,7 +89,7 @@ Segui questi passi per ottenere le credenziali OAuth da inserire in `.env`.
 14. **Verifica il risultato atteso**
     - Stato **collegato** nella UI con email Google collegata
     - Pulsante **Backup ora** disponibile
-    - Al primo backup, creazione cartella `HomeBI Backups` nel Drive
+    - Al primo backup, creazione cartella `HomeTab Backups` nel Drive
 
 ---
 
