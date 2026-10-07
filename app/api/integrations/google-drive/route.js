@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth/guard';
+import { demoBlocked } from '@/lib/demoGuard';
+import { isDemoMode } from '@/lib/demoAccounts';
 import connectDB from '@/lib/mongodb';
 import GoogleDriveIntegration from '@/lib/models/GoogleDriveIntegration';
 import { writeAudit } from '@/lib/utils/audit';
@@ -46,12 +48,15 @@ export async function GET() {
   await connectDB();
   const integration = await GoogleDriveIntegration.findOne({ userId: session.user.id }).lean();
 
-  return NextResponse.json(serializeIntegration(integration));
+  // demo: la pagina mostra la sezione disattivata invece di pulsanti che risponderebbero 403.
+  return NextResponse.json({ ...serializeIntegration(integration), demo: isDemoMode() });
 }
 
 export async function PATCH(req) {
   const { session, denied } = await requirePermission('settings:manage');
   if (denied) return denied;
+  const blocked = demoBlocked();
+  if (blocked) return blocked;
 
   try {
     const { autoBackupEnabled, backupFrequency } = await req.json();
@@ -94,6 +99,8 @@ export async function PATCH(req) {
 export async function DELETE(req) {
   const { session, denied } = await requirePermission('settings:manage');
   if (denied) return denied;
+  const blocked = demoBlocked();
+  if (blocked) return blocked;
 
   try {
     await connectDB();

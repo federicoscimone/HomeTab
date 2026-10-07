@@ -4,6 +4,8 @@ import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';
 import SessionProvider from '@/components/layout/SessionProvider';
 import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistration';
+import DemoBanner from '@/components/layout/DemoBanner';
+import { isDemoMode } from '@/lib/demoAccounts';
 
 export const metadata = {
   title: 'HomeTab — Family Manager',
@@ -53,6 +55,7 @@ export default async function RootLayout({ children }) {
     <html lang="it" data-theme={theme} suppressHydrationWarning>
       <body>
         <SessionProvider session={session}>
+          {isDemoMode() && <DemoBanner />}
           {children}
           <ServiceWorkerRegistration />
         </SessionProvider>

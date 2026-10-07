@@ -55,6 +55,11 @@ categorie si creano dalle Impostazioni oppure, lanciando l'app dai sorgenti, con
 (un albero predefinito con le regole a parole chiave) e `node lib/seed-income.js` (categorie delle
 entrate). Entrambi non fanno nulla se il database ha già delle categorie.
 
+## Pubblicare una demo
+
+La demo può girare gratis su Vercel con un cluster MongoDB Atlas M0, ripristinata ogni notte da
+un cron: vedi [docs/vercel.md](docs/vercel.md) (in inglese).
+
 ## Sviluppo in locale
 
 Servono Node.js 22 e un'istanza di MongoDB 7.

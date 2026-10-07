@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth/guard';
+import { demoBlocked } from '@/lib/demoGuard';
 import connectDB from '@/lib/mongodb';
 import GoogleDriveIntegration from '@/lib/models/GoogleDriveIntegration';
 import { runBackupForIntegration } from '@/lib/services/googleDriveBackup';
@@ -8,6 +9,8 @@ import { logApiError } from '@/lib/logger';
 export async function POST(req) {
   const { session, denied } = await requirePermission('settings:manage');
   if (denied) return denied;
+  const blocked = demoBlocked();
+  if (blocked) return blocked;
 
   try {
     await connectDB();

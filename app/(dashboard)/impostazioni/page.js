@@ -152,6 +152,11 @@ export default function ImpostazioniPage() {
 
           {driveMessage && <div className="alert alert-success py-2 text-sm"><span>{driveMessage}</span></div>}
           {driveError && <div className="alert alert-error py-2 text-sm"><span>{driveError}</span></div>}
+          {driveStatus?.demo && (
+            <div className="alert alert-info py-2 text-sm">
+              <span>Nella demo il backup su Google Drive è disattivato: richiede di collegare un account Google personale.</span>
+            </div>
+          )}
 
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-xl border border-base-200 p-4">
@@ -190,7 +195,7 @@ export default function ImpostazioniPage() {
                 type="button"
                 className={`btn btn-primary ${driveBusy ? 'loading' : ''}`}
                 onClick={handleConnectDrive}
-                disabled={driveBusy}
+                disabled={driveBusy || driveStatus?.demo}
               >
                 Collega Google Drive
               </button>
@@ -200,7 +205,7 @@ export default function ImpostazioniPage() {
                   type="button"
                   className={`btn btn-primary ${driveBusy ? 'loading' : ''}`}
                   onClick={handleRunBackup}
-                  disabled={driveBusy}
+                  disabled={driveBusy || driveStatus?.demo}
                 >
                   Esegui backup ora
                 </button>
@@ -208,7 +213,7 @@ export default function ImpostazioniPage() {
                   type="button"
                   className={`btn btn-outline btn-error ${driveBusy ? 'loading' : ''}`}
                   onClick={handleDisconnectDrive}
-                  disabled={driveBusy}
+                  disabled={driveBusy || driveStatus?.demo}
                 >
                   Scollega Drive
                 </button>
