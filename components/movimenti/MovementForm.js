@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { PAYMENT_METHODS, getPaymentGroup } from '@/lib/utils/payments';
+import { todayString } from '@/lib/utils/comparePeriods';
 
 const EMPTY_FORM = {
   type: 'expense',
   amount: '',
   paymentMethod: 'cash',
-  date: new Date().toISOString().split('T')[0],
+  date: '',
   time: '',
   description: '',
   place: '',
@@ -21,9 +23,19 @@ const EMPTY_FORM = {
   goalId: '',
 };
 
+/** Parte tra parentesi di un'etichetta, es. "(opzionale)". */
+const muted = (chunks) => <span className="text-base-content/40">{chunks}</span>;
+
 export default function MovementForm({ initial = null, expenseId = null }) {
   const router = useRouter();
-  const [form, setForm] = useState(initial ? {
+  const t = useTranslations('movementForm');
+  const tCommon = useTranslations('common');
+  const tPay = useTranslations('payments');
+  const tGroups = useTranslations('paymentGroups');
+  // La data di oggi si calcola quando il form si apre, nell'ora locale. Come costante di modulo
+  // restava quella del primo caricamento (sul server, l'avvio del processo) ed era in UTC: tra
+  // mezzanotte e l'una, le due con l'ora legale, il form proponeva il giorno prima.
+  const [form, setForm] = useState(() => (initial ? {
     ...EMPTY_FORM,
     ...initial,
     type: initial.type || 'expense',
@@ -32,7 +44,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
     subCategory2Id: initial.subCategory2Id?._id || initial.subCategory2Id || '',
     goalId: initial.goalId?._id || initial.goalId || '',
     amount: initial.amount?.toString() || '',
-  } : EMPTY_FORM);
+  } : { ...EMPTY_FORM, date: todayString() }));
 
   const [categories, setCategories] = useState([]);
   const [goals, setGoals] = useState([]);
@@ -96,7 +108,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Errore durante il salvataggio');
+        setError(data.error || t('saveFailed'));
         setStatus('error');
       } else if (expenseId) {
         router.push('/movimenti');
@@ -107,17 +119,15 @@ export default function MovementForm({ initial = null, expenseId = null }) {
         setTimeout(() => setSaved(false), 3000);
       }
     } catch {
-      setError('Errore di rete. Riprova.');
+      setError(tCommon('networkError'));
       setStatus('error');
     }
   };
 
-  const importMethodLabel = { xlsx: 'Excel (.xlsx)', csv: 'CSV', paste: 'Copia-incolla' };
-
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 max-w-2xl">
       {error && <div className="alert alert-error text-sm py-2"><span>{error}</span></div>}
-      {saved && <div className="alert alert-success text-sm py-2"><span>Movimento salvato.</span></div>}
+      {saved && <div className="alert alert-success text-sm py-2"><span>{t('saved')}</span></div>}
 
       {/* Origine del dato — solo in modifica, se importato */}
       {initial?.source === 'import' && (
@@ -126,9 +136,13 @@ export default function MovementForm({ initial = null, expenseId = null }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
           <span>
-            Importato
-            {initial.importMethod && <> via <strong>{importMethodLabel[initial.importMethod] || initial.importMethod}</strong></>}
-            {initial.importBatchId && <> · batch <code className="font-mono">{initial.importBatchId.slice(0, 8)}…</code></>}
+            {initial.importMethod
+              ? t.rich('importedVia', {
+                method: t.has(`importMethods.${initial.importMethod}`) ? t(`importMethods.${initial.importMethod}`) : initial.importMethod,
+                b: (chunks) => <strong>{chunks}</strong>,
+              })
+              : t('imported')}
+            {initial.importBatchId && <>{' · batch '}<code className="font-mono">{`${initial.importBatchId.slice(0, 8)}…`}</code></>}
           </span>
         </div>
       )}
@@ -140,21 +154,21 @@ export default function MovementForm({ initial = null, expenseId = null }) {
           className={`btn btn-sm flex-1 ${form.type === 'expense' ? 'btn-error' : 'btn-ghost border border-base-300'}`}
           onClick={() => set('type', 'expense')}
         >
-          ↑ Uscita
+          {'↑'} {t('expense')}
         </button>
         <button
           type="button"
           className={`btn btn-sm flex-1 ${form.type === 'income' ? 'btn-success' : 'btn-ghost border border-base-300'}`}
           onClick={() => set('type', 'income')}
         >
-          ↓ Entrata
+          {'↓'} {t('income')}
         </button>
       </div>
 
       {/* Riga 1: importo + metodo pagamento */}
       <div className="grid grid-cols-2 gap-4">
         <label className="form-control">
-          <div className="label"><span className="label-text font-medium">Importo (€) *</span></div>
+          <div className="label"><span className="label-text font-medium">{t('amount')}</span></div>
           <input
             type="number"
             step="0.01"
@@ -168,21 +182,21 @@ export default function MovementForm({ initial = null, expenseId = null }) {
         </label>
 
         <label className="form-control">
-          <div className="label"><span className="label-text font-medium">Metodo di pagamento *</span></div>
+          <div className="label"><span className="label-text font-medium">{t('paymentMethod')}</span></div>
           <select
             className="select select-bordered"
             value={form.paymentMethod}
             onChange={(e) => set('paymentMethod', e.target.value)}
             required
           >
-            <optgroup label="Tradizionali">
+            <optgroup label={tGroups('traditional')}>
               {PAYMENT_METHODS.filter((m) => m.group === 'traditional').map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
+                <option key={m.value} value={m.value}>{tPay(m.value)}</option>
               ))}
             </optgroup>
-            <optgroup label="Alternativi">
+            <optgroup label={tGroups('alternative')}>
               {PAYMENT_METHODS.filter((m) => m.group === 'alternative').map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
+                <option key={m.value} value={m.value}>{tPay(m.value)}</option>
               ))}
             </optgroup>
           </select>
@@ -192,7 +206,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       {/* Riga 2: data + ora */}
       <div className="grid grid-cols-2 gap-4">
         <label className="form-control">
-          <div className="label"><span className="label-text font-medium">Data *</span></div>
+          <div className="label"><span className="label-text font-medium">{t('date')}</span></div>
           <input
             type="date"
             className="input input-bordered"
@@ -203,7 +217,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
         </label>
 
         <label className="form-control">
-          <div className="label"><span className="label-text">Ora <span className="text-base-content/40">(opzionale)</span></span></div>
+          <div className="label"><span className="label-text">{t.rich('time', { muted })}</span></div>
           <input
             type="time"
             className="input input-bordered"
@@ -216,22 +230,22 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       {/* Riga 3: esercente + luogo */}
       <div className="grid grid-cols-2 gap-4">
         <label className="form-control">
-          <div className="label"><span className="label-text font-medium">Esercente</span></div>
+          <div className="label"><span className="label-text font-medium">{t('payee')}</span></div>
           <input
             type="text"
             className="input input-bordered"
-            placeholder="Es. Esselunga, Amazon…"
+            placeholder={t('payeePlaceholder')}
             value={form.payee}
             onChange={(e) => set('payee', e.target.value)}
           />
         </label>
 
         <label className="form-control">
-          <div className="label"><span className="label-text font-medium">Luogo</span></div>
+          <div className="label"><span className="label-text font-medium">{t('place')}</span></div>
           <input
             type="text"
             className="input input-bordered"
-            placeholder="Es. Milano, Online…"
+            placeholder={t('placePlaceholder')}
             value={form.place}
             onChange={(e) => set('place', e.target.value)}
           />
@@ -241,22 +255,22 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       {/* Riga 4: causale + note */}
       <div className="grid grid-cols-2 gap-4">
         <label className="form-control">
-          <div className="label"><span className="label-text font-medium">Causale</span></div>
+          <div className="label"><span className="label-text font-medium">{t('description')}</span></div>
           <input
             type="text"
             className="input input-bordered"
-            placeholder="Descrizione del movimento"
+            placeholder={t('descriptionPlaceholder')}
             value={form.description}
             onChange={(e) => set('description', e.target.value)}
           />
         </label>
 
         <label className="form-control">
-          <div className="label"><span className="label-text">Note <span className="text-base-content/40">(opzionali)</span></span></div>
+          <div className="label"><span className="label-text">{t.rich('notes', { muted })}</span></div>
           <input
             type="text"
             className="input input-bordered"
-            placeholder="Informazioni aggiuntive…"
+            placeholder={t('notesPlaceholder')}
             value={form.notes}
             onChange={(e) => set('notes', e.target.value)}
           />
@@ -266,13 +280,13 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       {/* Categorie */}
       <div className="grid grid-cols-3 gap-4">
         <label className="form-control">
-          <div className="label"><span className="label-text font-medium">Categoria</span></div>
+          <div className="label"><span className="label-text font-medium">{tCommon('category')}</span></div>
           <select
             className="select select-bordered"
             value={form.categoryId}
             onChange={(e) => handleCategoryChange(e.target.value)}
           >
-            <option value="">— Nessuna —</option>
+            <option value="">{tCommon('none')}</option>
             {level1.map((c) => (
               <option key={c._id} value={c._id}>{c.name}</option>
             ))}
@@ -280,14 +294,14 @@ export default function MovementForm({ initial = null, expenseId = null }) {
         </label>
 
         <label className="form-control">
-          <div className="label"><span className="label-text">Sotto-categoria 1 <span className="text-base-content/40">(opz.)</span></span></div>
+          <div className="label"><span className="label-text">{t.rich('subCategory1', { muted })}</span></div>
           <select
             className="select select-bordered"
             value={form.subCategory1Id}
             onChange={(e) => handleSub1Change(e.target.value)}
             disabled={!form.categoryId || level2.length === 0}
           >
-            <option value="">— Nessuna —</option>
+            <option value="">{tCommon('none')}</option>
             {level2.map((c) => (
               <option key={c._id} value={c._id}>{c.name}</option>
             ))}
@@ -295,14 +309,14 @@ export default function MovementForm({ initial = null, expenseId = null }) {
         </label>
 
         <label className="form-control">
-          <div className="label"><span className="label-text">Sotto-categoria 2 <span className="text-base-content/40">(opz.)</span></span></div>
+          <div className="label"><span className="label-text">{t.rich('subCategory2', { muted })}</span></div>
           <select
             className="select select-bordered"
             value={form.subCategory2Id}
             onChange={(e) => set('subCategory2Id', e.target.value)}
             disabled={!form.subCategory1Id || level3.length === 0}
           >
-            <option value="">— Nessuna —</option>
+            <option value="">{tCommon('none')}</option>
             {level3.map((c) => (
               <option key={c._id} value={c._id}>{c.name}</option>
             ))}
@@ -313,21 +327,19 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       {/* Obiettivo pagato con questa spesa */}
       {canLinkGoal && goalOptions.length > 0 && (
         <label className="form-control">
-          <div className="label"><span className="label-text">Paga un obiettivo <span className="text-base-content/40">(opzionale)</span></span></div>
+          <div className="label"><span className="label-text">{t.rich('goal', { muted })}</span></div>
           <select
             className="select select-bordered"
             value={form.goalId}
             onChange={(e) => set('goalId', e.target.value)}
           >
-            <option value="">— Nessuno —</option>
+            <option value="">{t('noGoal')}</option>
             {goalOptions.map((g) => (
-              <option key={g.id} value={g.id}>{g.name}{g.status !== 'active' ? ' (chiuso)' : ''}</option>
+              <option key={g.id} value={g.id}>{g.status !== 'active' ? `${g.name} ${t('goalClosed')}` : g.name}</option>
             ))}
           </select>
           {/* Fuori da .label: DaisyUI 5 la rende nowrap e la frase uscirebbe dal form. */}
-          <p className="text-xs text-base-content/50 mt-1">
-            Es. il volo del viaggio: resta nei report, ma viene scalato dall&apos;obiettivo invece che dal risparmio del mese.
-          </p>
+          <p className="text-xs text-base-content/50 mt-1">{t('goalHint')}</p>
         </label>
       )}
 
@@ -340,22 +352,19 @@ export default function MovementForm({ initial = null, expenseId = null }) {
           onChange={(e) => set('excludeFromAnalysis', e.target.checked)}
         />
         <div>
-          <p className="text-sm font-medium">Escludi dalle analisi</p>
-          <p className="text-xs text-base-content/50">Questo movimento non verrà conteggiato nel dashboard e nei report (es. vendita casa, auto)</p>
+          <p className="text-sm font-medium">{t('exclude')}</p>
+          <p className="text-xs text-base-content/50">{t('excludeHint')}</p>
         </div>
       </label>
 
       {/* Azioni */}
       <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          className={`btn btn-primary ${status === 'loading' ? 'loading' : ''}`}
-          disabled={status === 'loading'}
-        >
-          {status === 'loading' ? 'Salvataggio…' : expenseId ? 'Salva modifiche' : 'Aggiungi movimento'}
+        <button type="submit" className="btn btn-primary" disabled={status === 'loading'}>
+          {status === 'loading' && <span className="loading loading-spinner loading-sm" />}
+          {status === 'loading' ? tCommon('saving') : expenseId ? t('saveChanges') : t('add')}
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => router.back()}>
-          Annulla
+          {tCommon('cancel')}
         </button>
       </div>
     </form>

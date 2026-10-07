@@ -11,7 +11,9 @@ function leaves(obj, prefix = '') {
   return Object.entries(obj).flatMap(([key, value]) => {
     const path = prefix ? `${prefix}.${key}` : key;
     if (value && typeof value === 'object') return leaves(value, path);
-    const tokens = [...String(value).matchAll(/\{(\w+)|<(\w+)>/g)].map((m) => m[1] ?? `<${m[2]}>`);
+    // Un segnaposto è {nome} o {nome, plural|select…}: la parola che apre un ramo plurale
+    // ("one {Salta # riga}") è testo, non una variabile.
+    const tokens = [...String(value).matchAll(/\{(\w+)\s*[,}]|<(\w+)>/g)].map((m) => m[1] ?? `<${m[2]}>`);
     return [[path, [...new Set(tokens)].sort().join(',')]];
   });
 }
@@ -27,6 +29,18 @@ test('ogni traduzione usa gli stessi segnaposto e tag', () => {
   const en = new Map(leaves(load('en')));
   for (const [key, tokens] of leaves(load('it'))) {
     assert.equal(en.get(key), tokens, `segnaposto diversi in ${key}`);
+  }
+});
+
+test('nessun apostrofo apre per errore una sezione letterale ICU', () => {
+  // In ICU un apostrofo seguito da { } < # | inizia un testo letterale: "scarica l'<link>…" usciva
+  // grezzo, con i tag e i segnaposto in chiaro. Davanti a quei caratteri serve l'apostrofo
+  // tipografico (’), che in italiano è comunque quello corretto.
+  for (const locale of ['it', 'en']) {
+    const messages = load(locale);
+    const value = (key) => key.split('.').reduce((node, part) => node[part], messages);
+    const broken = leaves(messages).map(([key]) => key).filter((key) => /'[{}<#|]/.test(value(key)));
+    assert.deepEqual(broken, [], `apostrofi da sostituire in ${locale}.json`);
   }
 });
 

@@ -1,25 +1,29 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
-import PaymentBadge from '@/components/movimenti/PaymentBadge';
 import MappingModal from '@/components/shared/MappingModal';
 import useCan from '@/lib/auth/useCan';
-
-function formatAmount(n) {
-  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n);
-}
+import { useFormat } from '@/lib/hooks/useFormat';
 
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export default function StepReview({ rows: initialRows, categories, onSaved, onBack }) {
+export default function StepReview({ rows: initialRows, categories, onImported, onSaved, onBack }) {
   const [rows, setRows] = useState(initialRows);
   const canDo = useCan();
+  const t = useTranslations('import');
+  const tMov = useTranslations('movements');
+  const tForm = useTranslations('movementForm');
+  const tCommon = useTranslations('common');
+  const tPay = useTranslations('payments');
+  const { fmtFull } = useFormat();
   const [skipDuplicates, setSkipDuplicates] = useState(true);
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
+  const [saveError, setSaveError] = useState('');
   const [editingRow, setEditingRow] = useState(null); // indice riga in modifica
   const [mappingModal, setMappingModal] = useState(null); // { keyword, categoryId, subCategory1Id, priority, caseSensitive }
   const [mappingError, setMappingError] = useState('');
@@ -76,11 +80,11 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
 
   const handleMappingConfirm = async () => {
     if (!mappingModal.keyword.trim()) {
-      setMappingError('La keyword è obbligatoria.');
+      setMappingError(tMov('mappingKeywordRequired'));
       return;
     }
     if (!mappingModal.categoryId) {
-      setMappingError('Seleziona una categoria.');
+      setMappingError(tMov('mappingCategoryRequired'));
       return;
     }
     setMappingError('');
@@ -100,7 +104,7 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
     });
 
     if (!res.ok) {
-      setMappingError('Errore durante il salvataggio. Riprova.');
+      setMappingError(tMov('mappingSaveFailed'));
       return;
     }
 
@@ -127,41 +131,48 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
       importMethod:        r.importMethod || null,
     }));
 
-    const res = await fetch('/api/import/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rows: payload, skipDuplicates }),
-    });
-    const data = await res.json();
+    // Prima un errore del server fermava lo spinner e basta: nessun messaggio, nessun risultato.
+    setSaveError('');
+    try {
+      const res = await fetch('/api/import/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows: payload, skipDuplicates }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) { setResult(data); onImported?.(); }
+      else setSaveError(data.error || t('saveFailed'));
+    } catch {
+      setSaveError(tCommon('networkError'));
+    }
     setSaving(false);
-    if (res.ok) setResult(data);
   };
 
   if (result) {
     return (
       <div className="card bg-base-100 border border-base-200 shadow-sm max-w-md mx-auto">
         <div className="card-body gap-4 text-center">
-          <div className="text-5xl">✅</div>
-          <h2 className="text-xl font-bold">Import completato</h2>
+          <div className="text-5xl">{'✅'}</div>
+          <h2 className="text-xl font-bold">{t('doneTitle')}</h2>
           <div className="stats stats-vertical shadow-sm">
             <div className="stat py-2">
-              <div className="stat-title text-xs">Salvate</div>
+              <div className="stat-title text-xs">{t('savedCount')}</div>
               <div className="stat-value text-success text-2xl">{result.saved}</div>
             </div>
             {result.duplicates > 0 && (
               <div className="stat py-2">
-                <div className="stat-title text-xs">Duplicate saltate</div>
+                <div className="stat-title text-xs">{t('duplicatesSkipped')}</div>
                 <div className="stat-value text-warning text-2xl">{result.duplicates}</div>
               </div>
             )}
             {result.errors > 0 && (
               <div className="stat py-2">
-                <div className="stat-title text-xs">Errori</div>
+                <div className="stat-title text-xs">{t('errorsCount')}</div>
                 <div className="stat-value text-error text-2xl">{result.errors}</div>
               </div>
             )}
           </div>
-          <button className="btn btn-primary" onClick={onSaved}>Vai alle spese</button>
+          <button className="btn btn-primary" onClick={onSaved}>{t('goToMovements')}</button>
         </div>
       </div>
     );
@@ -175,10 +186,7 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
           </svg>
-          <span>
-            <strong>{duplicatesCount}</strong> {duplicatesCount === 1 ? 'riga è un possibile duplicato' : 'righe sono possibili duplicati'} (già presenti nel database).
-            {' '}Le righe duplicate sono state auto-deselezionate — puoi riabilitarle manualmente se necessario.
-          </span>
+          <span>{t.rich('duplicatesAlert', { count: duplicatesCount, b: (chunks) => <strong>{chunks}</strong> })}</span>
         </div>
       )}
 
@@ -189,45 +197,49 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
           <span>
-            <strong>{undetectedMethod}</strong> {undetectedMethod === 1 ? 'riga selezionata ha' : 'righe selezionate hanno'} il metodo di pagamento non rilevato.
-            Verranno importate con metodo <strong>Altro</strong> — puoi correggerlo ora dalla colonna Metodo.
+            {t.rich('methodAlert', { count: undetectedMethod, fallback: tPay('other'), b: (chunks) => <strong>{chunks}</strong> })}
           </span>
         </div>
+      )}
+
+      {saveError && (
+        <div className="alert alert-error text-sm py-2" role="alert"><span>{saveError}</span></div>
       )}
 
       {/* Riepilogo -*/}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Revisione dati</h2>
+          <h2 className="text-lg font-semibold">{t('reviewTitle')}</h2>
           <p className="text-sm text-base-content/50">
-            {rows.length} righe analizzate · {autocat} auto-categorizzate ·{' '}
+            {`${t('analyzedRows', { count: rows.length })} · ${t('autocategorized', { count: autocat })} · `}
             {duplicatesCount > 0 && (
-              <span className="text-warning font-medium">{duplicatesCount} duplicati · </span>
+              <span className="text-warning font-medium">{`${t('duplicates', { count: duplicatesCount })} · `}</span>
             )}
-            <span className="text-primary font-medium">{selected.length} selezionate</span>
+            <span className="text-primary font-medium">{t('selectedRows', { count: selected.length })}</span>
           </p>
         </div>
         <div className="flex gap-2 items-center flex-wrap">
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input type="checkbox" className="checkbox checkbox-sm"
               checked={skipDuplicates} onChange={e => setSkipDuplicates(e.target.checked)} />
-            Salta duplicati
+            {t('skipDuplicates')}
           </label>
-          <button className="btn btn-ghost btn-sm" onClick={onBack}>← Indietro</button>
+          <button className="btn btn-ghost btn-sm" onClick={onBack}>{t('back')}</button>
           <button
-            className={`btn btn-primary btn-sm ${saving ? 'loading' : ''}`}
+            className="btn btn-primary btn-sm"
             onClick={handleSave}
             disabled={saving || selected.length === 0}
           >
-            {saving ? 'Salvataggio…' : `Importa ${selected.length} spese`}
+            {saving && <span className="loading loading-spinner loading-xs" />}
+            {saving ? tCommon('saving') : t('importCount', { count: selected.length })}
           </button>
         </div>
       </div>
 
       {/* Seleziona tutto / nessuno */}
       <div className="flex gap-2 text-xs">
-        <button className="btn btn-ghost btn-xs" onClick={() => toggleAll(true)}>Seleziona tutto</button>
-        <button className="btn btn-ghost btn-xs" onClick={() => toggleAll(false)}>Deseleziona tutto</button>
+        <button className="btn btn-ghost btn-xs" onClick={() => toggleAll(true)}>{tCommon('selectAll')}</button>
+        <button className="btn btn-ghost btn-xs" onClick={() => toggleAll(false)}>{tCommon('deselectAll')}</button>
       </div>
 
       {/* Tabella */}
@@ -237,13 +249,13 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
             <thead>
               <tr className="bg-base-200">
                 <th className="w-8"></th>
-                <th>Data</th>
-                <th>Esercente / Causale</th>
-                <th>Tipo</th>
-                <th>Metodo</th>
-                <th>Categoria</th>
-                <th className="text-right">Importo</th>
-                <th className="text-center hidden sm:table-cell" title="Escludi dalle analisi">Escludi</th>
+                <th>{tMov('columns.date')}</th>
+                <th>{tMov('columns.payee')}</th>
+                <th>{t('columns.type')}</th>
+                <th>{tMov('columns.method')}</th>
+                <th>{tCommon('category')}</th>
+                <th className="text-right">{tMov('columns.amount')}</th>
+                <th className="text-center hidden sm:table-cell" title={tMov('excludeFromAnalysis')}>{tMov('columns.exclude')}</th>
                 <th className="w-8"></th>
               </tr>
             </thead>
@@ -260,18 +272,18 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                         <input type="checkbox" className="checkbox checkbox-xs"
                           checked={row.selected} onChange={() => toggleRow(i)} />
                       </td>
-                      <td className="whitespace-nowrap">{row.date}</td>
+                      <td className="whitespace-nowrap">{row.date.split('-').reverse().join('/')}</td>
                       <td>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <p className="font-medium">{row.payee || row.description || '—'}</p>
                           {row._isDuplicate && (
-                            <span className="badge badge-warning badge-xs shrink-0" title="Possibile duplicato: stessa data, importo e descrizione già presenti nel database">dup</span>
+                            <span className="badge badge-warning badge-xs shrink-0" title={t('duplicateTitle')}>{t('duplicateBadge')}</span>
                           )}
                           {/* Il mapping è un'impostazione: lo crea solo un amministratore. */}
                           {!row._autocat && canDo('settings:manage') && (
                             <button
                               className="btn btn-ghost btn-xs p-0 h-4 min-h-0 w-4 opacity-30 hover:opacity-80"
-                              title="Crea mapping keyword → categoria"
+                              title={tMov('createMapping')}
                               onClick={() => openMappingModal(row)}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -290,8 +302,8 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                           value={row.type || 'expense'}
                           onChange={e => updateRow(i, 'type', e.target.value)}
                         >
-                          <option value="expense">↑ Uscita</option>
-                          <option value="income">↓ Entrata</option>
+                          <option value="expense">{`↑ ${tForm('expense')}`}</option>
+                          <option value="income">{`↓ ${tForm('income')}`}</option>
                         </select>
                       </td>
                       <td>
@@ -300,9 +312,9 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                           value={row.paymentMethod || ''}
                           onChange={e => updatePaymentMethod(i, e.target.value)}
                         >
-                          {!row._methodAutoDetected && <option value="">— Seleziona —</option>}
+                          {!row._methodAutoDetected && <option value="">{t('chooseMethod')}</option>}
                           {PAYMENT_METHODS.map(m => (
-                            <option key={m.value} value={m.value}>{m.label}</option>
+                            <option key={m.value} value={m.value}>{tPay(m.value)}</option>
                           ))}
                         </select>
                       </td>
@@ -313,7 +325,7 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                             value={row.categoryId || ''}
                             onChange={e => updateCategory(i, 'categoryId', e.target.value || null)}
                           >
-                            <option value="">— Nessuna —</option>
+                            <option value="">{tCommon('none')}</option>
                             {level1.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                           </select>
                           {row.categoryId && level2of(row.categoryId).length > 0 && (
@@ -322,19 +334,19 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                               value={row.subCategory1Id || ''}
                               onChange={e => updateCategory(i, 'subCategory1Id', e.target.value || null)}
                             >
-                              <option value="">— Sub —</option>
+                              <option value="">{t('subNone')}</option>
                               {level2of(row.categoryId).map(c => (
                                 <option key={c._id} value={c._id}>{c.name}</option>
                               ))}
                             </select>
                           )}
                           {row._autocat && row.categoryId && (
-                            <span className="badge badge-success badge-xs">auto</span>
+                            <span className="badge badge-success badge-xs">{t('autoBadge')}</span>
                           )}
                         </div>
                       </td>
                       <td className={`text-right font-semibold whitespace-nowrap ${row.type === 'income' ? 'text-success' : 'text-error'}`}>
-                        {row.type === 'income' ? '+' : '-'}{formatAmount(row.amount)}
+                        {row.type === 'income' ? '+' : '-'}{fmtFull(row.amount)}
                       </td>
                       <td className="text-center hidden sm:table-cell">
                         <input
@@ -342,11 +354,11 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
                           className="checkbox checkbox-xs"
                           checked={!!row.excludeFromAnalysis}
                           onChange={() => updateRow(i, 'excludeFromAnalysis', !row.excludeFromAnalysis)}
-                          title="Escludi dalle analisi mensili"
+                          title={t('excludeTitle')}
                         />
                       </td>
                       <td>
-                        <button className="btn btn-ghost btn-xs" title="Modifica dettagli"
+                        <button className="btn btn-ghost btn-xs" title={t('editDetails')}
                           onClick={() => setEditingRow(i)}>
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -381,6 +393,10 @@ export default function StepReview({ rows: initialRows, categories, onSaved, onB
 
 function EditRow({ row, index, level1, level2of, onSave, onClose }) {
   const [local, setLocal] = useState({ ...row });
+  const t = useTranslations('import');
+  const tForm = useTranslations('movementForm');
+  const tMov = useTranslations('movements');
+  const tCommon = useTranslations('common');
 
   const commit = (field, value) => {
     setLocal(l => ({ ...l, [field]: value }));
@@ -392,38 +408,38 @@ function EditRow({ row, index, level1, level2of, onSave, onClose }) {
       <td colSpan={7} className="py-3 px-4">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
           <label className="form-control">
-            <div className="label py-0"><span className="label-text text-xs">Data</span></div>
+            <div className="label py-0"><span className="label-text text-xs">{tMov('columns.date')}</span></div>
             <input type="date" className="input input-bordered input-xs"
               value={local.date} onChange={e => commit('date', e.target.value)} />
           </label>
           <label className="form-control">
-            <div className="label py-0"><span className="label-text text-xs">Importo (€)</span></div>
+            <div className="label py-0"><span className="label-text text-xs">{t('amount')}</span></div>
             <input type="number" step="0.01" className="input input-bordered input-xs"
               value={local.amount} onChange={e => commit('amount', parseFloat(e.target.value))} />
           </label>
           <label className="form-control">
-            <div className="label py-0"><span className="label-text text-xs">Esercente</span></div>
+            <div className="label py-0"><span className="label-text text-xs">{tForm('payee')}</span></div>
             <input type="text" className="input input-bordered input-xs"
               value={local.payee} onChange={e => commit('payee', e.target.value)} />
           </label>
           <label className="form-control">
-            <div className="label py-0"><span className="label-text text-xs">Causale</span></div>
+            <div className="label py-0"><span className="label-text text-xs">{tForm('description')}</span></div>
             <input type="text" className="input input-bordered input-xs"
               value={local.description} onChange={e => commit('description', e.target.value)} />
           </label>
           <label className="form-control">
-            <div className="label py-0"><span className="label-text text-xs">Luogo</span></div>
+            <div className="label py-0"><span className="label-text text-xs">{tForm('place')}</span></div>
             <input type="text" className="input input-bordered input-xs"
               value={local.place} onChange={e => commit('place', e.target.value)} />
           </label>
           <label className="form-control">
-            <div className="label py-0"><span className="label-text text-xs">Note</span></div>
+            <div className="label py-0"><span className="label-text text-xs">{tMov('columns.notes')}</span></div>
             <input type="text" className="input input-bordered input-xs"
               value={local.notes} onChange={e => commit('notes', e.target.value)} />
           </label>
         </div>
         <div className="mt-2 flex justify-end">
-          <button className="btn btn-primary btn-xs" onClick={onClose}>Chiudi</button>
+          <button className="btn btn-primary btn-xs" onClick={onClose}>{tCommon('close')}</button>
         </div>
       </td>
     </tr>
