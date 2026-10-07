@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import StatCard from '@/components/dashboard/StatCard';
@@ -13,6 +13,7 @@ import TrendChart from '@/components/dashboard/TrendChart';
 import PaymentGroupBar from '@/components/dashboard/PaymentGroupBar';
 import { getPaymentMethod } from '@/lib/utils/payments';
 import { fmtFull, MONTHS_FULL } from '@/lib/utils/format';
+import { useApiData } from '@/lib/hooks/useApiData';
 
 /**
  * Dashboard page — renders a monthly snapshot with stat cards, charts,
@@ -24,38 +25,21 @@ export default function DashboardPage() {
   const [month,   setMonth]   = useState(now.getMonth() + 1);
   const [year,    setYear]    = useState(now.getFullYear());
   const [paymentGroup, setPaymentGroup] = useState('traditional'); // traditional | alternative | all
-  const [data,    setData]    = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(false);
-    const p = new URLSearchParams({ year: String(year), month: String(month), paymentGroup });
-    fetch(`/api/dashboard?${p.toString()}`)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(d => { setData(d); setLoading(false); })
-      .catch(err => {
-        console.error('[dashboard] Fetch error:', err);
-        setError(true);
-        setLoading(false);
-      });
-  }, [month, year, paymentGroup]);
+  const query = new URLSearchParams({ year: String(year), month: String(month), paymentGroup });
+  const { data, loading, error } = useApiData(`/api/dashboard?${query}`, 'dashboard');
 
   /** Navigate to the previous calendar month. */
-  const prevMonth = useCallback(() => {
+  const prevMonth = () => {
     if (month === 1) { setMonth(12); setYear(y => y - 1); }
     else setMonth(m => m - 1);
-  }, [month]);
+  };
 
   /** Navigate to the next calendar month (disabled when on current month). */
-  const nextMonth = useCallback(() => {
+  const nextMonth = () => {
     if (month === 12) { setMonth(1); setYear(y => y + 1); }
     else setMonth(m => m + 1);
-  }, [month]);
+  };
 
   const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
   const balance = (data?.current.totalIncome || 0) - (data?.current.totalExpense || 0);

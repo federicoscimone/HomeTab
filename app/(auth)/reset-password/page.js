@@ -9,18 +9,20 @@ function ResetPasswordForm() {
   const router = useRouter();
   const token = searchParams.get('token');
 
-  const [tokenValid, setTokenValid] = useState(null); // null=checking, true, false
+  // Senza token nell'URL la risposta è già nota: si chiede al server solo quando c'è.
+  const [checked, setChecked] = useState({ token: null, valid: null });
+  const tokenValid = !token ? false : checked.token === token ? checked.valid : null; // null=checking
   const [form, setForm] = useState({ password: '', confirm: '' });
   const [status, setStatus] = useState('idle'); // idle | loading | success | error
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!token) { setTokenValid(false); return; }
+    if (!token) return;
 
-    fetch(`/api/auth/reset-password?token=${token}`)
+    fetch(`/api/auth/reset-password?token=${encodeURIComponent(token)}`)
       .then((r) => r.json())
-      .then((d) => setTokenValid(d.valid))
-      .catch(() => setTokenValid(false));
+      .then((d) => setChecked({ token, valid: !!d.valid }))
+      .catch(() => setChecked({ token, valid: false }));
   }, [token]);
 
   const handleSubmit = async (e) => {

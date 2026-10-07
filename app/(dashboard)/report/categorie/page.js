@@ -4,7 +4,8 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useApiData } from '@/lib/hooks/useApiData';
 import MonthlyLineChart from '@/components/report/MonthlyLineChart';
 import CategoryBarChart from '@/components/report/CategoryBarChart';
 import { fmt, fmtPct, deltaClass, MONTHS_SHORT } from '@/lib/utils/format';
@@ -23,44 +24,28 @@ export default function CategoriePage() {
   const [mode,     setMode]     = useState('annual'); // 'annual' | 'monthly'
   const [type,     setType]     = useState('expense');
   const [paymentGroup, setPaymentGroup] = useState('traditional'); // traditional | alternative | all
-  const [data,     setData]     = useState(null);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState(false);
-  const [selected, setSelected] = useState(null);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(false);
-    setSelected(null);
+  let url = `/api/report/categorie?year=${year}&type=${type}`;
+  if (mode === 'monthly') {
+    url += `&month=${month}`;
+  }
+  if (paymentGroup !== 'all') {
+    url += `&paymentGroup=${paymentGroup}`;
+  }
+  const { data, loading, error } = useApiData(url, 'report/categorie');
 
-    let url = `/api/report/categorie?year=${year}&type=${type}`;
-    if (mode === 'monthly') {
-      url += `&month=${month}`;
-    }
-    if (paymentGroup !== 'all') {
-      url += `&paymentGroup=${paymentGroup}`;
-    }
-
-    fetch(url)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(d  => { setData(d); setLoading(false); })
-      .catch(err => {
-        console.error('[report/categorie] fetch error:', err);
-        setError(true);
-        setLoading(false);
-      });
-  }, [year, month, mode, type, paymentGroup]);
+  // La selezione vale solo per i filtri con cui è stata fatta: cambiando anno, tipo o mese la
+  // categoria scelta potrebbe non esistere più nei nuovi dati, quindi decade da sola.
+  const [selection, setSelection] = useState({ url: null, id: null });
+  const selected = selection.url === url ? selection.id : null;
 
   const categories  = data?.categories || [];
   const selectedCat = selected ? categories.find(c => c.categoryId === selected) : null;
 
   /** Toggles the selected category; clicking the same one deselects it. */
   const handleSelect = useCallback(
-    (id) => setSelected(prev => (prev === id ? null : id)),
-    [],
+    (id) => setSelection(prev => ({ url, id: prev.url === url && prev.id === id ? null : id })),
+    [url],
   );
 
   return (

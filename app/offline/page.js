@@ -14,6 +14,9 @@ export default function OfflinePage() {
       <p className="text-base-content/60 max-w-sm mb-8">
         HomeTab non è raggiungibile al momento. Controlla la connessione internet e riprova.
       </p>
+      {/* Un <a> e non <Link>: offline la navigazione client fallirebbe, mentre un caricamento
+          completo passa dal service worker, che riprova la rete o rimostra questa pagina. */}
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a href="/" className="btn btn-primary">
         Riprova
       </a>

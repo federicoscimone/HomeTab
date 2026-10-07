@@ -4,8 +4,9 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { fmt, fmtFull, MONTHS_SHORT } from '@/lib/utils/format';
+import { useApiData } from '@/lib/hooks/useApiData';
 
 /** Column headers for the pivot table (index 0 = spacer for MONTHS_SHORT). */
 const MONTH_LABELS = MONTHS_SHORT.slice(1); // ['Gen', 'Feb', ...]
@@ -60,27 +61,10 @@ export default function PivotPage() {
   const [year,         setYear]         = useState(now.getFullYear());
   const [type,         setType]         = useState('expense');
   const [paymentGroup, setPaymentGroup] = useState('');
-  const [data,         setData]         = useState(null);
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(false);
-    const p = new URLSearchParams({ year, type });
-    if (paymentGroup) p.set('paymentGroup', paymentGroup);
-    fetch(`/api/report/pivot?${p}`)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(d  => { setData(d); setLoading(false); })
-      .catch(err => {
-        console.error('[pivot] fetch error:', err);
-        setError(true);
-        setLoading(false);
-      });
-  }, [year, type, paymentGroup]);
+  const query = new URLSearchParams({ year, type });
+  if (paymentGroup) query.set('paymentGroup', paymentGroup);
+  const { data, loading, error } = useApiData(`/api/report/pivot?${query}`, 'pivot');
 
   const handleExport = useCallback(() => {
     if (!data) return;

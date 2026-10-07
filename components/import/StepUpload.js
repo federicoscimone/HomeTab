@@ -69,7 +69,7 @@ export default function StepUpload({ templates, onParsed, onError }) {
             <div className="text-xs text-base-content/50 flex gap-3 flex-wrap mt-1">
               <span>Salta {selectedTemplate.skipRows} righe</span>
               <span>Data: {selectedTemplate.dateFormat}</span>
-              {selectedTemplate.fileType === 'csv' && <span>Sep: "{selectedTemplate.delimiter}"</span>}
+              {selectedTemplate.fileType === 'csv' && <span>Sep: &quot;{selectedTemplate.delimiter}&quot;</span>}
             </div>
           )}
         </div>
