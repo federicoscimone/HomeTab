@@ -75,4 +75,7 @@ test('testo incollato separato da tabulazioni', () => {
 test('parseAmountRaw: formati italiano e americano', () => {
   assert.deepEqual(parseAmountRaw('-1.234,56'), { amount: 1234.56, negative: true });
   assert.deepEqual(parseAmountRaw('1,234.56'), { amount: 1234.56, negative: false });
+  // Il segno "+" degli accrediti non deve cambiare l'interpretazione del formato.
+  assert.deepEqual(parseAmountRaw('+120,00'), { amount: 120, negative: false });
+  assert.deepEqual(parseAmountRaw('+1.234,56'), { amount: 1234.56, negative: false });
 });
