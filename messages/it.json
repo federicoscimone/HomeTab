@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "title": "HomeTab — Family Manager",
+    "description": "Traccia e analizza i tuoi movimenti familiari",
+    "offlineTitle": "Offline — HomeTab"
+  },
+  "locale": {
+    "label": "Lingua",
+    "names": {
+      "it": "Italiano",
+      "en": "English"
+    }
+  },
+  "common": {
+    "tagline": "Family Manager",
+    "version": "Versione {version}"
+  },
+  "nav": {
+    "main": "Navigazione principale",
+    "dashboard": "Dashboard",
+    "movements": "Movimenti",
+    "newMovement": "Nuovo movimento",
+    "import": "Importa",
+    "goals": "Obiettivi",
+    "reports": "Report",
+    "pivot": "Pivot Mensile",
+    "byCategory": "Per Categoria",
+    "analysis": "Analisi Avanzata",
+    "settings": "Impostazioni",
+    "users": "Utenti",
+    "backup": "Backup",
+    "categories": "Categorie",
+    "paymentMethods": "Metodi Pagamento",
+    "importTemplates": "Template Import",
+    "keywordMapping": "Keyword Mapping",
+    "auditLog": "Audit Log",
+    "userMenu": "Menu utente",
+    "myAccount": "Il mio account",
+    "signOut": "Disconnetti",
+    "openMenu": "Apri menu"
+  },
+  "roles": {
+    "viewer": {
+      "label": "Lettore",
+      "description": "Vede dashboard, movimenti, report e obiettivi. Non modifica nulla."
+    },
+    "editor": {
+      "label": "Collaboratore",
+      "description": "Come il lettore, in più aggiunge, importa e modifica i movimenti. Non li elimina."
+    },
+    "admin": {
+      "label": "Amministratore",
+      "description": "Può fare tutto: impostazioni, utenti, obiettivi ed eliminazione dei movimenti."
+    }
+  },
+  "demo": {
+    "banner": "Demo con dati fittizi, condivisa da tutti i visitatori. Accesso: <b>{email}</b> / <b>{password}</b>"
+  },
+  "offline": {
+    "title": "Sei offline",
+    "text": "HomeTab non è raggiungibile al momento. Controlla la connessione internet e riprova.",
+    "retry": "Riprova"
+  },
+  "account": {
+    "title": "Il mio account",
+    "theme": {
+      "title": "Aspetto — Tema",
+      "active": "attivo"
+    },
+    "language": {
+      "title": "Lingua",
+      "hint": "La lingua dell'interfaccia, salvata nel tuo profilo."
+    },
+    "password": {
+      "title": "Sicurezza — Cambio Password",
+      "hint": "Dopo il cambio le sessioni aperte su altri dispositivi vengono chiuse.",
+      "done": "Password aggiornata. Le altre sessioni sono state chiuse."
+    },
+    "session": {
+      "title": "Sessione",
+      "text": "Disconnettiti dall'applicazione.",
+      "signOut": "Disconnetti"
+    }
+  },
+  "errors": {
+    "notAuthenticated": "Non autenticato",
+    "pendingPassword": "Devi prima sostituire la password provvisoria",
+    "forbidden": "Non hai i permessi per questa operazione",
+    "invalidLocale": "Lingua non valida"
+  }
+}

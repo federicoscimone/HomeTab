@@ -1,5 +1,7 @@
 import './globals.css';
 import { cookies } from 'next/headers';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { auth } from '@/auth';
 import connectDB from '@/lib/mongodb';
 import SessionProvider from '@/components/layout/SessionProvider';
@@ -7,9 +9,12 @@ import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistra
 import DemoBanner from '@/components/layout/DemoBanner';
 import { isDemoMode } from '@/lib/demoAccounts';
 
-export const metadata = {
-  title: 'HomeTab — Family Manager',
-  description: 'Traccia e analizza i tuoi movimenti familiari',
+export async function generateMetadata() {
+  const t = await getTranslations('meta');
+  return { ...staticMetadata, title: t('title'), description: t('description') };
+}
+
+const staticMetadata = {
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -51,14 +56,18 @@ export default async function RootLayout({ children }) {
   const cookieTheme = cookieStore.get('hometab-theme')?.value;
   const validThemes = ['light', 'dark', 'forest', 'aqua', 'abyss'];
   const theme = validThemes.includes(cookieTheme) ? cookieTheme : 'light';
+  const locale = await getLocale();
   return (
-    <html lang="it" data-theme={theme} suppressHydrationWarning>
+    <html lang={locale} data-theme={theme} suppressHydrationWarning>
       <body>
-        <SessionProvider session={session}>
-          {isDemoMode() && <DemoBanner />}
-          {children}
-          <ServiceWorkerRegistration />
-        </SessionProvider>
+        {/* Senza props: dalla versione 4 il provider riceve lingua e messaggi da i18n/request.js. */}
+        <NextIntlClientProvider>
+          <SessionProvider session={session}>
+            {isDemoMode() && <DemoBanner />}
+            {children}
+            <ServiceWorkerRegistration />
+          </SessionProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

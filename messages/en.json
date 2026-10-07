@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "title": "HomeTab — Family Manager",
+    "description": "Track and understand your family's spending",
+    "offlineTitle": "Offline — HomeTab"
+  },
+  "locale": {
+    "label": "Language",
+    "names": {
+      "it": "Italiano",
+      "en": "English"
+    }
+  },
+  "common": {
+    "tagline": "Family Manager",
+    "version": "Version {version}"
+  },
+  "nav": {
+    "main": "Main navigation",
+    "dashboard": "Dashboard",
+    "movements": "Transactions",
+    "newMovement": "New transaction",
+    "import": "Import",
+    "goals": "Goals",
+    "reports": "Reports",
+    "pivot": "Monthly pivot",
+    "byCategory": "By category",
+    "analysis": "Advanced analysis",
+    "settings": "Settings",
+    "users": "Users",
+    "backup": "Backup",
+    "categories": "Categories",
+    "paymentMethods": "Payment methods",
+    "importTemplates": "Import templates",
+    "keywordMapping": "Keyword rules",
+    "auditLog": "Audit log",
+    "userMenu": "User menu",
+    "myAccount": "My account",
+    "signOut": "Sign out",
+    "openMenu": "Open menu"
+  },
+  "roles": {
+    "viewer": {
+      "label": "Viewer",
+      "description": "Sees the dashboard, transactions, reports and goals. Changes nothing."
+    },
+    "editor": {
+      "label": "Editor",
+      "description": "Like a viewer, and can also add, import and edit transactions. Cannot delete them."
+    },
+    "admin": {
+      "label": "Administrator",
+      "description": "Can do everything: settings, users, goals and deleting transactions."
+    }
+  },
+  "demo": {
+    "banner": "Demo with fictitious data, shared by all visitors. Sign in with <b>{email}</b> / <b>{password}</b>"
+  },
+  "offline": {
+    "title": "You're offline",
+    "text": "HomeTab can't be reached right now. Check your internet connection and try again.",
+    "retry": "Try again"
+  },
+  "account": {
+    "title": "My account",
+    "theme": {
+      "title": "Appearance — Theme",
+      "active": "active"
+    },
+    "language": {
+      "title": "Language",
+      "hint": "The interface language, saved to your profile."
+    },
+    "password": {
+      "title": "Security — Change password",
+      "hint": "After the change, sessions open on other devices are closed.",
+      "done": "Password updated. Your other sessions have been closed."
+    },
+    "session": {
+      "title": "Session",
+      "text": "Sign out of the application.",
+      "signOut": "Sign out"
+    }
+  },
+  "errors": {
+    "notAuthenticated": "Not signed in",
+    "pendingPassword": "You must replace your temporary password first",
+    "forbidden": "You don't have permission for this operation",
+    "invalidLocale": "Invalid language"
+  }
+}
