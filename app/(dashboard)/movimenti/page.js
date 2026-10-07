@@ -54,6 +54,44 @@ const EMPTY_FILTERS = {
 };
 
 /**
+ * @param {URLSearchParams} searchParams
+ * @returns {Filters} Filtri passati nell'URL; quelli assenti restano vuoti.
+ */
+function filtersFromSearchParams(searchParams) {
+  return {
+    ...EMPTY_FILTERS,
+    from: searchParams.get('from') || '',
+    to: searchParams.get('to') || '',
+    categoryIds: (searchParams.get('categoryIds') || '').split(',').map(v => v.trim()).filter(Boolean),
+    type: searchParams.get('type') || '',
+    incomplete: searchParams.get('incomplete') === '1',
+    excludeFromAnalysis: searchParams.get('excludeFromAnalysis') === '1',
+  };
+}
+
+/**
+ * Query string di /api/movimenti per filtri, pagina e ordinamento.
+ *
+ * @param {Filters} f
+ * @param {number}  p
+ * @param {string}  s  - Campo di ordinamento.
+ * @param {string}  sd - 'asc' | 'desc'.
+ */
+function expensesQuery(f, p, s, sd) {
+  const params = new URLSearchParams({ page: p, limit: PAGE_SIZE, sort: s, sortDir: sd });
+  if (f.from)          params.set('from',          f.from);
+  if (f.to)            params.set('to',            f.to);
+  if (f.categoryIds && f.categoryIds.length > 0) params.set('categoryIds', f.categoryIds.join(','));
+  if (f.paymentMethod) params.set('paymentMethod', f.paymentMethod);
+  if (f.paymentGroup)  params.set('paymentGroup',  f.paymentGroup);
+  if (f.search)        params.set('search',        f.search);
+  if (f.type)          params.set('type',          f.type);
+  if (f.incomplete)    params.set('incomplete',    '1');
+  if (f.excludeFromAnalysis) params.set('excludeFromAnalysis', '1');
+  return params.toString();
+}
+
+/**
  * Expense list page — filterable, paginated table of all expense/income records.
  * On mobile, renders as stacked cards instead of a table.
  */
@@ -65,13 +103,10 @@ export default function SpesePage() {
   const [total,    setTotal]        = useState(0);
   const [pages,    setPages]        = useState(1);
   const [page,     setPage]         = useState(1);
-  const [loading,  setLoading]      = useState(true);
-  const [error,    setError]        = useState(false);
   const [categories, setCategories] = useState([]);
 
   const [filters,       setFilters]       = useState(EMPTY_FILTERS);
   const [activeFilters, setActiveFilters] = useState(EMPTY_FILTERS);
-  const [queryReady, setQueryReady] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const [sort,    setSort]    = useState('date');
@@ -98,71 +133,48 @@ export default function SpesePage() {
       .catch(err => console.error('[spese] categorie fetch error:', err));
   }, []);
 
-  useEffect(() => {
-    const from = searchParams.get('from') || '';
-    const to = searchParams.get('to') || '';
-    const categoryIds = (searchParams.get('categoryIds') || '')
-      .split(',')
-      .map(v => v.trim())
-      .filter(Boolean);
-    const type = searchParams.get('type') || '';
-    const incomplete = searchParams.get('incomplete') === '1';
-    const excludeFromAnalysis = searchParams.get('excludeFromAnalysis') === '1';
-
-    const incoming = {
-      ...EMPTY_FILTERS,
-      from,
-      to,
-      categoryIds,
-      type,
-      incomplete,
-      excludeFromAnalysis,
-    };
-
+  // I filtri arrivano anche dall'URL (link da dashboard e report). Si applicano durante il render
+  // quando l'URL cambia, non in un effetto: così la prima richiesta parte già con i filtri giusti
+  // e non serve un flag che la trattenga finché l'effetto non ha copiato i parametri.
+  const [syncedKey, setSyncedKey] = useState(null);
+  if (syncedKey !== searchParamsKey) {
+    const incoming = filtersFromSearchParams(searchParams);
+    setSyncedKey(searchParamsKey);
     setFilters(incoming);
     setActiveFilters(incoming);
     setPage(1);
-    setQueryReady(true);
-  }, [searchParamsKey]);
+  }
 
-  /**
-   * Fetches the expense list from the API.
-   *
-   * @param {Filters} f - Active filter state.
-   * @param {number}  p - Current page number.
-   */
-  const fetchExpenses = useCallback(async (f, p, s, sd) => {
-    setLoading(true);
-    setError(false);
-    const params = new URLSearchParams({ page: p, limit: PAGE_SIZE, sort: s, sortDir: sd });
-    if (f.from)          params.set('from',          f.from);
-    if (f.to)            params.set('to',            f.to);
-    if (f.categoryIds && f.categoryIds.length > 0) params.set('categoryIds', f.categoryIds.join(','));
-    if (f.paymentMethod) params.set('paymentMethod', f.paymentMethod);
-    if (f.paymentGroup)  params.set('paymentGroup',  f.paymentGroup);
-    if (f.search)        params.set('search',        f.search);
-    if (f.type)          params.set('type',          f.type);
-    if (f.incomplete)    params.set('incomplete',    '1');
-    if (f.excludeFromAnalysis) params.set('excludeFromAnalysis', '1');
-
-    try {
-      const res  = await fetch(`/api/movimenti?${params}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setExpenses(data.expenses || []);
-      setTotal(data.total || 0);
-      setPages(data.pages || 1);
-    } catch (err) {
-      console.error('[spese] fetchExpenses error:', err);
-      setError(true);
-    }
-    setLoading(false);
-  }, []);
+  // Elenco: la richiesta corrente è descritta da requestKey, e il caricamento è finito quando
+  // l'ultima risposta arrivata porta la stessa chiave. Una risposta superata viene annullata.
+  const [reloadVersion, setReloadVersion] = useState(0);
+  const reloadExpenses = () => setReloadVersion(v => v + 1);
+  const requestQuery = expensesQuery(activeFilters, page, sort, sortDir);
+  const requestKey = `${reloadVersion}:${requestQuery}`;
+  const [loaded, setLoaded] = useState({ key: null, error: false });
+  const loading = loaded.key !== requestKey;
+  const error = !loading && loaded.error;
 
   useEffect(() => {
-    if (!queryReady) return;
-    fetchExpenses(activeFilters, page, sort, sortDir);
-  }, [fetchExpenses, activeFilters, page, sort, sortDir, queryReady]);
+    const controller = new AbortController();
+    fetch(`/api/movimenti?${requestQuery}`, { signal: controller.signal })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        setExpenses(data.expenses || []);
+        setTotal(data.total || 0);
+        setPages(data.pages || 1);
+        setLoaded({ key: requestKey, error: false });
+      })
+      .catch(err => {
+        if (controller.signal.aborted) return;
+        console.error('[spese] fetchExpenses error:', err);
+        setLoaded({ key: requestKey, error: true });
+      });
+    return () => controller.abort();
+  }, [requestKey, requestQuery]);
 
   const handleSort = (field) => {
     if (sort === field) {
@@ -209,7 +221,7 @@ export default function SpesePage() {
     }
     setDeleting(false);
     setDeleteTarget(null);
-    fetchExpenses(activeFilters, page);
+    reloadExpenses();
   };
 
   const filterIncomplete = useCallback(() => {
@@ -290,7 +302,7 @@ export default function SpesePage() {
 
     setMappingModal(null);
     // Refresh table and incomplete counter
-    fetchExpenses(activeFilters, page, sort, sortDir);
+    reloadExpenses();
     fetch('/api/movimenti?incomplete=1&limit=1')
       .then(r => r.json())
       .then(d => setIncompleteCount(d.total ?? 0))

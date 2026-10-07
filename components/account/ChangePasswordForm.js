@@ -53,7 +53,9 @@ export default function ChangePasswordForm({
 
       const login = await signIn('credentials', { email, password: form.newPassword, redirect: false });
       if (login?.error) {
-        // Password cambiata ma nuovo accesso fallito: si torna al login a mano.
+        // Password cambiata ma nuovo accesso fallito: si torna al login a mano. Caricamento completo
+        // e non router.push: la sessione vecchia è revocata, e lo stato client va buttato via.
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = '/login';
         return;
       }
