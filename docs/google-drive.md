@@ -1,6 +1,6 @@
 # Checklist Google Cloud Console — Google Drive Backup
 
-Segui questi passi per ottenere le credenziali OAuth da inserire in `.env.local`.
+Segui questi passi per ottenere le credenziali OAuth da inserire in `.env`.
 
 ## Setup iniziale
 
@@ -64,9 +64,9 @@ Segui questi passi per ottenere le credenziali OAuth da inserire in `.env.local`
     - *OAuth 2.0 Client ID*
     - *Client secret*
 
-## Aggiornamento .env.local
+## Aggiornamento .env
 
-11. **Aggiorna `.env.local`**
+11. **Aggiorna `.env`**
     Sostituisci i valori placeholder:
     ```dotenv
     GOOGLE_OAUTH_CLIENT_ID=<incolla il Client ID>
@@ -97,7 +97,7 @@ Segui questi passi per ottenere le credenziali OAuth da inserire in `.env.local`
 
 | Errore | Causa | Soluzione |
 |---|---|---|
-| Redirect URI mismatch | URL nella Console ≠ valore in `.env.local` | Assicurati che coincidano esattamente (schema, host, porta, path) |
+| Redirect URI mismatch | URL nella Console ≠ valore in `.env` | Assicurati che coincidano esattamente (schema, host, porta, path) |
 | Access blocked / app non verificata | Account non nei Test users | Aggiungi l'account in *OAuth consent screen > Test users* |
 | Errore sul callback | `APP_URL` errato o server su porta diversa | Verifica `APP_URL=http://localhost:3000` e la porta attiva |
 | Errore Drive API | API non abilitata nel progetto | Abilita *Google Drive API* in *APIs & Services > Library* |
@@ -105,7 +105,7 @@ Segui questi passi per ottenere le credenziali OAuth da inserire in `.env.local`
 
 ---
 
-## Valori finali in .env.local
+## Valori finali in .env
 
 ```dotenv
 APP_URL=http://localhost:3000

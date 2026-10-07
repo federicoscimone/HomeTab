@@ -1,5 +1,10 @@
 # Demo Data - Famiglia Italiana (4 persone)
 
+> **Nota.** Per provare l'app basta `DEMO_MODE=true` nel `.env`: al primo avvio il database si
+> riempie da solo con 24 mesi di movimenti che finiscono a oggi (`lib/seed-demo-mode.js`).
+> Questa pagina descrive gli script di seed manuali, più vecchi, che caricano invece un dataset
+> a date fisse.
+
 ## Panoramica
 
 Dataset demo realistico che simula i movimenti finanziari di una **famiglia italiana di 4 persone** per il **mese di maggio 2026**:
