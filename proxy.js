@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { loadSessionUser } from '@/lib/auth/sessionUser';
 import { pageRedirectFor } from '@/lib/auth/permissions';
 import { hasUsers } from '@/lib/auth/setupState';
+import { LOCALE_COOKIE } from '@/lib/i18n/locale';
 
 const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password', '/setup', '/offline'];
 const FIRST_ACCESS = '/primo-accesso';
@@ -55,7 +56,13 @@ export async function proxy(req) {
   const fallback = pageRedirectFor(pathname, user.role);
   if (fallback) return redirect(fallback);
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+  // Lingua salvata sul profilo: la si porta su un browser che non ne ha ancora scelta una (niente
+  // cookie), per esempio il primo accesso da un dispositivo nuovo. Il cookie, se c'è, vince.
+  if (user.locale && !req.cookies.get(LOCALE_COOKIE)) {
+    res.cookies.set(LOCALE_COOKIE, user.locale, { path: '/', maxAge: 31536000, sameSite: 'lax' });
+  }
+  return res;
 }
 
 export const config = {

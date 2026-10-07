@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import Sidebar from '@/components/layout/Sidebar';
 
 /**
@@ -16,6 +17,7 @@ import Sidebar from '@/components/layout/Sidebar';
  */
 export default function DashboardLayout({ children }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const t = useTranslations('nav');
 
   const openDrawer  = useCallback(() => setDrawerOpen(true),  []);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
@@ -51,7 +53,7 @@ export default function DashboardLayout({ children }) {
           <button
             onClick={openDrawer}
             className="btn btn-ghost btn-sm p-1"
-            aria-label="Apri menu"
+            aria-label={t('openMenu')}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
               viewBox="0 0 24 24" stroke="currentColor">

@@ -9,20 +9,21 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
 import packageJson from '@/package.json';
 import useCan from '@/lib/auth/useCan';
-import { ROLE_INFO } from '@/lib/auth/permissions';
+import LocaleSwitcher from '@/components/layout/LocaleSwitcher';
 
 /**
  * @typedef {Object} NavChild
  * @property {string} href  - Destination URL.
- * @property {string} label - Display label.
+ * @property {string} label - Chiave in messages/*.json, sezione nav.
  */
 
 /**
  * @typedef {Object} NavItem
  * @property {string}          [href]     - URL (leaf items only).
- * @property {string}          label      - Display label.
+ * @property {string}          label      - Chiave in messages/*.json, sezione nav.
  * @property {React.ReactNode} icon       - SVG icon element.
  * @property {NavChild[]}      [children] - Sub-items (section group).
  * @property {string}          [permission] - Permesso richiesto per vedere la voce (lib/auth/permissions).
@@ -33,7 +34,7 @@ import { ROLE_INFO } from '@/lib/auth/permissions';
 const NAV_ITEMS = [
   {
     href: '/',
-    label: 'Dashboard',
+    label: 'dashboard',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -42,7 +43,7 @@ const NAV_ITEMS = [
   },
   {
     href: '/movimenti',
-    label: 'Movimenti',
+    label: 'movements',
     quickAdd: '/movimenti/nuova',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -52,7 +53,7 @@ const NAV_ITEMS = [
   },
   {
     href: '/importa',
-    label: 'Importa',
+    label: 'import',
     permission: 'movements:create',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -62,7 +63,7 @@ const NAV_ITEMS = [
   },
   {
     href: '/obiettivi',
-    label: 'Obiettivi',
+    label: 'goals',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21V4m0 0h11l-1.5 4L14 12H3" />
@@ -70,20 +71,20 @@ const NAV_ITEMS = [
     ),
   },
   {
-    label: 'Report',
+    label: 'reports',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     ),
     children: [
-      { href: '/report',           label: 'Pivot Mensile' },
-      { href: '/report/categorie', label: 'Per Categoria' },
-      { href: '/report/analisi',   label: 'Analisi Avanzata' },
+      { href: '/report',           label: 'pivot' },
+      { href: '/report/categorie', label: 'byCategory' },
+      { href: '/report/analisi',   label: 'analysis' },
     ],
   },
   {
-    label: 'Impostazioni',
+    label: 'settings',
     permission: 'settings:manage',
     collapsible: true,
     icon: (
@@ -93,13 +94,13 @@ const NAV_ITEMS = [
       </svg>
     ),
     children: [
-      { href: '/impostazioni/utenti',           label: 'Utenti' },
-      { href: '/impostazioni',                  label: 'Backup' },
-      { href: '/impostazioni/categorie',         label: 'Categorie' },
-      { href: '/impostazioni/metodi-pagamento',  label: 'Metodi Pagamento' },
-      { href: '/impostazioni/template-import',   label: 'Template Import' },
-      { href: '/impostazioni/keyword-mapping',   label: 'Keyword Mapping' },
-      { href: '/impostazioni/audit-log',         label: 'Audit Log' },
+      { href: '/impostazioni/utenti',           label: 'users' },
+      { href: '/impostazioni',                  label: 'backup' },
+      { href: '/impostazioni/categorie',         label: 'categories' },
+      { href: '/impostazioni/metodi-pagamento',  label: 'paymentMethods' },
+      { href: '/impostazioni/template-import',   label: 'importTemplates' },
+      { href: '/impostazioni/keyword-mapping',   label: 'keywordMapping' },
+      { href: '/impostazioni/audit-log',         label: 'auditLog' },
     ],
   },
 ];
@@ -125,6 +126,9 @@ export default function Sidebar({ onNavigate }) {
   const pathname           = usePathname();
   const { data: session }  = useSession();
   const canDo              = useCan();
+  const t                  = useTranslations('nav');
+  const tRoles             = useTranslations('roles');
+  const tCommon            = useTranslations('common');
   const navItems           = NAV_ITEMS.filter((item) => !item.permission || canDo(item.permission));
   // Scelte esplicite dell'utente sui gruppi richiudibili; finché non tocca nulla, un gruppo è
   // aperto solo se contiene la pagina corrente (così la voce attiva non resta nascosta).
@@ -172,11 +176,11 @@ export default function Sidebar({ onNavigate }) {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-base-300 shrink-0">
         <span className="text-xl font-bold text-primary">HomeTab</span>
-        <p className="text-xs text-base-content/60 mt-0.5">Family Manager</p>
+        <p className="text-xs text-base-content/60 mt-0.5">{tCommon('tagline')}</p>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1" aria-label="Navigazione principale">
+      <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1" aria-label={t('main')}>
         {navItems.map((item) =>
           item.children ? (
             <div key={item.label}>
@@ -189,7 +193,7 @@ export default function Sidebar({ onNavigate }) {
                   className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-base-content/50 uppercase tracking-wider mt-3 mb-1 rounded-lg hover:bg-base-300 hover:text-base-content/70 transition-colors"
                 >
                   {item.icon}
-                  <span className="flex-1 text-left">{item.label}</span>
+                  <span className="flex-1 text-left">{t(item.label)}</span>
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isGroupOpen(item) ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
@@ -197,7 +201,7 @@ export default function Sidebar({ onNavigate }) {
               ) : (
                 <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-base-content/50 uppercase tracking-wider mt-3 mb-1">
                   {item.icon}
-                  {item.label}
+                  {t(item.label)}
                 </div>
               )}
               {isGroupOpen(item) && (
@@ -213,7 +217,7 @@ export default function Sidebar({ onNavigate }) {
                       : 'hover:bg-base-500 text-base-content'
                   }`}
                 >
-                  {child.label}
+                  {t(child.label)}
                 </Link>
               ))}
               </div>
@@ -227,16 +231,16 @@ export default function Sidebar({ onNavigate }) {
                 className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium flex-1 min-w-0"
               >
                 {item.icon}
-                {item.label}
+                {t(item.label)}
               </Link>
               <Link
                 href={item.quickAdd}
                 onClick={onNavigate}
                 className={`px-2.5 py-2.5 rounded-r-lg text-lg leading-none transition-colors ${isActive(item.href) ? 'bg-primary-focus/30 hover:bg-primary-content/20' : 'bg-base-500 hover:bg-base-content/15'}`}
-                aria-label={`Nuova ${item.label}`}
-                title={`Nuova ${item.label}`}
+                aria-label={t('newMovement')}
+                title={t('newMovement')}
               >
-                +
+                <span aria-hidden="true">{'+'}</span>
               </Link>
             </div>
           ) : (
@@ -251,7 +255,7 @@ export default function Sidebar({ onNavigate }) {
               }`}
             >
               {item.icon}
-              {item.label}
+              {t(item.label)}
             </Link>
           ),
         )}
@@ -262,7 +266,7 @@ export default function Sidebar({ onNavigate }) {
         {menuOpen && (
           <ul
             role="menu"
-            aria-label="Menu utente"
+            aria-label={t('userMenu')}
             className="menu absolute bottom-full left-3 right-3 mb-1 bg-base-100 rounded-box shadow-lg border border-base-300 z-10 p-1"
           >
             <li role="none">
@@ -275,7 +279,7 @@ export default function Sidebar({ onNavigate }) {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Il mio account
+                {t('myAccount')}
               </Link>
             </li>
           </ul>
@@ -295,7 +299,7 @@ export default function Sidebar({ onNavigate }) {
             <span className="flex-1 min-w-0">
               <span className="block text-xs font-medium truncate">{session?.user?.name}</span>
               <span className="block text-xs text-base-content/40 truncate">
-                {ROLE_INFO[session?.user?.role]?.label ?? session?.user?.email}
+                {session?.user?.role ? tRoles(`${session.user.role}.label`) : session?.user?.email}
               </span>
             </span>
             <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 shrink-0 text-base-content/40 transition-transform ${menuOpen ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -306,15 +310,18 @@ export default function Sidebar({ onNavigate }) {
             type="button"
             onClick={() => signOut({ callbackUrl: '/login' })}
             className="btn btn-ghost btn-sm btn-square text-base-content/50 hover:text-error"
-            aria-label="Disconnetti"
-            title="Disconnetti"
+            aria-label={t('signOut')}
+            title={t('signOut')}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
           </button>
         </div>
-        <p className="text-[11px] text-base-content/40 mt-1 px-2">Versione {packageJson.version}</p>
+        <div className="flex items-center justify-between gap-2 mt-1 px-2">
+          <p className="text-[11px] text-base-content/40">{tCommon('version', { version: packageJson.version })}</p>
+          <LocaleSwitcher saveToAccount />
+        </div>
       </div>
     </aside>
   );
