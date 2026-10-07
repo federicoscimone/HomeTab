@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
 import { getPaymentGroup } from '@/lib/utils/payments';
+import { serverTranslator } from '@/lib/i18n/server';
 
 export async function POST(req) {
   const { session, denied } = await requirePermission('movements:create');
@@ -15,7 +16,7 @@ export async function POST(req) {
 
   const { rows, skipDuplicates } = await req.json();
   if (!Array.isArray(rows) || rows.length === 0)
-    return NextResponse.json({ error: 'Nessuna riga da salvare' }, { status: 400 });
+    return NextResponse.json({ error: (await serverTranslator('errors'))('noRowsToSave') }, { status: 400 });
 
   const batchId = randomUUID();
   const results = { saved: 0, duplicates: 0, errors: 0 };

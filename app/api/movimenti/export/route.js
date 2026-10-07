@@ -3,19 +3,19 @@ import { requirePermission } from '@/lib/auth/guard';
 import * as XLSX from 'xlsx';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
-import { PAYMENT_METHODS } from '@/lib/utils/payments';
 import { logApiError } from '@/lib/logger';
 import { buildMovementFilter } from '@/lib/utils/movementFilter';
-
-const PAYMENT_LABEL = Object.fromEntries(PAYMENT_METHODS.map(m => [m.value, m.label]));
-
-const TYPE_LABEL = { expense: 'Uscita', income: 'Entrata' };
+import { serverTranslator } from '@/lib/i18n/server';
 
 export async function GET(req) {
   const { session, denied } = await requirePermission('data:read');
   if (denied) return denied;
 
   await connectDB();
+  // Intestazioni e valori testuali nella lingua di chi esporta, come il resto dell'interfaccia.
+  const t = await serverTranslator('movements');
+  const tPay = await serverTranslator('payments');
+  const col = (key) => t(`export.${key}`);
 
   const { searchParams } = new URL(req.url);
   const filter = buildMovementFilter(searchParams);
@@ -29,20 +29,20 @@ export async function GET(req) {
       .lean();
 
     const rows = movements.map(m => ({
-      'Data':              m.date,
-      'Ora':               m.time ?? '',
-      'Tipo':              TYPE_LABEL[m.type] ?? m.type,
-      'Importo (€)':       m.type === 'expense' ? -m.amount : m.amount,
-      'Esercente':         m.payee ?? '',
-      'Causale':           m.description ?? '',
-      'Luogo':             m.place ?? '',
-      'Metodo pagamento':  PAYMENT_LABEL[m.paymentMethod] ?? m.paymentMethod,
-      'Categoria':         m.categoryId?.name ?? '',
-      'Sotto-cat 1':       m.subCategory1Id?.name ?? '',
-      'Sotto-cat 2':       m.subCategory2Id?.name ?? '',
-      'Note':              m.notes ?? '',
-      'Escluso analisi':   m.excludeFromAnalysis ? 'Sì' : 'No',
-      'Origine':           m.source === 'import' ? 'Importazione' : 'Manuale',
+      [col('date')]:        m.date,
+      [col('time')]:        m.time ?? '',
+      [col('type')]:        m.type === 'income' ? col('income') : col('expense'),
+      [col('amount')]:      m.type === 'expense' ? -m.amount : m.amount,
+      [col('payee')]:       m.payee ?? '',
+      [col('description')]: m.description ?? '',
+      [col('place')]:       m.place ?? '',
+      [col('method')]:      tPay.has(m.paymentMethod) ? tPay(m.paymentMethod) : m.paymentMethod,
+      [col('category')]:    m.categoryId?.name ?? '',
+      [col('sub1')]:        m.subCategory1Id?.name ?? '',
+      [col('sub2')]:        m.subCategory2Id?.name ?? '',
+      [col('notes')]:       m.notes ?? '',
+      [col('excluded')]:    m.excludeFromAnalysis ? col('yes') : col('no'),
+      [col('source')]:      m.source === 'import' ? col('imported') : col('manual'),
     }));
 
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -56,7 +56,7 @@ export async function GET(req) {
     ];
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Movimenti');
+    XLSX.utils.book_append_sheet(wb, ws, col('sheet'));
 
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
@@ -72,6 +72,6 @@ export async function GET(req) {
     });
   } catch (err) {
     logApiError('GET /api/movimenti/export', err);
-    return NextResponse.json({ error: 'Errore durante l\'esportazione' }, { status: 500 });
+    return NextResponse.json({ error: (await serverTranslator('errors'))('exportFailed') }, { status: 500 });
   }
 }

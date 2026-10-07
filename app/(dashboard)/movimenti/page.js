@@ -7,10 +7,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import PaymentBadge from '@/components/movimenti/PaymentBadge';
 import MappingModal from '@/components/shared/MappingModal';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
-import { fmtFull } from '@/lib/utils/format';
+import { useFormat } from '@/lib/hooks/useFormat';
 import useCan from '@/lib/auth/useCan';
 
 /** Number of records per page. */
@@ -98,6 +99,11 @@ function expensesQuery(f, p, s, sd) {
 export default function SpesePage() {
   const searchParams = useSearchParams();
   const canDo = useCan();
+  const t = useTranslations('movements');
+  const tCommon = useTranslations('common');
+  const tGroups = useTranslations('paymentGroups');
+  const tPay = useTranslations('payments');
+  const { fmtFull } = useFormat();
   const searchParamsKey = searchParams.toString();
   const [expenses, setExpenses]     = useState([]);
   const [total,    setTotal]        = useState(0);
@@ -118,6 +124,7 @@ export default function SpesePage() {
   const [exporting,       setExporting]       = useState(false);
   const [mappingModal,    setMappingModal]    = useState(null); // { keyword, categoryId, subCategory1Id, priority, caseSensitive }
   const [mappingError,    setMappingError]    = useState('');
+  const [actionError,     setActionError]     = useState('');
 
   useEffect(() => {
     fetch('/api/movimenti?incomplete=1&limit=1')
@@ -200,24 +207,37 @@ export default function SpesePage() {
   /** Toggles excludeFromAnalysis for a single expense (optimistic update). */
   const handleToggleExclude = async (exp) => {
     const newVal = !exp.excludeFromAnalysis;
-    // Aggiornamento ottimistico
-    setExpenses(prev => prev.map(e => e._id === exp._id ? { ...e, excludeFromAnalysis: newVal } : e));
-    await fetch(`/api/movimenti/${exp._id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ excludeFromAnalysis: newVal }),
-    });
+    const setExcluded = (value) =>
+      setExpenses(prev => prev.map(e => e._id === exp._id ? { ...e, excludeFromAnalysis: value } : e));
+    // Aggiornamento ottimistico: se il server rifiuta, la casella torna com'era e lo si dice.
+    // Prima l'errore veniva ignorato e la lista mostrava uno stato che il database non aveva.
+    setExcluded(newVal);
+    setActionError('');
+    try {
+      const res = await fetch(`/api/movimenti/${exp._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ excludeFromAnalysis: newVal }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch (err) {
+      console.error('[spese] toggle exclude error:', err);
+      setExcluded(!newVal);
+      setActionError(t('toggleFailed'));
+    }
   };
 
   /** Deletes the currently targeted expense and refreshes the list. */
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
+    setActionError('');
     try {
       const res = await fetch(`/api/movimenti/${deleteTarget._id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
     } catch (err) {
       console.error('[spese] delete error:', err);
+      setActionError(t('deleteFailed'));
     }
     setDeleting(false);
     setDeleteTarget(null);
@@ -233,6 +253,7 @@ export default function SpesePage() {
 
   const handleExport = useCallback(async () => {
     setExporting(true);
+    setActionError('');
     try {
       const params = new URLSearchParams();
       if (activeFilters.from)          params.set('from',          activeFilters.from);
@@ -257,10 +278,11 @@ export default function SpesePage() {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('[export]', err);
+      setActionError(tCommon('exportError'));
     } finally {
       setExporting(false);
     }
-  }, [activeFilters]);
+  }, [activeFilters, tCommon]);
 
   const level1 = categories.filter(c => c.level === 1);
   const level2of = (catId) => categories.filter(c => c.level === 2 && c.parentId?.toString() === catId);
@@ -277,8 +299,8 @@ export default function SpesePage() {
   };
 
   const handleMappingConfirm = async () => {
-    if (!mappingModal.keyword.trim()) { setMappingError('La keyword è obbligatoria.'); return; }
-    if (!mappingModal.categoryId)     { setMappingError('Seleziona una categoria.');   return; }
+    if (!mappingModal.keyword.trim()) { setMappingError(t('mappingKeywordRequired')); return; }
+    if (!mappingModal.categoryId)     { setMappingError(t('mappingCategoryRequired')); return; }
     setMappingError('');
 
     const body = {
@@ -293,7 +315,7 @@ export default function SpesePage() {
     const r1 = await fetch('/api/impostazioni/keyword-mapping', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     });
-    if (!r1.ok) { setMappingError('Errore durante il salvataggio. Riprova.'); return; }
+    if (!r1.ok) { setMappingError(t('mappingSaveFailed')); return; }
 
     // 2. Bulk-categorize matching movements already in the DB
     await fetch('/api/movimenti/bulk-categorize', {
@@ -316,36 +338,43 @@ export default function SpesePage() {
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Movimenti</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{t('title')}</h1>
           {!loading && (
-            <p className="text-sm text-base-content/50">{total} movimenti trovati</p>
+            <p className="text-sm text-base-content/50">{t('found', { count: total })}</p>
           )}
         </div>
         <div className="flex gap-2">
           <button
-            className={`btn btn-outline btn-sm gap-1 ${exporting ? 'loading' : ''}`}
+            className="btn btn-outline btn-sm gap-1"
             onClick={handleExport}
             disabled={exporting || loading}
-            title={hasActiveFilters ? 'Esporta movimenti filtrati' : 'Esporta tutti i movimenti'}
+            title={hasActiveFilters ? t('exportFiltered') : t('exportAll')}
           >
-            {!exporting && (
+            {exporting ? <span className="loading loading-spinner loading-xs" /> : (
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
             )}
-            <span className="hidden sm:inline">{exporting ? 'Esportazione…' : 'Esporta Excel'}</span>
+            <span className="hidden sm:inline">{exporting ? t('exporting') : tCommon('exportExcel')}</span>
           </button>
           {canDo('movements:create') && (
           <Link href="/movimenti/nuova" className="btn btn-primary btn-sm gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            <span className="hidden xs:inline">Nuovo movimento</span>
-            <span className="xs:hidden">Nuovo</span>
+            <span className="hidden sm:inline">{t('new')}</span>
+            <span className="sm:hidden">{t('newShort')}</span>
           </Link>
           )}
         </div>
       </div>
+
+      {actionError && (
+        <div className="alert alert-error mb-4 text-sm" role="alert">
+          <span>{actionError}</span>
+          <button className="btn btn-ghost btn-xs ml-auto" onClick={() => setActionError('')} aria-label={tCommon('close')}>{'✕'}</button>
+        </div>
+      )}
 
       {/* ── Alert movimenti incompleti ─────────────────────────────── */}
       {incompleteCount > 0 && !activeFilters.incomplete && (
@@ -358,12 +387,8 @@ export default function SpesePage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
           <div>
-            <p className="font-semibold text-sm">
-              {incompleteCount} {incompleteCount === 1 ? 'movimento incompleto' : 'movimenti incompleti'}
-            </p>
-            <p className="text-xs opacity-80">
-              Manca la categoria — clicca per visualizzarli
-            </p>
+            <p className="font-semibold text-sm">{t('incomplete', { count: incompleteCount })}</p>
+            <p className="text-xs opacity-80">{t('incompleteHint')}</p>
           </div>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-auto flex-shrink-0 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -377,7 +402,7 @@ export default function SpesePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-2">
             <input
               type="text"
-              placeholder="Cerca esercente, causale…"
+              placeholder={t('searchPlaceholder')}
               className="input input-bordered input-sm sm:col-span-2 xl:col-span-2"
               value={filters.search}
               onChange={e => setFilters({ ...filters, search: e.target.value })}
@@ -388,14 +413,14 @@ export default function SpesePage() {
               className="input input-bordered input-sm"
               value={filters.from}
               onChange={e => setFilters({ ...filters, from: e.target.value })}
-              aria-label="Da data"
+              aria-label={t('fromDate')}
             />
             <input
               type="date"
               className="input input-bordered input-sm"
               value={filters.to}
               onChange={e => setFilters({ ...filters, to: e.target.value })}
-              aria-label="A data"
+              aria-label={t('toDate')}
             />
             <div className="relative" onBlur={() => setTimeout(() => setShowCategoryDropdown(false), 200)}>
               <button
@@ -405,10 +430,10 @@ export default function SpesePage() {
               >
                 <span className="truncate">
                   {filters.categoryIds.length === 0
-                    ? 'Tutte le categorie'
+                    ? t('allCategories')
                     : filters.categoryIds.length === 1
-                    ? categories.find(c => c._id === filters.categoryIds[0])?.name || 'Categoria'
-                    : `${filters.categoryIds.length} categor.`}
+                    ? categories.find(c => c._id === filters.categoryIds[0])?.name || tCommon('category')
+                    : t('categoriesCount', { count: filters.categoryIds.length })}
                 </span>
                 <svg className={`w-4 h-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -422,14 +447,14 @@ export default function SpesePage() {
                       className="btn btn-sm btn-ghost btn-block text-xs justify-start"
                       onClick={() => setFilters({ ...filters, categoryIds: categories.filter(c => c.level === 1).map(c => c._id) })}
                     >
-                      Seleziona tutto
+                      {tCommon('selectAll')}
                     </button>
                     <button
                       type="button"
                       className="btn btn-sm btn-ghost btn-block text-xs justify-start"
                       onClick={() => setFilters({ ...filters, categoryIds: [] })}
                     >
-                      Deseleziona tutto
+                      {tCommon('deselectAll')}
                     </button>
                   </div>
                   <div className="p-2 space-y-1">
@@ -459,11 +484,11 @@ export default function SpesePage() {
               className="select select-bordered select-sm"
               value={filters.type}
               onChange={e => setFilters({ ...filters, type: e.target.value })}
-              aria-label="Tipo"
+              aria-label={t('type')}
             >
-              <option value="">Entrate e uscite</option>
-              <option value="expense">Solo uscite</option>
-              <option value="income">Solo entrate</option>
+              <option value="">{t('allTypes')}</option>
+              <option value="expense">{t('onlyExpenses')}</option>
+              <option value="income">{t('onlyIncome')}</option>
             </select>
             <select
               className="select select-bordered select-sm"
@@ -476,29 +501,29 @@ export default function SpesePage() {
                   setFilters({ ...filters, paymentMethod: v, paymentGroup: '' });
                 }
               }}
-              aria-label="Metodo di pagamento"
+              aria-label={t('paymentMethod')}
             >
-              <option value="">Tutti i metodi</option>
-              <optgroup label="Gruppi">
-                <option value="traditional">Tradizionali</option>
-                <option value="alternative">Alternativi</option>
+              <option value="">{tGroups('allMethods')}</option>
+              <optgroup label={t('groups')}>
+                <option value="traditional">{tGroups('traditional')}</option>
+                <option value="alternative">{tGroups('alternative')}</option>
               </optgroup>
-              <optgroup label="Specifici">
-                {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+              <optgroup label={t('specific')}>
+                {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{tPay(m.value)}</option>)}
               </optgroup>
             </select>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <button className="btn btn-primary btn-sm" onClick={applyFilters}>Filtra</button>
+            <button className="btn btn-primary btn-sm" onClick={applyFilters}>{t('filter')}</button>
             {hasActiveFilters && (
-              <button className="btn btn-ghost btn-sm" onClick={resetFilters}>Azzera filtri</button>
+              <button className="btn btn-ghost btn-sm" onClick={resetFilters}>{t('resetFilters')}</button>
             )}
             {activeFilters.incomplete && (
               <span className="badge badge-warning gap-1 text-xs">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                 </svg>
-                Solo movimenti incompleti
+                {t('onlyIncomplete')}
               </span>
             )}
             {activeFilters.excludeFromAnalysis && (
@@ -506,7 +531,7 @@ export default function SpesePage() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.658 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
-                Solo movimenti esclusi
+                {t('onlyExcluded')}
               </span>
             )}
             <label className="flex items-center gap-2 cursor-pointer ml-auto">
@@ -516,7 +541,7 @@ export default function SpesePage() {
                 checked={filters.excludeFromAnalysis ?? false}
                 onChange={e => setFilters({ ...filters, excludeFromAnalysis: e.target.checked })}
               />
-              <span className="text-sm">Esclusi</span>
+              <span className="text-sm">{t('excludedFilter')}</span>
             </label>
           </div>
         </div>
@@ -529,13 +554,13 @@ export default function SpesePage() {
         </div>
       ) : error ? (
         <div className="alert alert-warning">
-          <span>Errore nel caricamento. Riprova.</span>
+          <span>{tCommon('loadError')}</span>
         </div>
       ) : expenses.length === 0 ? (
         <div className="text-center py-16 text-base-content/50">
-          <p className="text-4xl mb-3">📭</p>
-          <p className="font-medium">Nessun movimento trovato</p>
-          {hasActiveFilters && <p className="text-sm mt-1">Prova a modificare i filtri</p>}
+          <p className="text-4xl mb-3">{'📭'}</p>
+          <p className="font-medium">{t('empty')}</p>
+          {hasActiveFilters && <p className="text-sm mt-1">{t('emptyHint')}</p>}
         </div>
       ) : (
         <>
@@ -551,12 +576,12 @@ export default function SpesePage() {
                           {exp.payee || exp.description || '—'}
                         </p>
                         {exp.excludeFromAnalysis && (
-                          <span className="badge badge-ghost badge-xs flex-shrink-0" title="Escluso dalle analisi">escluso</span>
+                          <span className="badge badge-ghost badge-xs flex-shrink-0" title={t('excludedTitle')}>{t('excludedBadge')}</span>
                         )}
                         {!exp.categoryId && canDo('settings:manage') && (
                           <button
                             className="btn btn-ghost btn-xs p-0 h-4 min-h-0 w-4 opacity-30 hover:opacity-80 flex-shrink-0"
-                            title="Crea mapping keyword → categoria"
+                            title={t('createMapping')}
                             onClick={() => openMappingModal(exp)}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -591,10 +616,10 @@ export default function SpesePage() {
                         checked={!!exp.excludeFromAnalysis}
                         onChange={() => handleToggleExclude(exp)}
                         disabled={!canDo('movements:edit')}
-                        title={exp.excludeFromAnalysis ? 'Includi nelle analisi' : 'Escludi dalle analisi'}
+                        title={exp.excludeFromAnalysis ? t('includeInAnalysis') : t('excludeFromAnalysis')}
                       />
                       {canDo('movements:edit') && (
-                      <Link href={`/movimenti/${exp._id}`} className="btn btn-ghost btn-sm py-1 px-2" aria-label="Modifica">
+                      <Link href={`/movimenti/${exp._id}`} className="btn btn-ghost btn-sm py-1 px-2" aria-label={t('edit')}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
@@ -604,7 +629,7 @@ export default function SpesePage() {
                       <button
                         className="btn btn-ghost btn-sm py-1 px-2 text-error"
                         onClick={() => setDeleteTarget(exp)}
-                        aria-label="Elimina"
+                        aria-label={t('delete')}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -625,13 +650,13 @@ export default function SpesePage() {
               <table className="table table-sm">
                 <thead>
                   <tr className="bg-base-200">
-                    <SortTh field="date"   current={sort} dir={sortDir} onClick={handleSort}>Data</SortTh>
-                    <SortTh field="payee"  current={sort} dir={sortDir} onClick={handleSort}>Esercente / Causale</SortTh>
-                    <th>Categoria</th>
-                    <th>Metodo</th>
-                    <th>Note</th>
-                    <SortTh field="amount" current={sort} dir={sortDir} onClick={handleSort} className="text-right">Importo</SortTh>
-                    <th className="text-center" title="Escludi dalle analisi">Escludi</th>
+                    <SortTh field="date"   current={sort} dir={sortDir} onClick={handleSort}>{t('columns.date')}</SortTh>
+                    <SortTh field="payee"  current={sort} dir={sortDir} onClick={handleSort}>{t('columns.payee')}</SortTh>
+                    <th>{tCommon('category')}</th>
+                    <th>{t('columns.method')}</th>
+                    <th>{t('columns.notes')}</th>
+                    <SortTh field="amount" current={sort} dir={sortDir} onClick={handleSort} className="text-right">{t('columns.amount')}</SortTh>
+                    <th className="text-center" title={t('excludeFromAnalysis')}>{t('columns.exclude')}</th>
                     <th className="text-right"></th>
                   </tr>
                 </thead>
@@ -646,12 +671,12 @@ export default function SpesePage() {
                         <div className="flex items-center gap-1.5">
                           <p className="font-medium text-sm truncate">{exp.payee || exp.description || '—'}</p>
                           {exp.excludeFromAnalysis && (
-                            <span className="badge badge-ghost badge-xs flex-shrink-0" title="Escluso dalle analisi">escluso</span>
+                            <span className="badge badge-ghost badge-xs flex-shrink-0" title={t('excludedTitle')}>{t('excludedBadge')}</span>
                           )}
                           {!exp.categoryId && canDo('settings:manage') && (
                             <button
                               className="btn btn-ghost btn-xs p-0 h-4 min-h-0 w-4 opacity-30 hover:opacity-80 flex-shrink-0"
-                              title="Crea mapping keyword → categoria"
+                              title={t('createMapping')}
                               onClick={() => openMappingModal(exp)}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -697,13 +722,13 @@ export default function SpesePage() {
                           checked={!!exp.excludeFromAnalysis}
                           onChange={() => handleToggleExclude(exp)}
                           disabled={!canDo('movements:edit')}
-                          title={exp.excludeFromAnalysis ? 'Includi nelle analisi' : 'Escludi dalle analisi'}
+                          title={exp.excludeFromAnalysis ? t('includeInAnalysis') : t('excludeFromAnalysis')}
                         />
                       </td>
                       <td>
                         <div className="flex gap-1 justify-end">
                           {canDo('movements:edit') && (
-                          <Link href={`/movimenti/${exp._id}`} className="btn btn-ghost btn-sm" aria-label="Modifica">
+                          <Link href={`/movimenti/${exp._id}`} className="btn btn-ghost btn-sm" aria-label={t('edit')}>
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
@@ -713,7 +738,7 @@ export default function SpesePage() {
                           <button
                             className="btn btn-ghost btn-sm text-error"
                             onClick={() => setDeleteTarget(exp)}
-                            aria-label="Elimina"
+                            aria-label={t('delete')}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -737,7 +762,7 @@ export default function SpesePage() {
         <div className="flex justify-center mt-4">
           <div className="join">
             <button className="join-item btn btn-sm" disabled={page === 1}
-              onClick={() => setPage(p => p - 1)} aria-label="Pagina precedente">«</button>
+              onClick={() => setPage(p => p - 1)} aria-label={t('prevPage')}>{'«'}</button>
             {Array.from({ length: pages }, (_, i) => i + 1)
               .filter(p => p === 1 || p === pages || Math.abs(p - page) <= 2)
               .reduce((acc, p, i, arr) => {
@@ -747,7 +772,7 @@ export default function SpesePage() {
               }, [])
               .map((p, i) =>
                 p === '...' ? (
-                  <button key={`ell-${i}`} className="join-item btn btn-sm btn-disabled">…</button>
+                  <button key={`ell-${i}`} className="join-item btn btn-sm btn-disabled">{'…'}</button>
                 ) : (
                   <button key={p}
                     className={`join-item btn btn-sm ${page === p ? 'btn-active btn-primary' : ''}`}
@@ -756,7 +781,7 @@ export default function SpesePage() {
                 ),
               )}
             <button className="join-item btn btn-sm" disabled={page === pages}
-              onClick={() => setPage(p => p + 1)} aria-label="Pagina successiva">»</button>
+              onClick={() => setPage(p => p + 1)} aria-label={t('nextPage')}>{'»'}</button>
           </div>
         </div>
       )}
@@ -778,21 +803,22 @@ export default function SpesePage() {
       {deleteTarget && (
         <div className="modal modal-open">
           <div className="modal-box w-11/12 max-w-md">
-            <h3 className="font-bold text-lg">Elimina movimento</h3>
+            <h3 className="font-bold text-lg">{t('deleteTitle')}</h3>
             <p className="py-4 text-sm">
-              Sei sicuro di voler eliminare
-              {deleteTarget.payee ? <strong> {deleteTarget.payee}</strong> : ''} del{' '}
-              <strong>{formatDate(deleteTarget.date)}</strong> —{' '}
-              <strong>{fmtFull(deleteTarget.amount)}</strong>?
+              {t.rich(deleteTarget.payee ? 'deleteConfirm' : 'deleteConfirmNoPayee', {
+                payee: deleteTarget.payee,
+                date: formatDate(deleteTarget.date),
+                amount: fmtFull(deleteTarget.amount),
+                b: (chunks) => <strong>{chunks}</strong>,
+              })}
             </p>
-            <p className="text-xs text-base-content/50">Questa azione non è reversibile.</p>
+            <p className="text-xs text-base-content/50">{t('irreversible')}</p>
             <div className="modal-action">
-              <button className="btn btn-ghost btn-sm" onClick={() => setDeleteTarget(null)}>Annulla</button>
-              <button
-                className={`btn btn-error btn-sm ${deleting ? 'loading' : ''}`}
-                onClick={handleDelete}
-                disabled={deleting}
-              >Elimina</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setDeleteTarget(null)}>{tCommon('cancel')}</button>
+              <button className="btn btn-error btn-sm" onClick={handleDelete} disabled={deleting}>
+                {deleting && <span className="loading loading-spinner loading-xs" />}
+                {t('delete')}
+              </button>
             </div>
           </div>
           <div className="modal-backdrop" onClick={() => setDeleteTarget(null)} />

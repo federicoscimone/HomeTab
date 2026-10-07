@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import Movement from '@/lib/models/Movement';
 import { writeAudit } from '@/lib/utils/audit';
+import { serverTranslator } from '@/lib/i18n/server';
 
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -27,7 +28,7 @@ export async function POST(req) {
   const { keyword, caseSensitive, categoryId, subCategory1Id } = await req.json();
 
   if (!keyword?.trim() || !categoryId) {
-    return NextResponse.json({ error: 'keyword e categoryId sono obbligatori' }, { status: 400 });
+    return NextResponse.json({ error: (await serverTranslator('errors'))('keywordAndCategoryRequired') }, { status: 400 });
   }
 
   const flags = caseSensitive ? '' : 'i';
