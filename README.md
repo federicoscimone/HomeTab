@@ -21,7 +21,8 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   the savings figures.
 - **Bank import** — Excel, CSV or pasted text. Each bank gets a template (which column holds
   what, date format, how to read the sign of amounts), and keyword rules assign the category.
-  Duplicates are detected before saving.
+  Duplicates are detected before saving. In demo mode a template and a sample bank statement are
+  ready to try it.
 - **Reports** — monthly dashboard, category × month pivot, year-over-year comparison by
   category, custom date ranges with a year-end projection. Movements, the pivot and the
   custom-range analysis export to Excel.

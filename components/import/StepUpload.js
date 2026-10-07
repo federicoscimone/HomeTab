@@ -2,16 +2,20 @@
 
 import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { DEMO_TEMPLATE_NAME } from '@/lib/demoImport';
 
 /**
  * @param {object} props
  * @param {object[]|null} props.templates - null mentre si caricano.
+ * @param {string|null} props.sampleHref - Estratto conto di esempio (solo nella demo).
  */
-export default function StepUpload({ templates: loadedTemplates, onParsed, onError }) {
+export default function StepUpload({ templates: loadedTemplates, sampleHref, onParsed, onError }) {
   const templates = loadedTemplates ?? [];
   const t = useTranslations('import');
   const tCommon = useTranslations('common');
-  const [templateId, setTemplateId] = useState('');
+  const [chosenTemplateId, setTemplateId] = useState('');
+  // Con un solo template non c'è niente da scegliere: è già selezionato.
+  const templateId = chosenTemplateId || (templates.length === 1 ? templates[0]._id : '');
   const [mode, setMode] = useState('file'); // 'file' | 'paste'
   const [pasteText, setPasteText] = useState('');
   const [file, setFile] = useState(null);
@@ -73,6 +77,15 @@ export default function StepUpload({ templates: loadedTemplates, onParsed, onErr
                 </button>
               ))}
             </div>
+          )}
+
+          {sampleHref && (
+            <p className="text-sm text-base-content/70">
+              {t.rich('sampleHint', {
+                template: DEMO_TEMPLATE_NAME,
+                link: (chunks) => <a href={sampleHref} className="link link-primary" download>{chunks}</a>,
+              })}
+            </p>
           )}
 
           {selectedTemplate && (
