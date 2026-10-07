@@ -18,13 +18,13 @@
     "mongoose": "^9.5.0",
     "next": "^16.2.4",
     "next-auth": "^4.24.14",
-    "nodemailer": "^8.0.6",
+    "nodemailer": "^10.0.15",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "recharts": "^3.8.1",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
