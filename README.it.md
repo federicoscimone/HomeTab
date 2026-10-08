@@ -29,6 +29,10 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
   si esportano in Excel.
 - **Obiettivi di risparmio**: il risparmio di ogni mese chiuso si ripartisce tra gli obiettivi;
   per ciascuno si vedono la quota mensile che serve e la data prevista di arrivo.
+- **Verifica in due passaggi e Telegram**: facoltativa per ogni utente; dopo la password serve
+  un codice di 6 cifre su Telegram o via email, e una chat Telegram collegata riceve anche i
+  codici di recupero della password ([docs/telegram.md](docs/telegram.md), in inglese). Spenta
+  nella demo pubblica.
 - **Utenti e ruoli**: lettore, collaboratore e amministratore. Un cambio di ruolo o di password
   vale subito, anche sulle sessioni già aperte.
 - **Registro delle attività**, **backup su Google Drive** (manuale o programmato), installabile
@@ -132,7 +136,6 @@ Alcune scelte che vale la pena guardare nel codice:
 
 ## Roadmap
 
-- Autenticazione a due fattori facoltativa e reset della password tramite un bot Telegram
 - Import assistito dall'IA con Claude: riconoscimento del template di una banca nuova,
   categorizzazione delle righe che nessuna parola chiave riconosce, con un tetto di spesa mensile
 - Un assistente in chat, in sola lettura, che risponde sui dati usando le stesse funzioni dei report
@@ -142,6 +145,8 @@ Alcune scelte che vale la pena guardare nel codice:
 
 - Gli utenti demo vengono creati solo con `DEMO_MODE=true`, insieme ai dati fittizi: un
   database per uso reale non li contiene.
+- I codici inviati su Telegram sono visibili a Telegram: le chat con i bot non sono cifrate
+  end-to-end. L'alternativa sono i codici via email.
 - `npm audit` non riporta vulnerabilità nelle dipendenze di produzione. Segnala ancora un
   problema di denial of service in `braces`, raggiunto solo dagli strumenti di ESLint, per cui
   non esiste una versione corretta.
