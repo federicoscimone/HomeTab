@@ -22,7 +22,7 @@ export default function ForgotPasswordPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         setError(data.error || t('forgot.sendError'));
@@ -46,7 +46,11 @@ export default function ForgotPasswordPage() {
             {t.rich('forgot.sentText', { b: (chunks) => <strong>{chunks}</strong> })}
           </p>
           <p className="text-xs text-base-content/50">{t('forgot.spam')}</p>
-          <Link href="/login" className="btn btn-outline btn-sm mt-2">{t('backToLogin')}</Link>
+          <p className="text-sm text-base-content/70">{t('forgot.telegramHint')}</p>
+          <Link href={`/reset-password?code=1&email=${encodeURIComponent(email)}`} className="btn btn-primary btn-sm">
+            {t('forgot.haveCode')}
+          </Link>
+          <Link href="/login" className="btn btn-outline btn-sm">{t('backToLogin')}</Link>
         </div>
       </div>
     );
@@ -79,11 +83,8 @@ export default function ForgotPasswordPage() {
             />
           </label>
 
-          <button
-            type="submit"
-            className={`btn btn-primary mt-1 ${status === 'loading' ? 'loading' : ''}`}
-            disabled={status === 'loading'}
-          >
+          <button type="submit" className="btn btn-primary mt-1" disabled={status === 'loading'}>
+            {status === 'loading' && <span className="loading loading-spinner loading-sm" />}
             {status === 'loading' ? t('forgot.submitting') : t('forgot.submit')}
           </button>
         </form>

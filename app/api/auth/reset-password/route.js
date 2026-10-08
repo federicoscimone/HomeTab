@@ -8,6 +8,8 @@ import { hashToken } from '@/lib/utils/tokens';
 import { sendPasswordChangedEmail } from '@/lib/email';
 import logger from '@/lib/logger';
 import { serverTranslator } from '@/lib/i18n/server';
+import { verifyUserCode } from '@/lib/services/otp';
+import { allowAttempt, clientIp } from '@/lib/rateLimit';
 
 // GET: verifica validità token (usato dal frontend prima di mostrare il form)
 export async function GET(req) {
@@ -30,7 +32,7 @@ export async function GET(req) {
   }
 }
 
-// POST: applica la nuova password
+// POST: applica la nuova password, con il token del link email oppure con email + codice Telegram
 export async function POST(req) {
   try {
     const t = await serverTranslator('errors');
@@ -38,9 +40,9 @@ export async function POST(req) {
       return NextResponse.json({ error: t('demoResetDisabled') }, { status: 403 });
     }
 
-    const { token, password } = await req.json();
+    const { token, email, code, password } = (await req.json().catch(() => null)) ?? {};
 
-    if (!token || !password)
+    if ((!token && !(email && code)) || typeof password !== 'string')
       return NextResponse.json({ error: t('missingData') }, { status: 400 });
 
     if (password.length < 8)
@@ -48,16 +50,29 @@ export async function POST(req) {
 
     await connectDB();
 
-    const record = await PasswordResetToken.findOne({
-      tokenHash: hashToken(token),
-      used: false,
-      expiresAt: { $gt: new Date() },
-    });
+    let user;
+    if (token) {
+      // Il token si consuma con un aggiornamento condizionato (used ancora false): prima la
+      // lettura e la marcatura erano separate, e due richieste parallele con lo stesso link
+      // potevano passare entrambe.
+      const record = await PasswordResetToken.findOneAndUpdate(
+        { tokenHash: hashToken(String(token)), used: false, expiresAt: { $gt: new Date() } },
+        { used: true },
+      );
+      if (!record)
+        return NextResponse.json({ error: t('invalidResetLink') }, { status: 400 });
+      user = await User.findOne({ email: record.email });
+    } else {
+      if (!(await allowAttempt('code', clientIp(req.headers))))
+        return NextResponse.json({ error: t('tooManyAttempts') }, { status: 429 });
+      // Stesso errore per email sconosciuta e codice sbagliato: non rivela chi è registrato.
+      const candidate = await User.findOne({ email: String(email).toLowerCase() });
+      const result = candidate ? await verifyUserCode({ userId: candidate._id, purpose: 'reset', code }) : { ok: false };
+      if (!result.ok)
+        return NextResponse.json({ error: t('invalidResetCode') }, { status: 400 });
+      user = candidate;
+    }
 
-    if (!record)
-      return NextResponse.json({ error: t('invalidResetLink') }, { status: 400 });
-
-    const user = await User.findOne({ email: record.email });
     if (!user)
       return NextResponse.json({ error: t('userNotFound') }, { status: 404 });
 
@@ -68,9 +83,6 @@ export async function POST(req) {
       { _id: user._id },
       { hashedPassword, mustChangePassword: false, $inc: { sessionVersion: 1 } },
     );
-
-    // Marca il token come usato (verrà eliminato dall'indice TTL)
-    await PasswordResetToken.updateOne({ _id: record._id }, { used: true });
 
     // Notifica di cortesia: se l'invio fallisce (es. SMTP non configurato) la password è già
     // cambiata, e rispondere 500 farebbe credere all'utente il contrario.

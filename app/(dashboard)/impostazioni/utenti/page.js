@@ -271,6 +271,7 @@ export default function UtentiPage() {
                           {u.name}
                           {u.isSelf && <span className="badge badge-ghost badge-xs ml-2">{t('you')}</span>}
                           {u.isProtected && <span className="badge badge-ghost badge-xs ml-2" title={t('demoTitle')}>{t('demoBadge')}</span>}
+                          {u.twoFactorEnabled && <span className="badge badge-info badge-xs ml-2" title={t('twoFactorTitle')}>{t('twoFactorBadge')}</span>}
                         </p>
                         <p className="text-xs text-base-content/50">{u.email}</p>
                       </td>
@@ -302,6 +303,11 @@ export default function UtentiPage() {
                             {u.active && (
                               <button className="btn btn-ghost btn-xs" onClick={() => setModal({ type: 'reset', user: u })}>
                                 {t('resetPassword')}
+                              </button>
+                            )}
+                            {u.twoFactorEnabled && (
+                              <button className="btn btn-ghost btn-xs" onClick={() => patch(u, { action: 'disable-2fa' })}>
+                                {t('disableTwoFactor')}
                               </button>
                             )}
                             <button className="btn btn-ghost btn-xs" onClick={() => patch(u, { active: !u.active })}>

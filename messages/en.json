@@ -105,6 +105,51 @@
       "title": "Session",
       "text": "Sign out of the application.",
       "signOut": "Sign out"
+    },
+    "security": {
+      "title": "Security — Telegram and two-step verification",
+      "demo": "Telegram and two-step verification are off in the demo: the accounts are shared and the credentials public.",
+      "telegram": {
+        "title": "Telegram",
+        "notConfigured": "Telegram isn't set up on this installation: the administrator can enable it by following docs/telegram.md.",
+        "intro": "Connect Telegram to receive sign-in and password recovery codes there.",
+        "link": "Connect Telegram",
+        "openHint": "Open the bot and press Start: the link is valid for {minutes} minutes.",
+        "open": "Open @{bot}",
+        "waiting": "Waiting for confirmation…",
+        "linkedNow": "Telegram connected.",
+        "linked": "Connected",
+        "since": "since {date}",
+        "unlink": "Disconnect"
+      },
+      "twoFactor": {
+        "title": "Two-step verification",
+        "intro": "After the password you'll need a 6-digit code, sent on the channel you choose. It's optional.",
+        "activeOn": {
+          "telegram": "On via Telegram",
+          "email": "On via email"
+        },
+        "switchTo": {
+          "telegram": "Switch to Telegram",
+          "email": "Switch to email"
+        },
+        "enableWith": {
+          "telegram": "Turn on with Telegram",
+          "email": "Turn on with email"
+        },
+        "noChannel": "Turning it on needs a connected Telegram or email sending set up.",
+        "sendHint": {
+          "telegram": "We'll send a code on Telegram to check the channel works.",
+          "email": "We'll email you a code to check the channel works."
+        },
+        "sendCode": "Send code",
+        "code": "Code received",
+        "confirm": "Confirm",
+        "enabled": "Two-step verification is on.",
+        "disable": "Turn off",
+        "passwordToDisable": "Current password",
+        "disabled": "Two-step verification is off."
+      }
     }
   },
   "errors": {
@@ -191,7 +236,17 @@
     "cannotChangeOwnRole": "You can't change your own role",
     "cannotDisableSelf": "You can't disable yourself",
     "cannotDeleteSelf": "You can't delete yourself",
-    "lastAdmin": "At least one active administrator must remain"
+    "lastAdmin": "At least one active administrator must remain",
+    "invalidCredentials": "Wrong email or password",
+    "tooManyAttempts": "Too many attempts: try again in a few minutes",
+    "codeChannelUnavailable": "The two-step verification channel is unavailable: ask an administrator to turn it off",
+    "codeSendFailed": "Could not send the code: try again shortly",
+    "invalidResetCode": "Invalid or expired code",
+    "telegramNotConfigured": "Telegram is not set up on this installation",
+    "twoFactorUsesTelegram": "Two-step verification uses Telegram: switch to email or turn it off before disconnecting it",
+    "channelUnavailable": "Channel not available",
+    "invalidCode": "Invalid or expired code",
+    "ownTwoFactorElsewhere": "For your own two-step verification use the “My account” page"
   },
   "auth": {
     "email": "Email",
@@ -206,7 +261,17 @@
       "forgot": "Forgot your password?",
       "submit": "Sign in",
       "submitting": "Signing in…",
-      "invalid": "Incorrect email or password"
+      "invalid": "Incorrect email or password",
+      "codeSubtitle": "Two-step verification",
+      "codeSent": {
+        "telegram": "We sent you a code on Telegram. Enter it to finish signing in.",
+        "email": "We emailed you a code. Enter it to finish signing in."
+      },
+      "code": "Code",
+      "verify": "Verify",
+      "back": "Go back",
+      "invalidCode": "Invalid or expired code",
+      "tooMany": "Too many attempts: try again in a few minutes"
     },
     "forgot": {
       "subtitle": "Recover your password",
@@ -216,7 +281,9 @@
       "sendError": "Couldn't send the email",
       "sentTitle": "Email sent",
       "sentText": "If the address is registered, you'll receive a link to reset your password. The link is valid for <b>60 minutes</b>.",
-      "spam": "Check your spam folder too."
+      "spam": "Check your spam folder too.",
+      "telegramHint": "If you linked Telegram to your account, we sent you a code there too.",
+      "haveCode": "I have a Telegram code"
     },
     "reset": {
       "subtitle": "Set a new password",
@@ -231,7 +298,9 @@
       "confirmPassword": "Confirm password",
       "submit": "Update password",
       "submitting": "Updating…",
-      "resetError": "Couldn't reset the password"
+      "resetError": "Couldn't reset the password",
+      "codeSubtitle": "Reset your password with the code",
+      "code": "Code received on Telegram"
     },
     "firstAccess": {
       "subtitleNamed": "Hi {name}, choose your password",
@@ -264,7 +333,7 @@
   "apiMessages": {
     "passwordUpdated": "Password updated",
     "adminCreated": "Admin created",
-    "resetRequested": "If the email is registered, you'll receive a reset link.",
+    "resetRequested": "If the email is registered, you'll receive reset instructions: a link by email or a code on Telegram.",
     "movementDeleted": "Transaction deleted",
     "goalDeleted": "Goal deleted",
     "categoryDeleted": "Category deleted",
@@ -293,6 +362,21 @@
       "greeting": "Hi {name},",
       "text": "Your password has been changed.",
       "warning": "If it wasn't you, contact the administrator right away."
+    },
+    "code": {
+      "subject": {
+        "login": "{app}: sign-in code",
+        "reset": "{app}: password reset code",
+        "enable": "{app}: activation code"
+      },
+      "greeting": "Hi {name},",
+      "intro": {
+        "login": "here is the code to finish signing in:",
+        "reset": "here is the code to reset your password:",
+        "enable": "here is the code to turn on two-step verification:"
+      },
+      "validity": "The code expires in {minutes} minutes and works only once.",
+      "ignore": "If you didn't ask for it, ignore this email and consider changing your password."
     }
   },
   "paymentGroups": {
@@ -856,7 +940,10 @@
     "deactivate": "Disable",
     "reactivate": "Enable",
     "delete": "Delete",
-    "deleteHint": "A user who has already signed in can't be deleted, only disabled: their actions stay in the audit log."
+    "deleteHint": "A user who has already signed in can't be deleted, only disabled: their actions stay in the audit log.",
+    "twoFactorBadge": "2FA",
+    "twoFactorTitle": "Two-step verification on",
+    "disableTwoFactor": "Turn off 2FA"
   },
   "audit": {
     "title": "Audit log",
@@ -1040,5 +1127,19 @@
     "traditionalOne": "Traditional",
     "alternativeOne": "Alternative",
     "note": "Alternative methods (meal tickets, vouchers) are always kept apart from traditional payments in reports and analysis."
+  },
+  "otp": {
+    "telegram": {
+      "login": "HomeTab: your sign-in code is {code}. It expires in {minutes} minutes. If this isn't you, change your password.",
+      "reset": "HomeTab: your password reset code is {code}. It expires in {minutes} minutes. If you didn't ask for it, ignore this message.",
+      "enable": "HomeTab: the code to turn on two-step verification is {code}. It expires in {minutes} minutes."
+    }
+  },
+  "telegramBot": {
+    "help": "This is the HomeTab bot. To link it to your account, open the Account page in the app and choose “Connect Telegram”.",
+    "alreadyLinked": "This chat is linked to your HomeTab account: sign-in and recovery codes will arrive here.",
+    "invalidLink": "The link is invalid or has expired. Create a new one from the Account page in HomeTab.",
+    "linked": "Done, {name}: this chat is now linked to your HomeTab account. Sign-in and recovery codes will arrive here.",
+    "chatTaken": "This chat is already linked to another HomeTab account: disconnect it there before using it here."
   }
 }

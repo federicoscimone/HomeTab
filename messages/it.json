@@ -105,6 +105,51 @@
       "title": "Sessione",
       "text": "Disconnettiti dall'applicazione.",
       "signOut": "Disconnetti"
+    },
+    "security": {
+      "title": "Sicurezza — Telegram e verifica in due passaggi",
+      "demo": "Nella demo Telegram e la verifica in due passaggi sono disattivati: gli account sono condivisi e le credenziali pubbliche.",
+      "telegram": {
+        "title": "Telegram",
+        "notConfigured": "Telegram non è configurato su questa installazione: l'amministratore può attivarlo seguendo docs/telegram.md.",
+        "intro": "Collega Telegram per ricevere lì i codici di accesso e di recupero della password.",
+        "link": "Collega Telegram",
+        "openHint": "Apri il bot e premi Start: il link vale {minutes} minuti.",
+        "open": "Apri @{bot}",
+        "waiting": "In attesa della conferma…",
+        "linkedNow": "Telegram collegato.",
+        "linked": "Collegato",
+        "since": "dal {date}",
+        "unlink": "Scollega"
+      },
+      "twoFactor": {
+        "title": "Verifica in due passaggi",
+        "intro": "Dopo la password serve un codice di 6 cifre, inviato sul canale che scegli. È facoltativa.",
+        "activeOn": {
+          "telegram": "Attiva su Telegram",
+          "email": "Attiva via email"
+        },
+        "switchTo": {
+          "telegram": "Passa a Telegram",
+          "email": "Passa all'email"
+        },
+        "enableWith": {
+          "telegram": "Attiva con Telegram",
+          "email": "Attiva con l'email"
+        },
+        "noChannel": "Per attivarla serve Telegram collegato oppure l'invio di email configurato.",
+        "sendHint": {
+          "telegram": "Ti inviamo un codice su Telegram per verificare che il canale funzioni.",
+          "email": "Ti inviamo un codice via email per verificare che il canale funzioni."
+        },
+        "sendCode": "Invia codice",
+        "code": "Codice ricevuto",
+        "confirm": "Conferma",
+        "enabled": "Verifica in due passaggi attiva.",
+        "disable": "Disattiva",
+        "passwordToDisable": "Password attuale",
+        "disabled": "Verifica in due passaggi disattivata."
+      }
     }
   },
   "errors": {
@@ -191,7 +236,17 @@
     "cannotChangeOwnRole": "Non puoi cambiare il tuo ruolo",
     "cannotDisableSelf": "Non puoi disattivare te stesso",
     "cannotDeleteSelf": "Non puoi eliminare te stesso",
-    "lastAdmin": "Deve restare almeno un amministratore attivo"
+    "lastAdmin": "Deve restare almeno un amministratore attivo",
+    "invalidCredentials": "Email o password non corretti",
+    "tooManyAttempts": "Troppi tentativi: riprova tra qualche minuto",
+    "codeChannelUnavailable": "Il canale della verifica in due passaggi non è disponibile: chiedi a un amministratore di disattivarla",
+    "codeSendFailed": "Invio del codice non riuscito: riprova tra poco",
+    "invalidResetCode": "Codice non valido o scaduto",
+    "telegramNotConfigured": "Telegram non è configurato su questa installazione",
+    "twoFactorUsesTelegram": "La verifica in due passaggi usa Telegram: passa all'email o disattivala prima di scollegarlo",
+    "channelUnavailable": "Canale non disponibile",
+    "invalidCode": "Codice non valido o scaduto",
+    "ownTwoFactorElsewhere": "Per la tua verifica in due passaggi usa la pagina «Il mio account»"
   },
   "auth": {
     "email": "Email",
@@ -206,7 +261,17 @@
       "forgot": "Password dimenticata?",
       "submit": "Accedi",
       "submitting": "Accesso in corso…",
-      "invalid": "Email o password non corretti"
+      "invalid": "Email o password non corretti",
+      "codeSubtitle": "Verifica in due passaggi",
+      "codeSent": {
+        "telegram": "Ti abbiamo inviato un codice su Telegram. Inseriscilo per completare l'accesso.",
+        "email": "Ti abbiamo inviato un codice via email. Inseriscilo per completare l'accesso."
+      },
+      "code": "Codice",
+      "verify": "Verifica",
+      "back": "Torna indietro",
+      "invalidCode": "Codice non valido o scaduto",
+      "tooMany": "Troppi tentativi: riprova tra qualche minuto"
     },
     "forgot": {
       "subtitle": "Recupera la tua password",
@@ -216,7 +281,9 @@
       "sendError": "Errore durante l'invio",
       "sentTitle": "Email inviata",
       "sentText": "Se l'indirizzo è registrato, riceverai un link per reimpostare la password. Il link è valido per <b>60 minuti</b>.",
-      "spam": "Controlla anche la cartella spam."
+      "spam": "Controlla anche la cartella spam.",
+      "telegramHint": "Se hai collegato Telegram all'account, ti abbiamo inviato anche un codice lì.",
+      "haveCode": "Ho un codice Telegram"
     },
     "reset": {
       "subtitle": "Imposta nuova password",
@@ -231,7 +298,9 @@
       "confirmPassword": "Conferma password",
       "submit": "Aggiorna password",
       "submitting": "Aggiornamento…",
-      "resetError": "Errore durante il reset"
+      "resetError": "Errore durante il reset",
+      "codeSubtitle": "Reimposta la password con il codice",
+      "code": "Codice ricevuto su Telegram"
     },
     "firstAccess": {
       "subtitleNamed": "Ciao {name}, scegli la tua password",
@@ -264,7 +333,7 @@
   "apiMessages": {
     "passwordUpdated": "Password aggiornata con successo",
     "adminCreated": "Admin creato",
-    "resetRequested": "Se l'email è registrata, riceverai un link per il reset.",
+    "resetRequested": "Se l'email è registrata, riceverai le istruzioni per il reset: un link via email o un codice su Telegram.",
     "movementDeleted": "Movimento eliminato",
     "goalDeleted": "Obiettivo eliminato",
     "categoryDeleted": "Categoria eliminata",
@@ -293,6 +362,21 @@
       "greeting": "Ciao {name},",
       "text": "La tua password è stata modificata con successo.",
       "warning": "Se non sei stato tu, contatta immediatamente l'amministratore."
+    },
+    "code": {
+      "subject": {
+        "login": "{app}: codice di accesso",
+        "reset": "{app}: codice per reimpostare la password",
+        "enable": "{app}: codice di attivazione"
+      },
+      "greeting": "Ciao {name},",
+      "intro": {
+        "login": "ecco il codice per completare l'accesso:",
+        "reset": "ecco il codice per reimpostare la password:",
+        "enable": "ecco il codice per attivare la verifica in due passaggi:"
+      },
+      "validity": "Il codice scade tra {minutes} minuti e si può usare una volta sola.",
+      "ignore": "Se non l'hai chiesto tu, ignora questa email e valuta di cambiare la password."
     }
   },
   "paymentGroups": {
@@ -856,7 +940,10 @@
     "deactivate": "Disattiva",
     "reactivate": "Riattiva",
     "delete": "Elimina",
-    "deleteHint": "Un utente che ha già fatto accessi non si elimina, si disattiva: le sue operazioni restano nell'audit log."
+    "deleteHint": "Un utente che ha già fatto accessi non si elimina, si disattiva: le sue operazioni restano nell'audit log.",
+    "twoFactorBadge": "2FA",
+    "twoFactorTitle": "Verifica in due passaggi attiva",
+    "disableTwoFactor": "Disattiva 2FA"
   },
   "audit": {
     "title": "Audit Log",
@@ -1040,5 +1127,19 @@
     "traditionalOne": "Tradizionale",
     "alternativeOne": "Alternativo",
     "note": "I metodi alternativi (ticket pasto, buoni) vengono sempre distinti dai pagamenti tradizionali nei report e nelle analisi."
+  },
+  "otp": {
+    "telegram": {
+      "login": "HomeTab: il tuo codice di accesso è {code}. Scade tra {minutes} minuti. Se non stai entrando tu, cambia la password.",
+      "reset": "HomeTab: il codice per reimpostare la password è {code}. Scade tra {minutes} minuti. Se non l'hai chiesto tu, ignora questo messaggio.",
+      "enable": "HomeTab: il codice per attivare la verifica in due passaggi è {code}. Scade tra {minutes} minuti."
+    }
+  },
+  "telegramBot": {
+    "help": "Questo è il bot di HomeTab. Per collegarlo al tuo account apri la pagina Account dell'app e scegli «Collega Telegram».",
+    "alreadyLinked": "Questa chat è collegata al tuo account HomeTab: qui riceverai i codici di accesso e di recupero.",
+    "invalidLink": "Il link non è valido o è scaduto. Generane uno nuovo dalla pagina Account di HomeTab.",
+    "linked": "Fatto, {name}: questa chat è collegata al tuo account HomeTab. Qui riceverai i codici di accesso e di recupero.",
+    "chatTaken": "Questa chat è già collegata a un altro account HomeTab: scollegala da quell'account prima di usarla qui."
   }
 }

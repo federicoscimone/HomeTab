@@ -1,6 +1,7 @@
 /**
  * @fileoverview API route — /api/utenti/[id] (solo amministratori)
- * PATCH  — modifica { name, role, active } oppure { action: 'reset-password', password }.
+ * PATCH  — modifica { name, role, active } oppure { action: 'reset-password', password }
+ *          oppure { action: 'disable-2fa' }: recupero per chi ha perso l'accesso al canale dei codici.
  * DELETE — solo per utenti che non sono mai entrati (es. creati per errore): chi ha usato l'app
  *          compare nell'audit log e va disattivato, non cancellato.
  *
@@ -60,6 +61,12 @@ export async function PATCH(req, { params }) {
     // Le sessioni aperte decadono: chi ha la vecchia password non deve restare dentro.
     user.sessionVersion = (user.sessionVersion ?? 0) + 1;
     description = `Reimpostata la password provvisoria di ${user.name}`;
+  } else if (body.action === 'disable-2fa') {
+    // Per sé la si disattiva dalla pagina Account, dove serve la password.
+    if (isSelf) return forbidden('ownTwoFactorElsewhere');
+    user.twoFactorEnabled = false;
+    user.twoFactorChannel = null;
+    description = `Disattivata la verifica in due passaggi di ${user.name}`;
   } else if (body.action) {
     return fail('invalidAction', 400);
   } else {

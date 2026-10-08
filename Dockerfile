@@ -30,6 +30,11 @@ RUN groupadd --system --gid 1001 nodejs \
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Per il bot Telegram (servizio "telegram" del compose): gira con node fuori da Next, quindi
+# servono i sorgenti che importa e i testi. I pacchetti (mongoose) sono già nello standalone.
+COPY --from=builder --chown=nextjs:nodejs /app/workers ./workers
+COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
+COPY --from=builder --chown=nextjs:nodejs /app/messages ./messages
 
 USER nextjs
 EXPOSE 3000
