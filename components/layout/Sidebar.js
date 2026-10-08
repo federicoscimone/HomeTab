@@ -100,6 +100,7 @@ const NAV_ITEMS = [
       { href: '/impostazioni/metodi-pagamento',  label: 'paymentMethods' },
       { href: '/impostazioni/template-import',   label: 'importTemplates' },
       { href: '/impostazioni/keyword-mapping',   label: 'keywordMapping' },
+      { href: '/impostazioni/ia',                label: 'ai' },
       { href: '/impostazioni/audit-log',         label: 'auditLog' },
     ],
   },
