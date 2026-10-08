@@ -4,6 +4,7 @@ import GoogleDriveIntegration from '@/lib/models/GoogleDriveIntegration';
 import { runBackupForIntegration } from '@/lib/services/googleDriveBackup';
 import logger from '@/lib/logger';
 import { bearerToken, secretMatches } from '@/lib/utils/secrets';
+import { serverTranslator } from '@/lib/i18n/server';
 
 function isAuthorized(req) {
   const secret = process.env.BACKUP_CRON_SECRET;
@@ -13,7 +14,7 @@ function isAuthorized(req) {
 
 export async function POST(req) {
   if (!isAuthorized(req)) {
-    return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
+    return NextResponse.json({ error: (await serverTranslator('errors'))('notAuthorized') }, { status: 401 });
   }
 
   await connectDB();

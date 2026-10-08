@@ -7,7 +7,7 @@ import { generateToken } from '@/lib/utils/tokens';
 export async function POST() {
   const { session, denied } = await requirePermission('settings:manage');
   if (denied) return denied;
-  const blocked = demoBlocked();
+  const blocked = await demoBlocked();
   if (blocked) return blocked;
 
   try {

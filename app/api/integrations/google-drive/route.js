@@ -7,6 +7,7 @@ import GoogleDriveIntegration from '@/lib/models/GoogleDriveIntegration';
 import { writeAudit } from '@/lib/utils/audit';
 import { computeNextBackupAt } from '@/lib/services/googleDriveBackup';
 import { logApiError } from '@/lib/logger';
+import { serverTranslator } from '@/lib/i18n/server';
 
 function serializeIntegration(integration) {
   if (!integration) {
@@ -55,19 +56,19 @@ export async function GET() {
 export async function PATCH(req) {
   const { session, denied } = await requirePermission('settings:manage');
   if (denied) return denied;
-  const blocked = demoBlocked();
+  const blocked = await demoBlocked();
   if (blocked) return blocked;
 
   try {
-    const { autoBackupEnabled, backupFrequency } = await req.json();
+    const { autoBackupEnabled, backupFrequency } = (await req.json().catch(() => null)) ?? {};
     if (![true, false].includes(autoBackupEnabled) || !['daily', 'weekly'].includes(backupFrequency)) {
-      return NextResponse.json({ error: 'Configurazione backup non valida' }, { status: 400 });
+      return NextResponse.json({ error: (await serverTranslator('errors'))('driveConfigInvalid') }, { status: 400 });
     }
 
     await connectDB();
     const integration = await GoogleDriveIntegration.findOne({ userId: session.user.id });
     if (!integration?.isConnected) {
-      return NextResponse.json({ error: 'Google Drive non collegato' }, { status: 400 });
+      return NextResponse.json({ error: (await serverTranslator('errors'))('driveNotConnected') }, { status: 400 });
     }
 
     integration.autoBackupEnabled = autoBackupEnabled;
@@ -92,21 +93,21 @@ export async function PATCH(req) {
     return NextResponse.json(serializeIntegration(integration));
   } catch (error) {
     logApiError('PATCH /api/integrations/google-drive', error, { userId: session.user.id });
-    return NextResponse.json({ error: 'Errore aggiornamento configurazione backup' }, { status: 500 });
+    return NextResponse.json({ error: (await serverTranslator('errors'))('driveConfigFailed') }, { status: 500 });
   }
 }
 
 export async function DELETE(req) {
   const { session, denied } = await requirePermission('settings:manage');
   if (denied) return denied;
-  const blocked = demoBlocked();
+  const blocked = await demoBlocked();
   if (blocked) return blocked;
 
   try {
     await connectDB();
     const integration = await GoogleDriveIntegration.findOne({ userId: session.user.id });
     if (!integration) {
-      return NextResponse.json({ message: 'Nessuna integrazione da scollegare' });
+      return NextResponse.json({ message: (await serverTranslator('apiMessages'))('driveNothingToDisconnect') });
     }
 
     integration.googleEmail = null;
@@ -127,9 +128,9 @@ export async function DELETE(req) {
       description: 'Google Drive scollegato',
     });
 
-    return NextResponse.json({ message: 'Google Drive scollegato' });
+    return NextResponse.json({ message: (await serverTranslator('apiMessages'))('driveDisconnected') });
   } catch (error) {
     logApiError('DELETE /api/integrations/google-drive', error, { userId: session.user.id });
-    return NextResponse.json({ error: 'Errore durante lo scollegamento di Google Drive' }, { status: 500 });
+    return NextResponse.json({ error: (await serverTranslator('errors'))('driveDisconnectFailed') }, { status: 500 });
   }
 }

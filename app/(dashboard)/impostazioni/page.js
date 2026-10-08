@@ -2,16 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/hooks/useFormat';
 
 /** @returns {Promise<object>} Stato dell'integrazione Google Drive. */
 async function fetchDriveStatus() {
   const res = await fetch('/api/integrations/google-drive', { cache: 'no-store' });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Errore caricamento stato Google Drive');
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || '');
+  return data;
+}
+
+/** Risposta JSON di un'azione: l'errore del server se c'è, altrimenti il messaggio di ripiego. */
+async function actionResult(res, fallback) {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || fallback);
   return data;
 }
 
 export default function ImpostazioniPage() {
+  const t = useTranslations('settingsBackup');
+  const { fmtDateTime } = useFormat();
   const [driveStatus, setDriveStatus] = useState(null);
   const [driveSettings, setDriveSettings] = useState({ autoBackupEnabled: false, backupFrequency: 'weekly' });
   const [driveBusy, setDriveBusy] = useState(false);
@@ -20,10 +31,10 @@ export default function ImpostazioniPage() {
   // legge da lì al primo render, poi l'effetto ripulisce l'URL senza toccare lo stato.
   const searchParams = useSearchParams();
   const [driveMessage, setDriveMessage] = useState(
-    () => (searchParams.get('driveConnected') === '1' ? 'Google Drive collegato correttamente.' : ''),
+    () => (searchParams.get('driveConnected') === '1' ? t('connectedOk') : ''),
   );
   const [driveError, setDriveError] = useState(
-    () => (searchParams.get('driveError') ? 'Collegamento Google Drive non completato. Riprova.' : ''),
+    () => (searchParams.get('driveError') ? t('connectFailed') : ''),
   );
 
   const applyDriveStatus = (data) => {
@@ -33,7 +44,7 @@ export default function ImpostazioniPage() {
       backupFrequency: data.backupFrequency || 'weekly',
     });
   };
-  const showDriveStatusError = (err) => setDriveError(err.message || 'Errore caricamento stato Google Drive');
+  const showDriveStatusError = (err) => setDriveError(err.message || t('statusLoadFailed'));
 
   /** Ricarica lo stato dopo un'azione dell'utente (collega, scollega, salva, backup). */
   const refreshDriveStatus = () => fetchDriveStatus().then(applyDriveStatus, showDriveStatusError);
@@ -50,6 +61,8 @@ export default function ImpostazioniPage() {
 
     // Lo stato si aggiorna solo nei callback, quando la risposta arriva.
     fetchDriveStatus().then(applyDriveStatus, showDriveStatusError);
+    // Solo al montaggio: rileggere lo stato a ogni cambio di lingua non serve.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleConnectDrive = async () => {
@@ -59,13 +72,10 @@ export default function ImpostazioniPage() {
 
     try {
       const res = await fetch('/api/integrations/google-drive/connect', { method: 'POST' });
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || 'Impossibile avviare il collegamento Google Drive');
-
+      const data = await actionResult(res, t('startConnectFailed'));
       window.location.href = data.authorizationUrl;
     } catch (err) {
-      setDriveError(err.message || 'Impossibile avviare il collegamento Google Drive');
+      setDriveError(err.message || t('startConnectFailed'));
       setDriveBusy(false);
     }
   };
@@ -77,13 +87,11 @@ export default function ImpostazioniPage() {
 
     try {
       const res = await fetch('/api/integrations/google-drive', { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Errore scollegamento Google Drive');
-
-      setDriveMessage('Google Drive scollegato.');
+      await actionResult(res, t('disconnectFailed'));
+      setDriveMessage(t('disconnected'));
       await refreshDriveStatus();
     } catch (err) {
-      setDriveError(err.message || 'Errore scollegamento Google Drive');
+      setDriveError(err.message || t('disconnectFailed'));
     } finally {
       setDriveBusy(false);
     }
@@ -96,13 +104,11 @@ export default function ImpostazioniPage() {
 
     try {
       const res = await fetch('/api/integrations/google-drive/backup', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Backup Google Drive fallito');
-
-      setDriveMessage(`Backup completato: ${data.fileName}`);
+      const data = await actionResult(res, t('backupFailed'));
+      setDriveMessage(t('backupDone', { fileName: data.fileName }));
       await refreshDriveStatus();
     } catch (err) {
-      setDriveError(err.message || 'Backup Google Drive fallito');
+      setDriveError(err.message || t('backupFailed'));
     } finally {
       setDriveBusy(false);
     }
@@ -119,13 +125,11 @@ export default function ImpostazioniPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(driveSettings),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Errore salvataggio configurazione backup');
-
-      setDriveMessage('Configurazione backup aggiornata.');
+      const data = await actionResult(res, t('settingsFailed'));
+      setDriveMessage(t('settingsSaved'));
       setDriveStatus(data);
     } catch (err) {
-      setDriveError(err.message || 'Errore salvataggio configurazione backup');
+      setDriveError(err.message || t('settingsFailed'));
     } finally {
       setDriveSaving(false);
     }
@@ -133,20 +137,18 @@ export default function ImpostazioniPage() {
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">Backup</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('title')}</h1>
 
       {/* Google Drive Backup */}
       <div className="card bg-base-100 shadow-sm border border-base-200 mb-4">
         <div className="card-body gap-4">
           <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
             <div>
-              <h2 className="card-title text-lg">Backup Google Drive</h2>
-              <p className="text-sm text-base-content/60">
-                Collega il tuo Google Drive personale e salva un backup JSON dei dati applicativi.
-              </p>
+              <h2 className="card-title text-lg">{t('driveTitle')}</h2>
+              <p className="text-sm text-base-content/60">{t('driveIntro')}</p>
             </div>
             <div className={`badge ${driveStatus?.isConnected ? 'badge-success' : 'badge-ghost'}`}>
-              {driveStatus?.isConnected ? 'collegato' : 'non collegato'}
+              {driveStatus?.isConnected ? t('connected') : t('notConnected')}
             </div>
           </div>
 
@@ -154,34 +156,34 @@ export default function ImpostazioniPage() {
           {driveError && <div className="alert alert-error py-2 text-sm"><span>{driveError}</span></div>}
           {driveStatus?.demo && (
             <div className="alert alert-info py-2 text-sm">
-              <span>Nella demo il backup su Google Drive è disattivato: richiede di collegare un account Google personale.</span>
+              <span>{t('demoDisabled')}</span>
             </div>
           )}
 
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-xl border border-base-200 p-4">
-              <p className="text-sm font-medium">Account Google</p>
-              <p className="text-sm text-base-content/70 mt-1">{driveStatus?.googleEmail || 'Non collegato'}</p>
+              <p className="text-sm font-medium">{t('account')}</p>
+              <p className="text-sm text-base-content/70 mt-1">{driveStatus?.googleEmail || t('accountNone')}</p>
             </div>
             <div className="rounded-xl border border-base-200 p-4">
-              <p className="text-sm font-medium">Cartella Drive</p>
+              <p className="text-sm font-medium">{t('folder')}</p>
               <p className="text-sm text-base-content/70 mt-1">{driveStatus?.folderName || 'HomeTab Backups'}</p>
             </div>
             <div className="rounded-xl border border-base-200 p-4">
-              <p className="text-sm font-medium">Ultimo backup</p>
+              <p className="text-sm font-medium">{t('lastBackup')}</p>
               <p className="text-sm text-base-content/70 mt-1">
-                {driveStatus?.lastBackupAt ? new Date(driveStatus.lastBackupAt).toLocaleString('it-IT') : 'Mai eseguito'}
+                {driveStatus?.lastBackupAt ? fmtDateTime(driveStatus.lastBackupAt) : t('never')}
               </p>
               {driveStatus?.lastBackupFileName && (
                 <p className="text-xs text-base-content/50 mt-1">{driveStatus.lastBackupFileName}</p>
               )}
             </div>
             <div className="rounded-xl border border-base-200 p-4">
-              <p className="text-sm font-medium">Stato ultimo esito</p>
+              <p className="text-sm font-medium">{t('lastStatus')}</p>
               <p className="text-sm text-base-content/70 mt-1">
-                {driveStatus?.lastBackupStatus === 'success' && 'Completato'}
-                {driveStatus?.lastBackupStatus === 'error' && 'Errore'}
-                {(!driveStatus || driveStatus.lastBackupStatus === 'idle') && 'In attesa'}
+                {driveStatus?.lastBackupStatus === 'success' && t('statusSuccess')}
+                {driveStatus?.lastBackupStatus === 'error' && t('statusError')}
+                {(!driveStatus || driveStatus.lastBackupStatus === 'idle') && t('statusIdle')}
               </p>
               {driveStatus?.lastBackupError && (
                 <p className="text-xs text-error mt-1">{driveStatus.lastBackupError}</p>
@@ -193,47 +195,49 @@ export default function ImpostazioniPage() {
             {!driveStatus?.isConnected ? (
               <button
                 type="button"
-                className={`btn btn-primary ${driveBusy ? 'loading' : ''}`}
+                className="btn btn-primary"
                 onClick={handleConnectDrive}
                 disabled={driveBusy || driveStatus?.demo}
               >
-                Collega Google Drive
+                {driveBusy && <span className="loading loading-spinner loading-sm" />}
+                {t('connect')}
               </button>
             ) : (
               <>
                 <button
                   type="button"
-                  className={`btn btn-primary ${driveBusy ? 'loading' : ''}`}
+                  className="btn btn-primary"
                   onClick={handleRunBackup}
                   disabled={driveBusy || driveStatus?.demo}
                 >
-                  Esegui backup ora
+                  {driveBusy && <span className="loading loading-spinner loading-sm" />}
+                  {t('runNow')}
                 </button>
                 <button
                   type="button"
-                  className={`btn btn-outline btn-error ${driveBusy ? 'loading' : ''}`}
+                  className="btn btn-outline btn-error"
                   onClick={handleDisconnectDrive}
                   disabled={driveBusy || driveStatus?.demo}
                 >
-                  Scollega Drive
+                  {t('disconnect')}
                 </button>
               </>
             )}
           </div>
 
           <div className={`rounded-xl border border-base-200 p-4 ${!driveStatus?.isConnected ? 'opacity-60' : ''}`}>
-            <h3 className="font-semibold mb-3">Backup automatico</h3>
+            <h3 className="font-semibold mb-3">{t('autoTitle')}</h3>
             <div className="flex flex-col gap-3 md:flex-row md:items-end">
               <label className="form-control w-full md:max-w-xs">
-                <div className="label"><span className="label-text">Frequenza</span></div>
+                <div className="label"><span className="label-text">{t('frequency')}</span></div>
                 <select
                   className="select select-bordered"
                   value={driveSettings.backupFrequency}
                   disabled={!driveStatus?.isConnected}
                   onChange={(e) => setDriveSettings((current) => ({ ...current, backupFrequency: e.target.value }))}
                 >
-                  <option value="weekly">Settimanale</option>
-                  <option value="daily">Giornaliero</option>
+                  <option value="weekly">{t('weekly')}</option>
+                  <option value="daily">{t('daily')}</option>
                 </select>
               </label>
 
@@ -245,25 +249,24 @@ export default function ImpostazioniPage() {
                   disabled={!driveStatus?.isConnected}
                   onChange={(e) => setDriveSettings((current) => ({ ...current, autoBackupEnabled: e.target.checked }))}
                 />
-                <span className="label-text">Attiva backup automatico</span>
+                <span className="label-text">{t('autoEnable')}</span>
               </label>
 
               <button
                 type="button"
-                className={`btn btn-outline ${driveSaving ? 'loading' : ''}`}
+                className="btn btn-outline"
                 onClick={handleSaveDriveSettings}
                 disabled={!driveStatus?.isConnected || driveSaving}
               >
-                Salva automazione
+                {driveSaving && <span className="loading loading-spinner loading-sm" />}
+                {t('saveAuto')}
               </button>
             </div>
 
-            <p className="text-xs text-base-content/60 mt-3">
-              L&apos;esecuzione automatica richiede un cron esterno che chiami la route protetta del server.
-            </p>
+            <p className="text-xs text-base-content/60 mt-3">{t('cronHint')}</p>
             {driveStatus?.nextBackupAt && (
               <p className="text-xs text-base-content/60 mt-1">
-                Prossima esecuzione prevista: {new Date(driveStatus.nextBackupAt).toLocaleString('it-IT')}
+                {t('nextRun', { date: fmtDateTime(driveStatus.nextBackupAt) })}
               </p>
             )}
           </div>

@@ -16,20 +16,24 @@ import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import { ROLE_INFO } from '@/lib/auth/permissions';
 import { isProtectedDemoAccount } from '@/lib/demoAccounts';
-import { isLastActiveAdmin, parseUserFields, passwordError, toPublicUser } from '@/lib/services/users';
+import { MIN_PASSWORD_LENGTH, isLastActiveAdmin, parseUserFields, passwordError, toPublicUser } from '@/lib/services/users';
 import { writeAudit } from '@/lib/utils/audit';
+import { serverTranslator } from '@/lib/i18n/server';
 
-const notFound = () => NextResponse.json({ error: 'Utente non trovato' }, { status: 404 });
-const forbidden = (error) => NextResponse.json({ error }, { status: 403 });
+/** @param {string} key - Chiave del namespace "errors". */
+const fail = async (key, status, values) =>
+  NextResponse.json({ error: (await serverTranslator('errors'))(key, values) }, { status });
+const notFound = () => fail('userNotFound', 404);
+const forbidden = (key) => fail(key, 403);
 
 /** Carica l'utente bersaglio e applica i vincoli comuni a modifica ed eliminazione. */
 async function loadTarget(id) {
-  if (!mongoose.isValidObjectId(id)) return { response: notFound() };
+  if (!mongoose.isValidObjectId(id)) return { response: await notFound() };
   await connectDB();
   const user = await User.findById(id);
-  if (!user) return { response: notFound() };
+  if (!user) return { response: await notFound() };
   if (isProtectedDemoAccount(user.email)) {
-    return { response: forbidden('Gli account della demo non si possono modificare') };
+    return { response: await forbidden('demoAccountLocked') };
   }
   return { user };
 }
@@ -43,13 +47,13 @@ export async function PATCH(req, { params }) {
   if (response) return response;
 
   const isSelf = String(user._id) === session.user.id;
-  const body = await req.json();
+  const body = (await req.json().catch(() => null)) ?? {};
   let description;
 
   if (body.action === 'reset-password') {
-    if (isSelf) return forbidden('Per la tua password usa la pagina "Il mio account"');
+    if (isSelf) return forbidden('ownPasswordElsewhere');
     const pwdError = passwordError(body.password);
-    if (pwdError) return NextResponse.json({ error: pwdError }, { status: 400 });
+    if (pwdError) return fail(pwdError, 400, { min: MIN_PASSWORD_LENGTH });
 
     user.hashedPassword = await bcrypt.hash(body.password, 12);
     user.mustChangePassword = true;
@@ -57,21 +61,19 @@ export async function PATCH(req, { params }) {
     user.sessionVersion = (user.sessionVersion ?? 0) + 1;
     description = `Reimpostata la password provvisoria di ${user.name}`;
   } else if (body.action) {
-    return NextResponse.json({ error: 'Azione non valida' }, { status: 400 });
+    return fail('invalidAction', 400);
   } else {
     const { data, error } = parseUserFields(body, true);
-    if (error) return NextResponse.json({ error }, { status: 400 });
+    if (error) return fail(error, 400);
     if (data.email && data.email !== user.email && await User.exists({ email: data.email })) {
-      return NextResponse.json({ error: 'Esiste già un utente con questa email' }, { status: 409 });
+      return fail('userEmailTaken', 409);
     }
 
     const losesAdmin = user.role === 'admin' && user.active !== false
       && ((data.role && data.role !== 'admin') || data.active === false);
-    if (isSelf && (data.role && data.role !== user.role)) return forbidden('Non puoi cambiare il tuo ruolo');
-    if (isSelf && data.active === false) return forbidden('Non puoi disattivare te stesso');
-    if (losesAdmin && await isLastActiveAdmin(user._id)) {
-      return forbidden('Deve restare almeno un amministratore attivo');
-    }
+    if (isSelf && (data.role && data.role !== user.role)) return forbidden('cannotChangeOwnRole');
+    if (isSelf && data.active === false) return forbidden('cannotDisableSelf');
+    if (losesAdmin && await isLastActiveAdmin(user._id)) return forbidden('lastAdmin');
 
     const changes = [];
     if (data.role && data.role !== user.role) changes.push(`ruolo ${ROLE_INFO[user.role].label} → ${ROLE_INFO[data.role].label}`);
@@ -101,16 +103,9 @@ export async function DELETE(req, { params }) {
   const { user, response } = await loadTarget(id);
   if (response) return response;
 
-  if (String(user._id) === session.user.id) return forbidden('Non puoi eliminare te stesso');
-  if (user.lastLoginAt) {
-    return NextResponse.json(
-      { error: 'L\'utente ha già effettuato accessi: disattivalo invece di eliminarlo' },
-      { status: 409 },
-    );
-  }
-  if (user.role === 'admin' && await isLastActiveAdmin(user._id)) {
-    return forbidden('Deve restare almeno un amministratore attivo');
-  }
+  if (String(user._id) === session.user.id) return forbidden('cannotDeleteSelf');
+  if (user.lastLoginAt) return fail('userHasLogins', 409);
+  if (user.role === 'admin' && await isLastActiveAdmin(user._id)) return forbidden('lastAdmin');
 
   await User.deleteOne({ _id: user._id });
   await writeAudit(session, req, {
@@ -119,5 +114,5 @@ export async function DELETE(req, { params }) {
     resourceId: id,
     description: `Eliminato utente ${user.name} (${user.email})`,
   });
-  return NextResponse.json({ message: 'Eliminato' });
+  return NextResponse.json({ message: (await serverTranslator('apiMessages'))('userDeleted') });
 }
