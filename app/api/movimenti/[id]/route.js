@@ -46,7 +46,7 @@ export async function PUT(req, { params }) {
   if (error) return badRequest(error);
 
   await connectDB();
-  const expense = await Movement.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+  const expense = await Movement.findByIdAndUpdate(id, data, { returnDocument: 'after', runValidators: true });
   if (!expense) return notFound();
 
   await writeAudit(session, req, {
@@ -70,7 +70,7 @@ export async function PATCH(req, { params }) {
   if (error) return badRequest(error);
 
   await connectDB();
-  const expense = await Movement.findByIdAndUpdate(id, { $set: data }, { new: true });
+  const expense = await Movement.findByIdAndUpdate(id, { $set: data }, { returnDocument: 'after' });
   if (!expense) return notFound();
 
   await writeAudit(session, req, {

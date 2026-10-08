@@ -21,7 +21,7 @@ export async function PUT(req, { params }) {
   if (!fields.subCategory1Id) fields.subCategory1Id = null;
   let m;
   try {
-    m = await KeywordMapping.findByIdAndUpdate(id, fields, { new: true, runValidators: true });
+    m = await KeywordMapping.findByIdAndUpdate(id, fields, { returnDocument: 'after', runValidators: true });
   } catch (err) {
     if (!isInputError(err)) throw err;
     return fail('invalidData', 400);

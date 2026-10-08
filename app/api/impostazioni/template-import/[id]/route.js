@@ -31,7 +31,7 @@ export async function PUT(req, { params }) {
   let t;
   try {
     t = await ImportTemplate.findByIdAndUpdate(
-      id, pick(await req.json().catch(() => null), TEMPLATE_FIELDS), { new: true, runValidators: true },
+      id, pick(await req.json().catch(() => null), TEMPLATE_FIELDS), { returnDocument: 'after', runValidators: true },
     );
   } catch (err) {
     if (!isInputError(err)) throw err;

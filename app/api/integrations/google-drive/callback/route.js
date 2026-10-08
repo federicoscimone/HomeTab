@@ -81,7 +81,7 @@ export async function GET(req) {
           backupFrequency: 'weekly',
         },
       },
-      { upsert: true, new: true, runValidators: true },
+      { upsert: true, returnDocument: 'after', runValidators: true },
     );
 
     await writeAudit(session, req, {
