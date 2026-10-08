@@ -24,7 +24,7 @@ export async function PUT(req, { params }) {
   const fields = pick(await req.json().catch(() => null), ['name', 'color']);
   let category;
   try {
-    category = await Category.findByIdAndUpdate(id, fields, { new: true, runValidators: true });
+    category = await Category.findByIdAndUpdate(id, fields, { returnDocument: 'after', runValidators: true });
   } catch (err) {
     if (!isInputError(err)) throw err;
     return fail('invalidData', 400);

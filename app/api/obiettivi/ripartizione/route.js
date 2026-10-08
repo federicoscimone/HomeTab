@@ -55,7 +55,7 @@ export async function PUT(req) {
     const plan = await AllocationPlan.findOneAndUpdate(
       { effectiveFrom: overview.currentMonth },
       { shares: shares.map((s) => ({ goalId: s.goalId, pct: s.pct })) },
-      { upsert: true, new: true, runValidators: true },
+      { upsert: true, returnDocument: 'after', runValidators: true },
     );
 
     await writeAudit(session, req, {
