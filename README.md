@@ -25,6 +25,9 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   custom-range analysis export to Excel.
 - **Savings goals** — the savings of each closed month are split among goals; every goal shows
   the monthly amount it needs and its estimated arrival date.
+- **Two-step verification and Telegram** — optional for each user: after the password, a
+  6-digit code on Telegram or by email; a linked Telegram chat also receives password-recovery
+  codes ([docs/telegram.md](docs/telegram.md)). Off in the public demo.
 - **Users and roles** — viewer, editor and administrator. Role changes and password resets take
   effect immediately, also on sessions that are already open.
 - **Italian and English** — the language follows the browser, can be switched at any time and
@@ -127,7 +130,6 @@ A few decisions worth a look in the code:
 
 ## Roadmap
 
-- Optional two-factor authentication and password reset through a Telegram bot
 - AI-assisted import with Claude: template detection for a new bank, categorization of the rows
   that no keyword matches, with a hard monthly spending cap
 - A read-only chat assistant that answers questions on your data using the same functions as the
@@ -138,6 +140,8 @@ A few decisions worth a look in the code:
 
 - The demo users are created only with `DEMO_MODE=true`, together with the fictitious data;
   a database for real use never contains them.
+- Codes sent through Telegram are visible to Telegram: bot chats are not end-to-end encrypted.
+  Email codes are the alternative ([docs/telegram.md](docs/telegram.md#limits)).
 - `npm audit` reports no vulnerabilities in production dependencies. It still lists a
   denial-of-service issue in `braces`, reached only through the ESLint toolchain, for which no
   fixed version exists.
