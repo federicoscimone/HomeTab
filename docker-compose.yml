@@ -1,9 +1,13 @@
-name: hometab
+name: ${INSTANCE:-hometab}
+
+# Più istanze sullo stesso host (es. la vetrina demo e una con dati reali): ognuna è uno stack
+# separato con una propria INSTANCE, che dà il nome a container e router di Traefik. Volumi e
+# rete interna sono già separati dal nome del progetto (lo stack). Default "hometab".
 
 services:
   mongodb:
     image: mongo:7
-    container_name: hometab-mongodb
+    container_name: ${INSTANCE:-hometab}-mongodb
     restart: unless-stopped
     command: ["--bind_ip_all"]
     environment:
@@ -33,7 +37,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: hometab-app
+    container_name: ${INSTANCE:-hometab}-app
     restart: unless-stopped
     depends_on:
       mongodb:
@@ -80,8 +84,8 @@ services:
     labels:
       - "traefik.enable=${TRAEFIK_ENABLE:-false}"
       - "traefik.docker.network=${PUBLIC_NETWORK:-hometab_public}"
-      - "traefik.http.routers.hometab.rule=Host(`${APP_HOST:-localhost}`)"
-      - "traefik.http.services.hometab.loadbalancer.server.port=3000"
+      - "traefik.http.routers.${INSTANCE:-hometab}.rule=Host(`${APP_HOST:-localhost}`)"
+      - "traefik.http.services.${INSTANCE:-hometab}.loadbalancer.server.port=3000"
 
   # Bot Telegram: collega le chat agli utenti (vedi workers/telegram.js). Stessa immagine
   # dell'app, altro comando. Parte solo con il profilo "telegram" (COMPOSE_PROFILES=telegram),
@@ -90,7 +94,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: hometab-telegram
+    container_name: ${INSTANCE:-hometab}-telegram
     profiles: ["telegram"]
     restart: unless-stopped
     command: ["node", "workers/telegram.js"]
