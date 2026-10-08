@@ -9,11 +9,13 @@ function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('token');
+  // Con ?code=1 il reset usa il codice ricevuto su Telegram invece del link: niente token da verificare.
+  const codeMode = searchParams.has('code');
 
   // Senza token nell'URL la risposta è già nota: si chiede al server solo quando c'è.
   const [checked, setChecked] = useState({ token: null, valid: null });
-  const tokenValid = !token ? false : checked.token === token ? checked.valid : null; // null=checking
-  const [form, setForm] = useState({ password: '', confirm: '' });
+  const tokenValid = codeMode ? true : !token ? false : checked.token === token ? checked.valid : null; // null=checking
+  const [form, setForm] = useState({ email: searchParams.get('email') ?? '', code: '', password: '', confirm: '' });
   const [status, setStatus] = useState('idle'); // idle | loading | success | error
   const [error, setError] = useState('');
   const t = useTranslations('auth');
@@ -47,9 +49,11 @@ function ResetPasswordForm() {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password: form.password }),
+        body: JSON.stringify(codeMode
+          ? { email: form.email, code: form.code, password: form.password }
+          : { token, password: form.password }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         setError(data.error || t('reset.resetError'));
@@ -85,6 +89,7 @@ function ResetPasswordForm() {
           <Link href="/forgot-password" className="btn btn-primary btn-sm">
             {t('reset.requestNew')}
           </Link>
+          <Link href="/reset-password?code=1" className="btn btn-ghost btn-sm">{t('forgot.haveCode')}</Link>
         </div>
       </div>
     );
@@ -108,7 +113,7 @@ function ResetPasswordForm() {
       <div className="card-body gap-4">
         <div className="text-center mb-2">
           <h1 className="text-2xl font-bold text-primary">{'HomeTab'}</h1>
-          <p className="text-sm text-base-content/60">{t('reset.subtitle')}</p>
+          <p className="text-sm text-base-content/60">{codeMode ? t('reset.codeSubtitle') : t('reset.subtitle')}</p>
         </div>
 
         {error && (
@@ -116,6 +121,25 @@ function ResetPasswordForm() {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          {codeMode && (
+            <>
+              <label className="form-control">
+                <div className="label"><span className="label-text">{t('email')}</span></div>
+                <input
+                  type="email" className="input input-bordered" required autoComplete="email"
+                  value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+                />
+              </label>
+              <label className="form-control">
+                <div className="label"><span className="label-text">{t('reset.code')}</span></div>
+                <input
+                  type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={7} required
+                  className="input input-bordered font-mono tracking-widest" placeholder="123456"
+                  value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })}
+                />
+              </label>
+            </>
+          )}
           <label className="form-control">
             <div className="label"><span className="label-text">{t('reset.newPassword')}</span></div>
             <input
@@ -142,11 +166,8 @@ function ResetPasswordForm() {
             />
           </label>
 
-          <button
-            type="submit"
-            className={`btn btn-primary mt-1 ${status === 'loading' ? 'loading' : ''}`}
-            disabled={status === 'loading'}
-          >
+          <button type="submit" className="btn btn-primary mt-1" disabled={status === 'loading'}>
+            {status === 'loading' && <span className="loading loading-spinner loading-sm" />}
             {status === 'loading' ? t('reset.submitting') : t('reset.submit')}
           </button>
         </form>

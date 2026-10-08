@@ -4,6 +4,19 @@ import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import { loadSessionUser } from '@/lib/auth/sessionUser';
+import { passwordAloneAllowed } from '@/lib/auth/otp';
+import { verifyLoginCode } from '@/lib/services/otp';
+import { allowAttempt, clientIp } from '@/lib/rateLimit';
+import { isDemoMode } from '@/lib/demoAccounts';
+
+/** Errore che il login mostra come "troppi tentativi" invece che come credenziali sbagliate. */
+export const RATE_LIMITED = 'RateLimited';
+
+/** Utente autenticato: si registra l'accesso e si passa a NextAuth solo identità e versione. */
+async function signedIn(user) {
+  await User.updateOne({ _id: user._id }, { lastLoginAt: new Date() });
+  return { id: user._id.toString(), name: user.name, email: user.email, sv: user.sessionVersion ?? 0 };
+}
 
 export const authOptions = {
   session: {
@@ -20,25 +33,35 @@ export const authOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        // Secondo passo della verifica in due passaggi (vedi /api/auth/login/start).
+        ticket: { label: 'Ticket', type: 'text' },
+        code: { label: 'Code', type: 'text' },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-
+      async authorize(credentials, req) {
         await connectDB();
+        const ip = clientIp(req?.headers);
+
+        // Codice ricevuto su Telegram o via email, con il ticket rilasciato dopo la password.
+        if (credentials?.ticket) {
+          if (!(await allowAttempt('code', ip))) throw new Error(RATE_LIMITED);
+          const user = await verifyLoginCode(credentials.ticket, credentials.code);
+          return user ? signedIn(user) : null;
+        }
+
+        if (!credentials?.email || !credentials?.password) return null;
+        if (!(await allowAttempt('login', ip))) throw new Error(RATE_LIMITED);
+
         const user = await User.findOne({ email: credentials.email.toLowerCase() });
         if (!user || user.active === false) return null;
 
         const valid = await bcrypt.compare(credentials.password, user.hashedPassword);
         if (!valid) return null;
 
-        await User.updateOne({ _id: user._id }, { lastLoginAt: new Date() });
+        // Con la 2FA attiva la password da sola non basta, anche chiamando questo endpoint
+        // direttamente invece di passare dalla pagina di login: serve il ticket con il codice.
+        if (!passwordAloneAllowed(user, isDemoMode())) return null;
 
-        return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          sv: user.sessionVersion ?? 0,
-        };
+        return signedIn(user);
       },
     }),
   ],

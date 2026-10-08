@@ -10,6 +10,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import ChangePasswordForm from '@/components/account/ChangePasswordForm';
 import LocaleSwitcher from '@/components/layout/LocaleSwitcher';
+import SecurityCard from '@/components/account/SecurityCard';
 
 const THEMES = [
   { value: 'light',  label: 'Light',  bg: '#ffffff', primary: '#6366f1', text: '#1f2937' },
@@ -119,6 +120,14 @@ export default function AccountPage() {
               onDone={() => setMessage(t('password.done'))}
             />
           )}
+        </div>
+      </div>
+
+      {/* Telegram e verifica in due passaggi */}
+      <div className="card bg-base-100 shadow-sm border border-base-200 mt-4">
+        <div className="card-body gap-3">
+          <h2 className="card-title text-lg">{t('security.title')}</h2>
+          <SecurityCard />
         </div>
       </div>
 
