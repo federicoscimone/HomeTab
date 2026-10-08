@@ -11,9 +11,6 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
 
 ![Dashboard](docs/images/dashboard.png)
 
-> The interface is in Italian for now: it was built for an Italian household and Italian banks.
-> A language selector (Italian and English) is next on the [roadmap](#roadmap).
-
 ## Features
 
 - **Movements** — expenses and income with a three-level category tree, payee, place, notes and
@@ -30,6 +27,9 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   the monthly amount it needs and its estimated arrival date.
 - **Users and roles** — viewer, editor and administrator. Role changes and password resets take
   effect immediately, also on sessions that are already open.
+- **Italian and English** — the language follows the browser, can be switched at any time and
+  is saved on the user's profile; amounts, dates, plurals, Excel exports and API errors follow
+  it. Data you enter (category names, payees) stays as written.
 - **Audit log**, **Google Drive backup** (manual or scheduled), installable as a **PWA**, five
   colour themes.
 
@@ -121,10 +121,12 @@ A few decisions worth a look in the code:
 - **Import pipeline**: template-driven parsing with Italian and US number formats, Excel serial
   dates and sheets that don't start in column A, tested in
   [test/importParser.test.js](test/importParser.test.js).
+- **Translations that can't drift.** Tests check that both languages have the same keys and
+  placeholders and catch ICU syntax mistakes; a lint rule rejects any text written directly in
+  JSX, so a new sentence can't ship in one language only ([test/i18n.test.js](test/i18n.test.js)).
 
 ## Roadmap
 
-- Language selector: Italian and English
 - Optional two-factor authentication and password reset through a Telegram bot
 - AI-assisted import with Claude: template detection for a new bank, categorization of the rows
   that no keyword matches, with a hard monthly spending cap

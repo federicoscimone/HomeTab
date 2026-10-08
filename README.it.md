@@ -16,6 +16,9 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
 - **Movimenti**: uscite ed entrate con categorie su tre livelli, esercente, luogo, note e metodo
   di pagamento. Ticket restaurant e buoni sono tenuti separati dal denaro, così non falsano il
   calcolo del risparmio.
+- **Italiano e inglese**: la lingua segue quella del browser, si cambia in ogni momento e resta
+  salvata nel profilo; importi, date, plurali, export Excel ed errori delle API la seguono. I dati
+  inseriti (nomi delle categorie, esercenti) restano come sono stati scritti.
 - **Import dagli estratti conto**: Excel, CSV o testo incollato. Per ogni banca si definisce un
   template (quale colonna contiene cosa, formato delle date, come leggere il segno degli
   importi), e regole a parole chiave assegnano la categoria. I doppioni si riconoscono prima del
@@ -122,10 +125,13 @@ Alcune scelte che vale la pena guardare nel codice:
 - **La pipeline di import**: lettura guidata dal template, con formati numerici italiano e
   americano, date seriali di Excel e fogli che non partono dalla colonna A, coperta dai test in
   [test/importParser.test.js](test/importParser.test.js).
+- **Traduzioni che non possono divergere.** I test verificano che le due lingue abbiano le stesse
+  chiavi e gli stessi segnaposto e intercettano gli errori di sintassi ICU; una regola di lint
+  rifiuta i testi scritti direttamente nel JSX, così una frase nuova non può uscire in una lingua
+  sola ([test/i18n.test.js](test/i18n.test.js)).
 
 ## Roadmap
 
-- Interfaccia in italiano e in inglese, a scelta
 - Autenticazione a due fattori facoltativa e reset della password tramite un bot Telegram
 - Import assistito dall'IA con Claude: riconoscimento del template di una banca nuova,
   categorizzazione delle righe che nessuna parola chiave riconosce, con un tetto di spesa mensile
