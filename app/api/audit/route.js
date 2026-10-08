@@ -3,6 +3,7 @@ import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import AuditLog from '@/lib/models/AuditLog';
 import { logApiError } from '@/lib/logger';
+import { serverTranslator } from '@/lib/i18n/server';
 
 export async function GET(req) {
   const { session, denied } = await requirePermission('settings:manage');
@@ -53,6 +54,6 @@ export async function GET(req) {
     return NextResponse.json({ logs, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (err) {
     logApiError('GET /api/audit', err);
-    return NextResponse.json({ error: 'Errore caricamento audit log' }, { status: 500 });
+    return NextResponse.json({ error: (await serverTranslator('errors'))('auditLoadFailed') }, { status: 500 });
   }
 }

@@ -10,10 +10,11 @@ import bcrypt from 'bcryptjs';
 import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import { parseUserFields, passwordError, toPublicUser } from '@/lib/services/users';
+import { MIN_PASSWORD_LENGTH, parseUserFields, passwordError, toPublicUser } from '@/lib/services/users';
 import { ROLE_INFO } from '@/lib/auth/permissions';
 import { logApiError } from '@/lib/logger';
 import { writeAudit } from '@/lib/utils/audit';
+import { serverTranslator } from '@/lib/i18n/server';
 
 export async function GET() {
   const { session, denied } = await requirePermission('users:manage');
@@ -28,15 +29,16 @@ export async function POST(req) {
   const { session, denied } = await requirePermission('users:manage');
   if (denied) return denied;
 
-  const body = await req.json();
+  const tErrors = await serverTranslator('errors');
+  const body = (await req.json().catch(() => null)) ?? {};
   const { data, error } = parseUserFields(body);
-  if (error) return NextResponse.json({ error }, { status: 400 });
+  if (error) return NextResponse.json({ error: tErrors(error) }, { status: 400 });
   const pwdError = passwordError(body.password);
-  if (pwdError) return NextResponse.json({ error: pwdError }, { status: 400 });
+  if (pwdError) return NextResponse.json({ error: tErrors(pwdError, { min: MIN_PASSWORD_LENGTH }) }, { status: 400 });
 
   await connectDB();
   if (await User.exists({ email: data.email })) {
-    return NextResponse.json({ error: 'Esiste già un utente con questa email' }, { status: 409 });
+    return NextResponse.json({ error: tErrors('userEmailTaken') }, { status: 409 });
   }
 
   try {
@@ -56,6 +58,6 @@ export async function POST(req) {
     return NextResponse.json(toPublicUser(user.toObject(), session.user.id), { status: 201 });
   } catch (err) {
     logApiError('POST /api/utenti', err, { userId: session.user.id });
-    return NextResponse.json({ error: 'Errore nella creazione dell\'utente' }, { status: 500 });
+    return NextResponse.json({ error: tErrors('userCreateFailed') }, { status: 500 });
   }
 }
