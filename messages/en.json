@@ -58,6 +58,7 @@
     "paymentMethods": "Payment methods",
     "importTemplates": "Import templates",
     "keywordMapping": "Keyword rules",
+    "ai": "AI",
     "auditLog": "Audit log",
     "userMenu": "User menu",
     "myAccount": "My account",
@@ -894,6 +895,47 @@
     "saveAuto": "Save schedule",
     "cronHint": "Automatic runs need an external cron that calls the server's protected route.",
     "nextRun": "Next scheduled run: {date}"
+  },
+  "settingsAi": {
+    "pageTitle": "Artificial intelligence",
+    "title": "Claude for imports",
+    "intro": "The model suggests categories and templates while importing. Personal data is masked before anything is sent, and spending stays within the monthly cap.",
+    "active": "on",
+    "inactive": "off",
+    "loadFailed": "Could not read the AI status",
+    "importModel": "Model for imports",
+    "none": "None",
+    "callsThisMonth": "Calls this month",
+    "callsSummary": "{total, plural, =0 {No calls} one {# call} other {# calls}}{failed, plural, =0 {} one {, # failed} other {, # failed}}",
+    "spending": "Spending in {month}",
+    "spentOfCap": "{spent} of {cap}",
+    "spendingBar": "This month’s spending against the cap",
+    "capHint": "Once the cap is reached, AI features switch off until the first of the month and imports work as usual. Set the cap with AI_MONTHLY_BUDGET_USD.",
+    "tokensInOut": "{input} → {output}",
+    "reasons": {
+      "demo": "AI is off in the public demo: anyone could use up the credit.",
+      "off": "AI is turned off (AI_MODEL_IMPORT=none).",
+      "unknownModel": "The model {model} is not recognised: write it as provider:name, with a known price.",
+      "notConfigured": "The provider key is missing (for Anthropic, ANTHROPIC_API_KEY).",
+      "noBudget": "The monthly cap is zero or invalid (AI_MONTHLY_BUDGET_USD)."
+    },
+    "cols": {
+      "when": "When",
+      "task": "Feature",
+      "outcome": "Result",
+      "tokens": "Tokens",
+      "cost": "Cost"
+    },
+    "tasks": {
+      "importCategorize": "Import categories",
+      "importTemplate": "Template suggestion"
+    },
+    "outcomes": {
+      "ok": "Succeeded",
+      "invalid": "Invalid answer",
+      "error": "Service error",
+      "unknown": "Timed out"
+    }
   },
   "users": {
     "title": "Users",

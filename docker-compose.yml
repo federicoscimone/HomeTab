@@ -68,6 +68,9 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_MODEL_IMPORT: ${AI_MODEL_IMPORT:-}
+      AI_MONTHLY_BUDGET_USD: ${AI_MONTHLY_BUDGET_USD:-}
     # Porta sull'host. Dietro un reverse proxy conviene legarla a 127.0.0.1 (APP_BIND), così
     # l'app non è raggiungibile in rete aggirando il proxy.
     ports:

@@ -64,3 +64,6 @@ administrator. To receive sign-in and recovery codes on Telegram, add `TELEGRAM_
 `TELEGRAM_BOT_USERNAME` and `TELEGRAM_WEBHOOK_SECRET`: on Vercel the bot works through the
 webhook, which the app registers by itself ([docs/telegram.md](telegram.md)). Use a bot that no
 other installation uses.
+
+For the AI-assisted import add `ANTHROPIC_API_KEY` and, if you want a cap other than $3 a
+month, `AI_MONTHLY_BUDGET_USD` ([docs/ai.md](ai.md)). In the demo the AI stays off anyway.

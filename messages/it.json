@@ -58,6 +58,7 @@
     "paymentMethods": "Metodi Pagamento",
     "importTemplates": "Template Import",
     "keywordMapping": "Keyword Mapping",
+    "ai": "IA",
     "auditLog": "Audit Log",
     "userMenu": "Menu utente",
     "myAccount": "Il mio account",
@@ -894,6 +895,47 @@
     "saveAuto": "Salva automazione",
     "cronHint": "L'esecuzione automatica richiede un cron esterno che chiami la route protetta del server.",
     "nextRun": "Prossima esecuzione prevista: {date}"
+  },
+  "settingsAi": {
+    "pageTitle": "Intelligenza artificiale",
+    "title": "Claude per l’import",
+    "intro": "Il modello propone categorie e template durante l’import. Prima di ogni invio i dati personali vengono mascherati, e la spesa resta entro il tetto mensile.",
+    "active": "attiva",
+    "inactive": "spenta",
+    "loadFailed": "Impossibile leggere lo stato dell’IA",
+    "importModel": "Modello per l’import",
+    "none": "Nessuno",
+    "callsThisMonth": "Chiamate nel mese",
+    "callsSummary": "{total, plural, =0 {Nessuna chiamata} one {# chiamata} other {# chiamate}}{failed, plural, =0 {} one {, # non riuscita} other {, # non riuscite}}",
+    "spending": "Spesa di {month}",
+    "spentOfCap": "{spent} su {cap}",
+    "spendingBar": "Spesa del mese rispetto al tetto",
+    "capHint": "Raggiunto il tetto, le funzioni IA si spengono fino al primo del mese e l’import funziona come sempre. Il tetto si imposta con AI_MONTHLY_BUDGET_USD.",
+    "tokensInOut": "{input} → {output}",
+    "reasons": {
+      "demo": "Nella demo pubblica l’IA è spenta: chiunque potrebbe consumare il credito.",
+      "off": "L’IA è spenta (AI_MODEL_IMPORT=none).",
+      "unknownModel": "Il modello {model} non è riconosciuto: va indicato come fornitore:nome, con un prezzo noto.",
+      "notConfigured": "Manca la chiave del fornitore (per Anthropic, ANTHROPIC_API_KEY).",
+      "noBudget": "Il tetto mensile è zero o non valido (AI_MONTHLY_BUDGET_USD)."
+    },
+    "cols": {
+      "when": "Quando",
+      "task": "Funzione",
+      "outcome": "Esito",
+      "tokens": "Token",
+      "cost": "Costo"
+    },
+    "tasks": {
+      "importCategorize": "Categorie nell’import",
+      "importTemplate": "Proposta di template"
+    },
+    "outcomes": {
+      "ok": "Riuscita",
+      "invalid": "Risposta non valida",
+      "error": "Errore del servizio",
+      "unknown": "Timeout"
+    }
   },
   "users": {
     "title": "Utenti",
