@@ -31,7 +31,7 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
   per ciascuno si vedono la quota mensile che serve e la data prevista di arrivo.
 - **Verifica in due passaggi e Telegram**: facoltativa per ogni utente; dopo la password serve
   un codice di 6 cifre su Telegram o via email, e una chat Telegram collegata riceve anche i
-  codici di recupero della password ([docs/telegram.md](docs/telegram.md), in inglese). Spenta
+  codici di recupero della password ([docs/telegram.md](docs/telegram.md#telegram-e-verifica-in-due-passaggi)). Spenta
   nella demo pubblica.
 - **Utenti e ruoli**: lettore, collaboratore e amministratore. Un cambio di ruolo o di password
   vale subito, anche sulle sessioni già aperte.
