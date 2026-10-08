@@ -162,7 +162,27 @@
     "allocationInvalidPct": "Percentages must be whole numbers between 0 and 100",
     "allocationOver100": "The percentages add up to {total}%: the maximum is 100%",
     "allocationMissingGoals": "Missing percentage for: {names}",
-    "allocationSaveFailed": "Could not save the allocation"
+    "allocationSaveFailed": "Could not save the allocation",
+    "invalidData": "Invalid data",
+    "categoryNotFound": "Category not found",
+    "categoryInUse": "{count, plural, one {Can't delete: a transaction uses this category} other {Can't delete: # transactions use this category}}",
+    "keywordNotFound": "Keyword not found",
+    "nameRequired": "The name is required (up to 100 characters)",
+    "invalidEmail": "Invalid email",
+    "invalidRole": "Invalid role",
+    "invalidStatus": "Invalid status",
+    "tempPasswordTooShort": "The temporary password must be at least {min} characters long",
+    "userEmailTaken": "A user with this email already exists",
+    "userCreateFailed": "Could not create the user",
+    "userHasLogins": "The user has already signed in: disable them instead of deleting them",
+    "demoUnavailable": "Not available in the demo",
+    "notAuthorized": "Not authorized",
+    "driveNotConnected": "Google Drive is not connected",
+    "driveBackupFailed": "The Google Drive backup failed",
+    "driveConfigInvalid": "Invalid backup settings",
+    "driveConfigFailed": "Could not update the backup settings",
+    "driveDisconnectFailed": "Could not disconnect Google Drive",
+    "auditLoadFailed": "Could not load the audit log"
   },
   "auth": {
     "email": "Email",
@@ -237,7 +257,13 @@
     "adminCreated": "Admin created",
     "resetRequested": "If the email is registered, you'll receive a reset link.",
     "movementDeleted": "Transaction deleted",
-    "goalDeleted": "Goal deleted"
+    "goalDeleted": "Goal deleted",
+    "categoryDeleted": "Category deleted",
+    "keywordDeleted": "Keyword deleted",
+    "templateDeleted": "Template deleted",
+    "userDeleted": "User deleted",
+    "driveDisconnected": "Google Drive disconnected",
+    "driveNothingToDisconnect": "No integration to disconnect"
   },
   "email": {
     "team": "— The {app} team",
