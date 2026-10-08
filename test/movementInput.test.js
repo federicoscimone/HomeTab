@@ -58,3 +58,12 @@ test('il PATCH accetta solo excludeFromAnalysis booleano', () => {
   assert.equal(movementPatchInput({ amount: 1 }).error, 'invalidPatch');
   assert.equal(movementPatchInput([]).error, 'invalidPatch');
 });
+
+test('pick tiene solo i campi ammessi', async () => {
+  const { pick, isInputError } = await import('../lib/utils/apiInput.js');
+  assert.deepEqual(pick({ name: 'Casa', _id: 'x', color: undefined }, ['name', 'color']), { name: 'Casa' });
+  assert.deepEqual(pick(null, ['name']), {});
+  assert.deepEqual(pick(['name'], ['0']), {});
+  assert.equal(isInputError({ name: 'ValidationError' }), true);
+  assert.equal(isInputError(new Error('boom')), false);
+});

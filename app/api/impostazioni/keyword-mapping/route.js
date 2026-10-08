@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import KeywordMapping from '@/lib/models/KeywordMapping';
+import { writeAudit } from '@/lib/utils/audit';
+import { KEYWORD_FIELDS, pick, isInputError } from '@/lib/utils/apiInput';
+import { serverTranslator } from '@/lib/i18n/server';
 
 export async function GET() {
   const { session, denied } = await requirePermission('data:read');
@@ -19,8 +22,20 @@ export async function POST(req) {
   const { session, denied } = await requirePermission('settings:manage');
   if (denied) return denied;
   await connectDB();
-  const body = await req.json();
-  if (!body.subCategory1Id) body.subCategory1Id = null;
-  const mapping = await KeywordMapping.create(body);
-  return NextResponse.json(mapping, { status: 201 });
+  const fields = pick(await req.json().catch(() => null), KEYWORD_FIELDS);
+  if (!fields.subCategory1Id) fields.subCategory1Id = null;
+  try {
+    const mapping = await KeywordMapping.create(fields);
+    await writeAudit(session, req, {
+      action: 'CREATE',
+      resource: 'keyword',
+      resourceId: mapping._id,
+      description: `Creata keyword "${mapping.keyword}"`,
+      meta: { categoryId: mapping.categoryId, priority: mapping.priority },
+    });
+    return NextResponse.json(mapping, { status: 201 });
+  } catch (err) {
+    if (!isInputError(err)) throw err;
+    return NextResponse.json({ error: (await serverTranslator('errors'))('invalidData') }, { status: 400 });
+  }
 }
