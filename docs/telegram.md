@@ -1,5 +1,7 @@
 # Telegram and two-step verification
 
+[Versione italiana](#telegram-e-verifica-in-due-passaggi) più sotto.
+
 HomeTab can send sign-in and password-recovery codes through a Telegram bot. Each user links
 their own chat from the **Account** page and can then turn on two-step verification, on Telegram
 or by email. Everything here is optional: without a bot the app works as before, and email codes
@@ -74,3 +76,89 @@ the linked chat, besides the usual email link.
 - In the public demo (`DEMO_MODE=true`) Telegram and two-step verification are disabled: the
   accounts are shared and their credentials are public.
 - On Vercel the bot process can't run (no long-running processes). Codes by email still work.
+
+---
+
+# Telegram e verifica in due passaggi
+
+HomeTab può inviare i codici di accesso e di recupero della password tramite un bot Telegram.
+Ogni utente collega la propria chat dalla pagina **Il mio account** e può poi attivare la
+verifica in due passaggi, su Telegram o via email. Tutto è facoltativo: senza bot l'app funziona
+come prima, e i codici via email richiedono solo la configurazione SMTP.
+
+## 1. Crea il bot
+
+1. In Telegram apri [@BotFather](https://t.me/BotFather) e invia `/newbot`.
+2. Scegli un nome visualizzato (es. `HomeTab`) e un nome utente che finisca in `bot`
+   (es. `lamiafamiglia_hometab_bot`).
+3. BotFather risponde con un token del tipo `123456789:AA…`. Trattalo come una password: chi lo
+   possiede può inviare messaggi a nome del tuo bot.
+
+## 2. Configura l'app
+
+Nel file `.env`:
+
+```
+TELEGRAM_BOT_TOKEN=123456789:AA…
+TELEGRAM_BOT_USERNAME=lamiafamiglia_hometab_bot
+```
+
+L'app invia i codici da sola (una chiamata HTTPS in uscita). Un processo separato riceve i
+messaggi che gli utenti mandano al bot: è così che una chat viene collegata a un account.
+
+## 3. Avvia il processo del bot
+
+Il processo del bot è il servizio `telegram` di `docker-compose.yml`, sotto il profilo con lo
+stesso nome. Attivalo e ricrea lo stack:
+
+```
+COMPOSE_PROFILES=telegram docker compose up -d --build
+```
+
+(oppure metti `COMPOSE_PROFILES=telegram` nel `.env`). Avvia **un solo** processo per bot:
+Telegram rifiuta due client che leggono gli aggiornamenti nello stesso momento.
+
+Il processo usa il
+[long polling (`getUpdates`)](https://core.telegram.org/bots/api#getupdates) invece di un
+webhook, quindi il server non ha bisogno di un indirizzo HTTPS pubblico: funziona anche dietro
+NAT. Salva su MongoDB l'offset degli aggiornamenti, così un riavvio non rielabora i vecchi
+messaggi.
+
+## 4. Collega un account e attiva la verifica in due passaggi
+
+1. Pagina **Il mio account** → **Collega Telegram** → **Apri @il_tuo_bot** → premi **Start** in
+   Telegram. Il link vale 10 minuti e funziona una sola volta; la pagina si aggiorna da sola
+   quando il bot conferma.
+2. In **Verifica in due passaggi** scegli Telegram o l'email e inserisci il codice che ricevi.
+   Si attiva solo dopo che un codice è arrivato, così un canale che non funziona non può
+   chiuderti fuori.
+
+Da quel momento l'accesso chiede un codice dopo la password. Il recupero della password invia un
+codice alla chat collegata, oltre al consueto link via email.
+
+## Come è protetta
+
+- I codici sono di 6 cifre, valgono 5 minuti, ammettono al massimo 5 tentativi sbagliati, si
+  usano una sola volta, sono legati al loro scopo (accesso, reset, attivazione) e sono salvati
+  solo come hash SHA-256.
+- Con la verifica in due passaggi attiva, la sola password viene rifiutata anche chiamando
+  direttamente l'endpoint di accesso di NextAuth: il secondo passo richiede il ticket rilasciato
+  insieme al codice.
+- I tentativi sono limitati per indirizzo IP (contatori su MongoDB, così il limite vale anche fra
+  più istanze serverless). Gli account non vengono mai bloccati: sulla demo pubblica chiunque
+  potrebbe chiudere fuori tutti.
+- Il recupero via Telegram funziona solo per una chat collegata in precedenza, mai per una
+  indicata al momento del recupero. Una chat può appartenere a un solo account.
+- Un amministratore può disattivare la verifica in due passaggi di un utente da
+  **Impostazioni → Utenti**, per chi ha perso l'accesso al proprio canale.
+
+## Limiti
+
+- **Telegram può leggere i codici.** Le chat con i bot non sono cifrate end-to-end. Per un'app
+  familiare è un compromesso accettabile; se per te non lo è, usa i codici via email.
+- Il limite per IP si fida dell'header `X-Forwarded-For` impostato dal reverse proxy. Lascia
+  l'app raggiungibile solo attraverso il proxy (`APP_BIND=127.0.0.1`).
+- Nella demo pubblica (`DEMO_MODE=true`) Telegram e la verifica in due passaggi sono disattivati:
+  gli account sono condivisi e le loro credenziali pubbliche.
+- Su Vercel il processo del bot non può girare (niente processi di lunga durata). I codici via
+  email funzionano comunque.
