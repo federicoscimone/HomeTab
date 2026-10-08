@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
     return (
       <div className="card bg-base-100 shadow-xl w-full max-w-sm">
         <div className="card-body gap-4 text-center">
-          <div className="text-5xl">📧</div>
+          <div className="text-5xl">{'📧'}</div>
           <h2 className="text-xl font-bold">{t('forgot.sentTitle')}</h2>
           <p className="text-sm text-base-content/70">
             {t.rich('forgot.sentText', { b: (chunks) => <strong>{chunks}</strong> })}
@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
     <div className="card bg-base-100 shadow-xl w-full max-w-sm">
       <div className="card-body gap-4">
         <div className="text-center mb-2">
-          <h1 className="text-2xl font-bold text-primary">HomeTab</h1>
+          <h1 className="text-2xl font-bold text-primary">{'HomeTab'}</h1>
           <p className="text-sm text-base-content/60">{t('forgot.subtitle')}</p>
         </div>
 

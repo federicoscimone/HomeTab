@@ -9,6 +9,13 @@ const eslintConfig = defineConfig([
     rules: { "no-undef": "error" },
   },
   {
+    // Nessun testo scritto direttamente nel JSX: ogni frase visibile passa da messages/*.json,
+    // così non resta nulla in una sola lingua. Simboli e numeri si scrivono come espressione
+    // ({'↓'}), che la regola accetta: è un modo esplicito per dire "non va tradotto".
+    files: ["app/**/*.js", "components/**/*.js"],
+    rules: { "react/jsx-no-literals": ["error", { noStrings: false, ignoreProps: true }] },
+  },
+  {
     // Script eseguiti da mongosh all'avvio del container: lì `db` è una variabile globale.
     files: ["deploy/mongo/init/**/*.js"],
     languageOptions: { globals: { db: "readonly" } },
