@@ -24,25 +24,38 @@ TELEGRAM_BOT_TOKEN=123456789:AA…
 TELEGRAM_BOT_USERNAME=myfamily_hometab_bot
 ```
 
-The app sends the codes itself (an outgoing HTTPS call). A separate process receives the
-messages users send to the bot, which is how a chat gets linked to an account.
+The app sends the codes itself (an outgoing HTTPS call). Receiving what users send to the bot
+(that's how a chat gets linked to an account) works in one of two ways.
 
-## 3. Start the bot process
+## 3. Choose how the bot receives messages
 
-The bot process is the `telegram` service of `docker-compose.yml`, under the profile of the same
-name. Enable it and recreate the stack:
+**Public HTTPS deploy (Vercel, or a server reachable from the internet): webhook.** Add a random
+secret and redeploy:
+
+```
+TELEGRAM_WEBHOOK_SECRET=<e.g. the output of: openssl rand -hex 32>
+```
+
+At startup the app registers `https://<your domain>/api/telegram/webhook` with Telegram, only if
+it isn't registered already (changing the secret registers it again). Telegram then sends every
+message there, with the secret in a header the route checks. No extra process is needed.
+
+**Server reachable only in the LAN: polling.** Telegram can't reach the app, so a separate
+process asks Telegram for new messages. Leave `TELEGRAM_WEBHOOK_SECRET` empty; the process is
+the `telegram` service of `docker-compose.yml`, under the profile of the same name. Enable it and
+recreate the stack:
 
 ```
 COMPOSE_PROFILES=telegram docker compose up -d --build
 ```
 
-(or put `COMPOSE_PROFILES=telegram` in `.env`). Run **one** bot process per bot: Telegram rejects
-two clients reading updates at the same time.
+(or put `COMPOSE_PROFILES=telegram` in `.env`). It uses
+[long polling (`getUpdates`)](https://core.telegram.org/bots/api#getupdates), so it works behind
+NAT, and stores the update offset in MongoDB, so a restart does not reprocess old messages.
 
-The process uses
-[long polling (`getUpdates`)](https://core.telegram.org/bots/api#getupdates) instead of a
-webhook, so the server needs no public HTTPS address: it works behind NAT. It stores the update
-offset in MongoDB, so a restart does not reprocess old messages.
+**One bot per installation.** Linked chats live in each installation's database, and Telegram
+doesn't allow a webhook and polling on the same bot. Two installations (say, production on Vercel
+and a test copy at home) need two bots.
 
 ## 4. Link an account and turn on two-step verification
 
@@ -75,7 +88,8 @@ the linked chat, besides the usual email link.
   reachable only through the proxy (`APP_BIND=127.0.0.1`).
 - In the public demo (`DEMO_MODE=true`) Telegram and two-step verification are disabled: the
   accounts are shared and their credentials are public.
-- On Vercel the bot process can't run (no long-running processes). Codes by email still work.
+- The webhook needs a public HTTPS address; the polling process needs an always-on server. A
+  deploy without either can still send codes by email.
 
 ---
 
@@ -103,26 +117,40 @@ TELEGRAM_BOT_TOKEN=123456789:AA…
 TELEGRAM_BOT_USERNAME=lamiafamiglia_hometab_bot
 ```
 
-L'app invia i codici da sola (una chiamata HTTPS in uscita). Un processo separato riceve i
-messaggi che gli utenti mandano al bot: è così che una chat viene collegata a un account.
+L'app invia i codici da sola (una chiamata HTTPS in uscita). Ricevere ciò che gli utenti
+mandano al bot (è così che una chat viene collegata a un account) funziona in uno di due modi.
 
-## 3. Avvia il processo del bot
+## 3. Scegli come il bot riceve i messaggi
 
-Il processo del bot è il servizio `telegram` di `docker-compose.yml`, sotto il profilo con lo
-stesso nome. Attivalo e ricrea lo stack:
+**Deploy pubblico in HTTPS (Vercel, o un server raggiungibile da internet): webhook.** Aggiungi
+un segreto casuale e ripubblica:
+
+```
+TELEGRAM_WEBHOOK_SECRET=<es. il risultato di: openssl rand -hex 32>
+```
+
+All'avvio l'app registra presso Telegram `https://<il tuo dominio>/api/telegram/webhook`, solo
+se non è già registrato (cambiando il segreto lo registra di nuovo). Da lì Telegram invia ogni
+messaggio a quell'indirizzo, con il segreto in un header che la route controlla. Non serve
+nessun processo in più.
+
+**Server raggiungibile solo in LAN: polling.** Telegram non può raggiungere l'app, quindi un
+processo separato gli chiede i messaggi nuovi. Lascia vuoto `TELEGRAM_WEBHOOK_SECRET`; il
+processo è il servizio `telegram` di `docker-compose.yml`, sotto il profilo con lo stesso nome.
+Attivalo e ricrea lo stack:
 
 ```
 COMPOSE_PROFILES=telegram docker compose up -d --build
 ```
 
-(oppure metti `COMPOSE_PROFILES=telegram` nel `.env`). Avvia **un solo** processo per bot:
-Telegram rifiuta due client che leggono gli aggiornamenti nello stesso momento.
+(oppure metti `COMPOSE_PROFILES=telegram` nel `.env`). Usa il
+[long polling (`getUpdates`)](https://core.telegram.org/bots/api#getupdates), quindi funziona
+anche dietro NAT, e salva su MongoDB l'offset degli aggiornamenti, così un riavvio non
+rielabora i vecchi messaggi.
 
-Il processo usa il
-[long polling (`getUpdates`)](https://core.telegram.org/bots/api#getupdates) invece di un
-webhook, quindi il server non ha bisogno di un indirizzo HTTPS pubblico: funziona anche dietro
-NAT. Salva su MongoDB l'offset degli aggiornamenti, così un riavvio non rielabora i vecchi
-messaggi.
+**Un bot per installazione.** Le chat collegate stanno nel database di ogni installazione, e
+Telegram non ammette webhook e polling sullo stesso bot. Due installazioni (per esempio la
+produzione su Vercel e una copia di prova a casa) richiedono due bot.
 
 ## 4. Collega un account e attiva la verifica in due passaggi
 
@@ -160,5 +188,5 @@ codice alla chat collegata, oltre al consueto link via email.
   l'app raggiungibile solo attraverso il proxy (`APP_BIND=127.0.0.1`).
 - Nella demo pubblica (`DEMO_MODE=true`) Telegram e la verifica in due passaggi sono disattivati:
   gli account sono condivisi e le loro credenziali pubbliche.
-- Su Vercel il processo del bot non può girare (niente processi di lunga durata). I codici via
-  email funzionano comunque.
+- Il webhook richiede un indirizzo HTTPS pubblico; il polling un server sempre acceso. Un
+  deploy senza nessuno dei due può comunque inviare i codici via email.

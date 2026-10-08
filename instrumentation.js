@@ -16,6 +16,21 @@ export async function register() {
   // del database si importano solo nel runtime Node, e solo quando il server parte davvero.
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
   if (process.env.NEXT_PHASE === 'phase-production-build') return;
+
+  // Webhook di Telegram: si registra da solo, solo se manca o è cambiato (lib/telegramBot.js).
+  // Senza await: una risposta lenta di Telegram non deve ritardare l'avvio dell'app.
+  if (process.env.TELEGRAM_WEBHOOK_SECRET && process.env.TELEGRAM_BOT_TOKEN) {
+    Promise.all([import('./lib/telegramBot.js'), import('./lib/logger.js')])
+      .then(async ([{ ensureWebhook }, { default: logger }]) => {
+        try {
+          const result = await ensureWebhook();
+          if (result === 'set') logger.info('Webhook di Telegram registrato');
+        } catch (err) {
+          logger.error('Registrazione del webhook di Telegram non riuscita', { error: err.message });
+        }
+      });
+  }
+
   if (process.env.DEMO_MODE !== 'true') return;
 
   const { default: connectDB } = await import('./lib/mongodb.js');
