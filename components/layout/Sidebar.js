@@ -175,7 +175,7 @@ export default function Sidebar({ onNavigate }) {
     <aside className="w-64 h-dvh bg-base-200 flex flex-col">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-base-300 shrink-0">
-        <span className="text-xl font-bold text-primary">HomeTab</span>
+        <span className="text-xl font-bold text-primary">{'HomeTab'}</span>
         <p className="text-xs text-base-content/60 mt-0.5">{tCommon('tagline')}</p>
       </div>
 

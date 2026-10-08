@@ -29,7 +29,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     <div className="bg-base-100 border border-base-200 rounded-lg shadow px-3 py-2 text-sm">
       <p className="font-medium mb-1">{fmtMonth(label)}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color }}>{p.name}: {fmt(p.value)}</p>
+        <p key={i} style={{ color: p.color }}>{`${p.name}: ${fmt(p.value)}`}</p>
       ))}
     </div>
   );

@@ -28,12 +28,12 @@ export default function PaymentGroupBar({ traditional = 0, alternative = 0 }) {
         <div>
           <span className="badge badge-info badge-sm mr-1">{t('traditional')}</span>
           <span className="font-semibold">{fmtFull(traditional)}</span>
-          <span className="text-base-content/40 text-xs ml-1">({tradPct.toFixed(0)}%)</span>
+          <span className="text-base-content/40 text-xs ml-1">{`(${tradPct.toFixed(0)}%)`}</span>
         </div>
         <div className="text-right">
           <span className="badge badge-warning badge-sm mr-1">{t('alternative')}</span>
           <span className="font-semibold">{fmtFull(alternative)}</span>
-          <span className="text-base-content/40 text-xs ml-1">({altPct.toFixed(0)}%)</span>
+          <span className="text-base-content/40 text-xs ml-1">{`(${altPct.toFixed(0)}%)`}</span>
         </div>
       </div>
 

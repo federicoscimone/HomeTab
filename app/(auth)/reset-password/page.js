@@ -79,7 +79,7 @@ function ResetPasswordForm() {
     return (
       <div className="card bg-base-100 shadow-xl w-full max-w-sm">
         <div className="card-body gap-4 text-center">
-          <div className="text-5xl">❌</div>
+          <div className="text-5xl">{'❌'}</div>
           <h2 className="text-xl font-bold">{t('reset.invalidTitle')}</h2>
           <p className="text-sm text-base-content/70">{t('reset.invalidText')}</p>
           <Link href="/forgot-password" className="btn btn-primary btn-sm">
@@ -94,7 +94,7 @@ function ResetPasswordForm() {
     return (
       <div className="card bg-base-100 shadow-xl w-full max-w-sm">
         <div className="card-body gap-4 text-center">
-          <div className="text-5xl">✅</div>
+          <div className="text-5xl">{'✅'}</div>
           <h2 className="text-xl font-bold">{t('reset.doneTitle')}</h2>
           <p className="text-sm text-base-content/70">{t('reset.doneText')}</p>
           <Link href="/login" className="btn btn-primary btn-sm">{t('reset.goToLogin')}</Link>
@@ -107,7 +107,7 @@ function ResetPasswordForm() {
     <div className="card bg-base-100 shadow-xl w-full max-w-sm">
       <div className="card-body gap-4">
         <div className="text-center mb-2">
-          <h1 className="text-2xl font-bold text-primary">HomeTab</h1>
+          <h1 className="text-2xl font-bold text-primary">{'HomeTab'}</h1>
           <p className="text-sm text-base-content/60">{t('reset.subtitle')}</p>
         </div>
 

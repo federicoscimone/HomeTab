@@ -698,7 +698,7 @@ export default function SpesePage() {
                             <span className="text-sm">{exp.categoryId.name}</span>
                           </div>
                         ) : (
-                          <span className="text-xs text-base-content/30">—</span>
+                          <span className="text-xs text-base-content/30">{'—'}</span>
                         )}
                         {exp.subCategory1Id && (
                           <p className="text-xs text-base-content/50 ml-3">{exp.subCategory1Id.name}</p>
@@ -710,7 +710,7 @@ export default function SpesePage() {
                       <td className="max-w-[180px]">
                         {exp.notes
                           ? <p className="text-xs text-base-content/60 truncate" title={exp.notes}>{exp.notes}</p>
-                          : <span className="text-xs text-base-content/20">—</span>}
+                          : <span className="text-xs text-base-content/20">{'—'}</span>}
                       </td>
                       <td className={`text-right font-semibold whitespace-nowrap ${exp.type === 'income' ? 'text-success' : 'text-error'}`}>
                         {exp.type === 'income' ? '+' : '-'}{fmtFull(exp.amount)}
