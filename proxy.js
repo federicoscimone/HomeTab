@@ -14,7 +14,11 @@ const FIRST_ACCESS = '/primo-accesso';
  * i redirect, non partirebbero affatto. Elenco esplicito e non "tutte le API": una rotta nuova
  * che dimenticasse il proprio controllo resta comunque chiusa qui.
  */
-const SELF_AUTHENTICATED_API = ['/api/integrations/google-drive/run-scheduled', '/api/demo/reset'];
+const SELF_AUTHENTICATED_API = [
+  '/api/integrations/google-drive/run-scheduled',
+  '/api/demo/reset',
+  '/api/telegram/webhook',
+];
 const SESSION_COOKIES = ['next-auth.session-token', '__Secure-next-auth.session-token'];
 
 /**

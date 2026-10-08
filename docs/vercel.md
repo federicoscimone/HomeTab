@@ -54,3 +54,13 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://hometab-demo.vercel.app/api
 - Google Drive backup is disabled: it would need a personal Google account.
 - Imported files are limited to 1 MB (10 MB otherwise).
 - The demo accounts can't change their password, and password reset is off.
+- Telegram and two-step verification are off: the accounts are shared.
+
+## A personal deployment (real data)
+
+The same steps work for your own instance, with `DEMO_MODE=false` and without the nightly cron
+(`CRON_SECRET` isn't needed): on first visit the app opens `/setup`, where you create the
+administrator. To receive sign-in and recovery codes on Telegram, add `TELEGRAM_BOT_TOKEN`,
+`TELEGRAM_BOT_USERNAME` and `TELEGRAM_WEBHOOK_SECRET`: on Vercel the bot works through the
+webhook, which the app registers by itself ([docs/telegram.md](telegram.md)). Use a bot that no
+other installation uses.
