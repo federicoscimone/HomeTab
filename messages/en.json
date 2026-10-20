@@ -718,11 +718,15 @@
       "original": "Original (stays here)",
       "sent": "Sent",
       "amount": "Amount",
-      "rows": "Rows"
+      "rows": "Rows",
+      "similar": "Similar from history"
     },
     "previewExamples": "Examples from history ({count})",
     "previewExamplesHint": "Merchants already categorized, with the category code. Those that masking reduces to a placeholder are not sent.",
-    "previewRaw": "Full request (JSON)"
+    "previewRaw": "Full request (JSON)",
+    "fromHistoryCount": "{count} from history",
+    "historyBadge": "from history",
+    "historyTitle": "Like {count, plural, one {# past movement} other {# past movements}} with “{text}”"
   },
   "goalStates": {
     "on_track": {

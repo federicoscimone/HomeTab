@@ -718,11 +718,15 @@
       "original": "Originale (resta qui)",
       "sent": "Inviato",
       "amount": "Importo",
-      "rows": "Righe"
+      "rows": "Righe",
+      "similar": "Esempi simili dallo storico"
     },
     "previewExamples": "Esempi dallo storico ({count})",
     "previewExamplesHint": "Esercenti già categorizzati, con il codice della categoria. Quelli che il mascheramento riduce a un segnaposto non vengono inviati.",
-    "previewRaw": "Richiesta completa (JSON)"
+    "previewRaw": "Richiesta completa (JSON)",
+    "fromHistoryCount": "{count, plural, one {# dallo storico} other {# dallo storico}}",
+    "historyBadge": "dallo storico",
+    "historyTitle": "Come {count, plural, one {# movimento passato} other {# movimenti passati}} con «{text}»"
   },
   "goalStates": {
     "on_track": {
