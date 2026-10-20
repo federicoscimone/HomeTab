@@ -247,7 +247,12 @@
     "twoFactorUsesTelegram": "Two-step verification uses Telegram: switch to email or turn it off before disconnecting it",
     "channelUnavailable": "Channel not available",
     "invalidCode": "Invalid or expired code",
-    "ownTwoFactorElsewhere": "For your own two-step verification use the “My account” page"
+    "ownTwoFactorElsewhere": "For your own two-step verification use the “My account” page",
+    "invalidSettings": "Invalid settings",
+    "invalidModel": "Unrecognised model",
+    "invalidEffort": "Invalid effort",
+    "invalidBudget": "The cap must be between $0.01 and $100",
+    "invalidApiKey": "The API key is not in a valid format"
   },
   "auth": {
     "email": "Email",
@@ -898,8 +903,8 @@
   },
   "settingsAi": {
     "pageTitle": "Artificial intelligence",
-    "title": "Claude for imports",
-    "intro": "The model suggests categories and templates while importing. Personal data is masked before anything is sent, and spending stays within the monthly cap.",
+    "title": "Status and spending",
+    "intro": "This month’s calls and spending against the cap. Personal data is masked before anything is sent.",
     "active": "on",
     "inactive": "off",
     "loadFailed": "Could not read the AI status",
@@ -910,14 +915,14 @@
     "spending": "Spending in {month}",
     "spentOfCap": "{spent} of {cap}",
     "spendingBar": "This month’s spending against the cap",
-    "capHint": "Once the cap is reached, AI features switch off until the first of the month and imports work as usual. Set the cap with AI_MONTHLY_BUDGET_USD.",
+    "capHint": "Once the cap is reached, AI features switch off until the first of the month and imports work as usual.",
     "tokensInOut": "{input} → {output}",
     "reasons": {
       "demo": "AI is off in the public demo: anyone could use up the credit.",
-      "off": "AI is turned off (AI_MODEL_IMPORT=none).",
-      "unknownModel": "The model {model} is not recognised: write it as provider:name, with a known price.",
-      "notConfigured": "The provider key is missing (for Anthropic, ANTHROPIC_API_KEY).",
-      "noBudget": "The monthly cap is zero or invalid (AI_MONTHLY_BUDGET_USD)."
+      "off": "AI for imports is off: pick a model above.",
+      "unknownModel": "The model {model} is not recognised: pick one from the list.",
+      "notConfigured": "The provider’s API key is missing: enter it above.",
+      "noBudget": "The monthly cap is not valid: set one above."
     },
     "cols": {
       "when": "When",
@@ -935,7 +940,45 @@
       "invalid": "Invalid answer",
       "error": "Service error",
       "unknown": "Timed out"
-    }
+    },
+    "configTitle": "Configuration",
+    "configIntro": "Model, effort and cap apply from the next call. Everything is saved in the database; the key is encrypted.",
+    "demoLocked": "The configuration is locked in the demo: the account is public.",
+    "saveFailed": "Could not save",
+    "saved": "Settings saved.",
+    "keySaved": "Key saved, encrypted.",
+    "keyRemoved": "Key removed from the database.",
+    "keyValid": "Valid key: Anthropic accepted it.",
+    "keyInvalid": "Anthropic rejected the key.",
+    "keyUnknown": "Anthropic gave no clear answer: try again shortly.",
+    "verifyFailed": "Could not verify",
+    "sources": {
+      "db": "set here",
+      "env": "from environment variable",
+      "default": "default"
+    },
+    "modelOff": "Off",
+    "modelOption": "{model} · {input} / {output} per million tokens",
+    "effort": "Effort",
+    "efforts": {
+      "low": "Low (cheapest)",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "budget": "Monthly cap (USD)",
+    "save": "Save",
+    "effortHint": "Effort sets how much the model reasons, and so cost and time; models that don’t support it ignore it. Prices are Anthropic’s official ones.",
+    "keyTitle": "Anthropic API key",
+    "keyConfigured": "Configured: ends in …{hint}.",
+    "keyMissing": "No key configured.",
+    "keyUnreadable": "The saved key can no longer be decrypted because the server secret changed: enter it again.",
+    "keyFromEnv": "It comes from the ANTHROPIC_API_KEY variable. A key saved here takes precedence.",
+    "keyPlaceholder": "sk-ant-…",
+    "verify": "Verify",
+    "saveKey": "Save key",
+    "removeKey": "Remove",
+    "keyHint": "The key is never shown or returned by the server. Create it in a workspace with a monthly spend limit: that is the second safety net.",
+    "keyPrefixWarning": "Anthropic keys start with “sk-ant-”: part of it may have been left out when copying."
   },
   "users": {
     "title": "Users",

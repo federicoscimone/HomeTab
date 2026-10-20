@@ -1,14 +1,15 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useApiData } from '@/lib/hooks/useApiData';
 import { useFormat } from '@/lib/hooks/useFormat';
 
-/** Stato dell'IA e spesa del mese rispetto al tetto, con le ultime chiamate. */
-export default function AiCard() {
+/**
+ * Stato dell'IA e spesa del mese rispetto al tetto, con le ultime chiamate.
+ * @param {{ data: object|null }} props - La risposta di GET /api/ai/settings.
+ */
+export default function AiCard({ data }) {
   const t = useTranslations('settingsAi');
   const { fmtUsd, fmtDateTime, fmtMonth } = useFormat();
-  const { data, error } = useApiData('/api/ai/status', 'ai-status');
 
   const available = data?.import?.available;
   const pct = data?.capUsd ? Math.min(100, (data.spentUsd / data.capUsd) * 100) : 0;
@@ -30,7 +31,6 @@ export default function AiCard() {
           )}
         </div>
 
-        {error && <div className="alert alert-error py-2 text-sm"><span>{t('loadFailed')}</span></div>}
         {data && !available && (
           <div className="alert alert-info py-2 text-sm">
             <span>{t(`reasons.${data.import.reason}`, { model: data.import.model ?? '' })}</span>

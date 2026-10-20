@@ -247,7 +247,12 @@
     "twoFactorUsesTelegram": "La verifica in due passaggi usa Telegram: passa all'email o disattivala prima di scollegarlo",
     "channelUnavailable": "Canale non disponibile",
     "invalidCode": "Codice non valido o scaduto",
-    "ownTwoFactorElsewhere": "Per la tua verifica in due passaggi usa la pagina «Il mio account»"
+    "ownTwoFactorElsewhere": "Per la tua verifica in due passaggi usa la pagina «Il mio account»",
+    "invalidSettings": "Impostazioni non valide",
+    "invalidModel": "Modello non riconosciuto",
+    "invalidEffort": "Effort non valido",
+    "invalidBudget": "Il tetto deve essere fra 0,01 e 100 dollari",
+    "invalidApiKey": "La chiave API non ha un formato valido"
   },
   "auth": {
     "email": "Email",
@@ -898,8 +903,8 @@
   },
   "settingsAi": {
     "pageTitle": "Intelligenza artificiale",
-    "title": "Claude per l’import",
-    "intro": "Il modello propone categorie e template durante l’import. Prima di ogni invio i dati personali vengono mascherati, e la spesa resta entro il tetto mensile.",
+    "title": "Stato e spesa",
+    "intro": "Le chiamate del mese e la spesa rispetto al tetto. Prima di ogni invio i dati personali vengono mascherati.",
     "active": "attiva",
     "inactive": "spenta",
     "loadFailed": "Impossibile leggere lo stato dell’IA",
@@ -910,14 +915,14 @@
     "spending": "Spesa di {month}",
     "spentOfCap": "{spent} su {cap}",
     "spendingBar": "Spesa del mese rispetto al tetto",
-    "capHint": "Raggiunto il tetto, le funzioni IA si spengono fino al primo del mese e l’import funziona come sempre. Il tetto si imposta con AI_MONTHLY_BUDGET_USD.",
+    "capHint": "Raggiunto il tetto, le funzioni IA si spengono fino al primo del mese e l’import funziona come sempre.",
     "tokensInOut": "{input} → {output}",
     "reasons": {
       "demo": "Nella demo pubblica l’IA è spenta: chiunque potrebbe consumare il credito.",
-      "off": "L’IA è spenta (AI_MODEL_IMPORT=none).",
-      "unknownModel": "Il modello {model} non è riconosciuto: va indicato come fornitore:nome, con un prezzo noto.",
-      "notConfigured": "Manca la chiave del fornitore (per Anthropic, ANTHROPIC_API_KEY).",
-      "noBudget": "Il tetto mensile è zero o non valido (AI_MONTHLY_BUDGET_USD)."
+      "off": "L’IA per l’import è spenta: scegli un modello qui sopra.",
+      "unknownModel": "Il modello {model} non è riconosciuto: scegline uno dall’elenco.",
+      "notConfigured": "Manca la chiave API del fornitore: inseriscila qui sopra.",
+      "noBudget": "Il tetto mensile non è valido: impostane uno qui sopra."
     },
     "cols": {
       "when": "Quando",
@@ -935,7 +940,45 @@
       "invalid": "Risposta non valida",
       "error": "Errore del servizio",
       "unknown": "Timeout"
-    }
+    },
+    "configTitle": "Configurazione",
+    "configIntro": "Modello, effort e tetto valgono dalla chiamata successiva. Tutto si salva sul database; la chiave è cifrata.",
+    "demoLocked": "Nella demo la configurazione è bloccata: l’account è pubblico.",
+    "saveFailed": "Salvataggio non riuscito",
+    "saved": "Impostazioni salvate.",
+    "keySaved": "Chiave salvata, cifrata.",
+    "keyRemoved": "Chiave eliminata dal database.",
+    "keyValid": "Chiave valida: Anthropic l’ha accettata.",
+    "keyInvalid": "Chiave rifiutata da Anthropic.",
+    "keyUnknown": "Anthropic non ha dato una risposta chiara: riprova fra poco.",
+    "verifyFailed": "Verifica non riuscita",
+    "sources": {
+      "db": "impostato qui",
+      "env": "da variabile d’ambiente",
+      "default": "predefinito"
+    },
+    "modelOff": "Spenta",
+    "modelOption": "{model} · {input} / {output} per milione di token",
+    "effort": "Effort",
+    "efforts": {
+      "low": "Basso (più economico)",
+      "medium": "Medio",
+      "high": "Alto"
+    },
+    "budget": "Tetto mensile (USD)",
+    "save": "Salva",
+    "effortHint": "L’effort regola quanto ragiona il modello, e quindi costo e tempo; i modelli che non lo supportano lo ignorano. I prezzi sono quelli ufficiali di Anthropic.",
+    "keyTitle": "Chiave API Anthropic",
+    "keyConfigured": "Configurata: termina con …{hint}.",
+    "keyMissing": "Nessuna chiave configurata.",
+    "keyUnreadable": "La chiave salvata non si riesce più a decifrare, perché il segreto del server è cambiato: inseriscila di nuovo.",
+    "keyFromEnv": "Viene dalla variabile ANTHROPIC_API_KEY. Una chiave salvata qui ha la precedenza.",
+    "keyPlaceholder": "sk-ant-…",
+    "verify": "Verifica",
+    "saveKey": "Salva chiave",
+    "removeKey": "Elimina",
+    "keyHint": "La chiave non viene mai mostrata né restituita dal server. Creala in un workspace con un limite di spesa mensile: è la seconda rete di sicurezza.",
+    "keyPrefixWarning": "Le chiavi Anthropic iniziano con «sk-ant-»: forse una parte è rimasta fuori dalla copia."
   },
   "users": {
     "title": "Utenti",

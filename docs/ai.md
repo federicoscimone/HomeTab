@@ -13,36 +13,41 @@ vendor. Out of the box it uses Anthropic's Claude.
 
 1. On the [Claude Console](https://platform.claude.com) create a workspace for HomeTab and give
    it a monthly [spend limit](https://platform.claude.com/docs/en/manage-claude/workspaces), the
-   same as the app's cap below. It is a second safety net, in case the app's own counter were
-   ever wrong.
+   same as the app's cap. It is a second safety net, in case the app's own counter were ever
+   wrong, and the only limit that covers several installations together.
 2. Create an API key **inside that workspace** and buy some credits.
-3. In `.env` (or in your host's environment variables):
 
-```
-ANTHROPIC_API_KEY=sk-ant-…
-AI_MONTHLY_BUDGET_USD=3
-```
+## 2. Configure it from Settings → AI
 
-The **Settings → AI** page shows whether the AI is on, the month's spending against the cap and
-the last calls.
+Everything is set from the **Settings → AI** page, by an administrator, and saved in the
+database: the model, the effort, the monthly cap and the API key. Changes apply from the next
+call, with no redeploy. The page also shows the month's spending against the cap and the last
+calls.
 
-## 2. Models
+- **The model** is picked from a list that contains only models with a known price, because the
+  spending cap needs it (the price table is in `lib/ai/pricing.js`). The default is
+  `anthropic:claude-haiku-5-5`: classification and extraction don't need more, at $0.10 / $0.50
+  per million tokens.
+- **The effort** sets how much the model reasons, and so cost and time. Default: low.
+- **The API key** is stored encrypted (AES-256-GCM, with a key derived from the server secret,
+  the same scheme used for the Google Drive tokens). It is never shown again nor returned by the
+  server: the page shows only its last four characters, with buttons to verify (a free call that
+  lists the models), replace or remove it. If you change `NEXTAUTH_SECRET`, the saved key can no
+  longer be decrypted and has to be entered again; the page says so.
+- In the public demo the page is read-only: the demo account is an administrator with a public
+  password.
 
-| Feature | Variable | Default | Why |
-| --- | --- | --- | --- |
-| Categories and template suggestions while importing | `AI_MODEL_IMPORT` | `anthropic:claude-haiku-5-5` | Classification and extraction: the cheapest current model is enough, at $0.10 / $0.50 per million tokens |
-
-A model is written as `provider:name`. `none` turns the feature off. Only models with a known
-price are accepted, because the spending cap needs it: the price table is in
-`lib/ai/pricing.js`.
+**Environment variables** (`AI_MODEL_IMPORT`, `AI_MONTHLY_BUDGET_USD`, `ANTHROPIC_API_KEY`) still
+work as a fallback: they apply until a value is saved from the page, which then takes
+precedence. Useful for an installation configured only from files.
 
 **Another provider** (OpenAI, a local model through Ollama…): install its LangChain package
-(`@langchain/openai`, `@langchain/ollama`) and add an entry to `lib/ai/providers.js`. A local
-provider costs nothing and is not counted against the cap.
+(`@langchain/openai`, `@langchain/ollama`) and add an entry to `lib/ai/providers.js`; its models
+then appear in the list. A local provider costs nothing and is not counted against the cap.
 
 ## 3. How the spending cap works
 
-`AI_MONTHLY_BUDGET_USD` is a hard limit, in US dollars because Anthropic bills in dollars.
+The monthly cap is a hard limit, in US dollars because Anthropic bills in dollars.
 
 - **Before every call** the app reserves the most it could cost: the input estimated from above
   (a token never covers less than one byte, so the bytes sent are an upper bound) plus all of
@@ -93,36 +98,42 @@ fornitore. Di serie usa Claude di Anthropic.
 
 1. Nella [Claude Console](https://platform.claude.com) crea un workspace per HomeTab e dagli un
    [limite di spesa](https://platform.claude.com/docs/en/manage-claude/workspaces) mensile, uguale
-   al tetto dell'app qui sotto. È una seconda rete di sicurezza, nel caso il contatore dell'app
-   sbagliasse.
+   al tetto dell'app. È una seconda rete di sicurezza, nel caso il contatore dell'app sbagliasse,
+   e l'unico limite che copre insieme più installazioni.
 2. Crea una chiave API **dentro quel workspace** e acquista dei crediti.
-3. Nel `.env` (o nelle variabili d'ambiente del tuo hosting):
 
-```
-ANTHROPIC_API_KEY=sk-ant-…
-AI_MONTHLY_BUDGET_USD=3
-```
+## 2. Configura da Impostazioni → IA
 
-La pagina **Impostazioni → IA** mostra se l'IA è attiva, la spesa del mese rispetto al tetto e
-le ultime chiamate.
+Tutto si imposta dalla pagina **Impostazioni → IA**, da un amministratore, e si salva sul
+database: modello, effort, tetto mensile e chiave API. Le modifiche valgono dalla chiamata
+successiva, senza ripubblicare. La pagina mostra anche la spesa del mese rispetto al tetto e le
+ultime chiamate.
 
-## 2. Modelli
+- **Il modello** si sceglie da un elenco che contiene solo modelli con un prezzo noto, perché il
+  tetto di spesa ne ha bisogno (la tabella prezzi sta in `lib/ai/pricing.js`). Il predefinito è
+  `anthropic:claude-haiku-5-5`: per classificare ed estrarre non serve di più, a 0,10 $ / 0,50 $
+  per milione di token.
+- **L'effort** regola quanto ragiona il modello, e quindi costo e tempo. Predefinito: basso.
+- **La chiave API** è salvata cifrata (AES-256-GCM, con una chiave ricavata dal segreto del
+  server, lo stesso schema dei token di Google Drive). Non viene più mostrata né restituita dal
+  server: la pagina ne mostra solo gli ultimi quattro caratteri, con i pulsanti per verificarla
+  (una chiamata gratuita che elenca i modelli), sostituirla o eliminarla. Se cambi
+  `NEXTAUTH_SECRET`, la chiave salvata non si decifra più e va reinserita; la pagina lo segnala.
+- Nella demo pubblica la pagina è in sola lettura: l'account demo è amministratore e ha la
+  password pubblica.
 
-| Funzione | Variabile | Predefinito | Perché |
-| --- | --- | --- | --- |
-| Categorie e proposta di template nell'import | `AI_MODEL_IMPORT` | `anthropic:claude-haiku-5-5` | Classificare ed estrarre: basta il modello attuale più economico, a 0,10 $ / 0,50 $ per milione di token |
-
-Un modello si scrive `fornitore:nome`. `none` spegne la funzione. Sono accettati solo i modelli
-con un prezzo noto, perché il tetto di spesa ne ha bisogno: la tabella prezzi sta in
-`lib/ai/pricing.js`.
+**Le variabili d'ambiente** (`AI_MODEL_IMPORT`, `AI_MONTHLY_BUDGET_USD`, `ANTHROPIC_API_KEY`)
+restano come ripiego: valgono finché dalla pagina non si salva un valore, che da lì ha la
+precedenza. Servono a un'installazione configurata solo da file.
 
 **Un altro fornitore** (OpenAI, un modello locale con Ollama…): installa il suo pacchetto
 LangChain (`@langchain/openai`, `@langchain/ollama`) e aggiungi una voce in
-`lib/ai/providers.js`. Un fornitore locale non costa nulla e non pesa sul tetto.
+`lib/ai/providers.js`; i suoi modelli compaiono nell'elenco. Un fornitore locale non costa nulla
+e non pesa sul tetto.
 
 ## 3. Come funziona il tetto di spesa
 
-`AI_MONTHLY_BUDGET_USD` è un limite rigido, in dollari perché Anthropic fattura in dollari.
+Il tetto mensile è un limite rigido, in dollari perché Anthropic fattura in dollari.
 
 - **Prima di ogni chiamata** l'app prenota il massimo che potrebbe costare: l'ingresso stimato
   per eccesso (un token non copre mai meno di un byte, quindi i byte inviati sono un limite

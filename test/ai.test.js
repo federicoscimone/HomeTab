@@ -60,3 +60,84 @@ test('modello indicato come fornitore:nome', () => {
   assert.equal(parseModelSpec('claude-haiku-5-5'), null);
   assert.equal(parseModelSpec(''), null);
 });
+
+test('impostazioni: il database vince sull\'ambiente, che vince sul predefinito', async () => {
+  const { resolveAiSettings } = await import('../lib/ai/settings.js');
+  const saved = { ...process.env };
+  try {
+    delete process.env.AI_MODEL_IMPORT;
+    delete process.env.AI_MONTHLY_BUDGET_USD;
+    let r = resolveAiSettings({});
+    assert.deepEqual(r.importModel, { value: 'anthropic:claude-haiku-5-5', source: 'default' });
+    assert.deepEqual(r.monthlyBudgetUsd, { value: 3, source: 'default' });
+
+    process.env.AI_MODEL_IMPORT = 'anthropic:claude-sonnet-5-5';
+    process.env.AI_MONTHLY_BUDGET_USD = 'abc';
+    r = resolveAiSettings({});
+    assert.deepEqual(r.importModel, { value: 'anthropic:claude-sonnet-5-5', source: 'env' });
+    // Un tetto non valido vale zero, cioè IA spenta: mai "senza limite".
+    assert.deepEqual(r.monthlyBudgetUsd, { value: 0, source: 'env' });
+
+    r = resolveAiSettings({ importModel: 'none', monthlyBudgetUsd: 1.5, importEffort: 'high' });
+    assert.deepEqual(r.importModel, { value: 'none', source: 'db' });
+    assert.deepEqual(r.monthlyBudgetUsd, { value: 1.5, source: 'db' });
+    assert.deepEqual(r.importEffort, { value: 'high', source: 'db' });
+  } finally {
+    process.env = saved;
+  }
+});
+
+test('chiave API: cifrata sul database, decifrata solo per la chiamata, ripiego sull\'ambiente', async () => {
+  const { providerKey, sealKey } = await import('../lib/ai/settings.js');
+  const saved = { ...process.env };
+  try {
+    process.env.NEXTAUTH_SECRET = 'segreto-di-prova-segreto-di-prova';
+    delete process.env.GOOGLE_DRIVE_TOKEN_SECRET;
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-dallambiente-0000';
+    const sealed = sealKey('sk-ant-dal-database-x7Qa');
+    assert.ok(!sealed.apiKeyEnc.includes('sk-ant'), 'la chiave non deve comparire in chiaro');
+    assert.equal(sealed.hint, 'x7Qa');
+
+    const doc = { providers: { anthropic: sealed } };
+    assert.deepEqual(providerKey('anthropic', doc), { apiKey: 'sk-ant-dal-database-x7Qa', source: 'db', hint: 'x7Qa', unreadable: false });
+    assert.equal(providerKey('anthropic', {}).source, 'env');
+
+    // Cambiato il segreto del server, la chiave salvata non si legge più: si segnala e si ripiega.
+    process.env.NEXTAUTH_SECRET = 'un-altro-segreto-un-altro-segreto';
+    assert.deepEqual(providerKey('anthropic', doc), { apiKey: 'sk-ant-dallambiente-0000', source: 'env', hint: '0000', unreadable: true });
+    delete process.env.ANTHROPIC_API_KEY;
+    assert.equal(providerKey('anthropic', doc).apiKey, null);
+  } finally {
+    process.env = saved;
+  }
+});
+
+test('input delle impostazioni: solo modelli con prezzo, tetto entro i limiti, chiave mai nell\'elenco dei cambi', async () => {
+  const { aiSettingsInput } = await import('../lib/ai/settingsInput.js');
+  const saved = { ...process.env };
+  process.env.NEXTAUTH_SECRET = 'segreto-di-prova-segreto-di-prova';
+  try {
+    assert.equal(aiSettingsInput(null).error, 'invalidSettings');
+    assert.equal(aiSettingsInput({}).error, 'invalidSettings');
+    assert.equal(aiSettingsInput({ importModel: 'anthropic:modello-inventato' }).error, 'invalidModel');
+    assert.equal(aiSettingsInput({ importModel: 'openai:gpt-9' }).error, 'invalidModel');
+    assert.equal(aiSettingsInput({ importEffort: 'max' }).error, 'invalidEffort');
+    assert.equal(aiSettingsInput({ monthlyBudgetUsd: 300 }).error, 'invalidBudget');
+    assert.equal(aiSettingsInput({ monthlyBudgetUsd: '3' }).error, 'invalidBudget');
+    assert.equal(aiSettingsInput({ anthropicApiKey: 'corta' }).error, 'invalidApiKey');
+    assert.equal(aiSettingsInput({ anthropicApiKey: 'sk-ant con spazi dentro la chiave' }).error, 'invalidApiKey');
+
+    const ok = aiSettingsInput({ importModel: 'anthropic:claude-sonnet-5-5', monthlyBudgetUsd: 2.555, anthropicApiKey: ' sk-ant-api03-abcdefghijklmnop ' });
+    assert.equal(ok.set.importModel, 'anthropic:claude-sonnet-5-5');
+    assert.equal(ok.set.monthlyBudgetUsd, 2.56);
+    assert.equal(ok.set['providers.anthropic'].hint, 'mnop');
+    assert.deepEqual(ok.changes, ['importModel', 'monthlyBudgetUsd', 'anthropicApiKey:replaced']);
+    assert.ok(!JSON.stringify(ok.changes).includes('sk-ant'));
+
+    const reset = aiSettingsInput({ importModel: null, anthropicApiKey: null });
+    assert.deepEqual(reset.unset, { importModel: '', 'providers.anthropic': '' });
+    assert.equal(aiSettingsInput({ importModel: 'none' }).set.importModel, 'none');
+  } finally {
+    process.env = saved;
+  }
+});
