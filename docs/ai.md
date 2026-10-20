@@ -54,6 +54,13 @@ import review it appears under the category menu as "Maybe: …", one click to u
 of incomplete movements it fills the category but stays unticked, marked "uncertain". Below 30%
 it is dropped.
 
+**No catch-all categories.** Categories such as "Altro", "Varie", "Spese varie" or "Other" are
+not sent to the model, so it cannot propose them and leaves the row empty instead: "other" says
+as little as no category. A catch-all with specific subcategories ("Altro → Regali") is sent only
+as a group, with its subcategories choosable. They stay available for manual choice and for the
+local sources. On the demo data the uncertain proposals filed under "Altro" went from dozens to
+none.
+
 **Web search.** For the rows no other source recognises, **Search the web** asks the model to
 look each merchant up (Anthropic's web search tool, one search per row at most, at most 15 rows per
 click). It runs only from its button, after the AI pass, and **See what it would search** shows
@@ -248,6 +255,13 @@ Impostazioni → IA.
 revisione dell'import compare sotto il menu della categoria come «Forse: …», un clic per usarlo;
 nella revisione dei movimenti incompleti compila la categoria ma resta senza spunta, segnato
 «incerta». Sotto il 30% si scarta.
+
+**Niente categorie contenitore.** Categorie come «Altro», «Varie», «Spese varie» o «Other» non
+partono verso il modello, che quindi non può proporle e lascia la riga vuota: «altro» dice tanto
+quanto nessuna categoria. Una categoria contenitore con sottocategorie specifiche («Altro →
+Regali») parte solo come raggruppamento, con le figlie scegliibili. Restano disponibili per la
+scelta manuale e per le fonti locali. Sui dati della demo le proposte incerte in «Altro» sono
+passate da decine a zero.
 
 **Ricerca web.** Per le righe che nessuna altra fonte riconosce, **Cerca sul web** chiede al modello
 di cercare ogni esercente (lo strumento di ricerca web di Anthropic, al massimo una ricerca per
