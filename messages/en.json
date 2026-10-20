@@ -726,7 +726,13 @@
     "previewRaw": "Full request (JSON)",
     "fromHistoryCount": "{count} from history",
     "historyBadge": "from history",
-    "historyTitle": "Like {count, plural, one {# past movement} other {# past movements}} with “{text}”"
+    "historyTitle": "Like {count, plural, one {# past movement} other {# past movements}} with “{text}”",
+    "withFallback": "The remaining rows were passed again to {model}.",
+    "previewBank": "bank’s category: {label}",
+    "previewFallback": "Rows still without a category would be passed again to {model}.",
+    "bankBadge": "from bank",
+    "bankTitle": "Like {count, plural, one {# past movement} other {# past movements}} with the bank’s category “{label}”",
+    "bankLabel": "Bank: {label}"
   },
   "goalStates": {
     "on_track": {
@@ -976,7 +982,8 @@
     },
     "tasks": {
       "importCategorize": "Import categories",
-      "importTemplate": "Template suggestion"
+      "importTemplate": "Template suggestion",
+      "importCategorizeFallback": "Categories, second pass"
     },
     "outcomes": {
       "ok": "Succeeded",
@@ -1023,7 +1030,10 @@
     "keyHint": "The key is never shown or returned by the server. Create it in a workspace with a monthly spend limit: that is the second safety net.",
     "keyPrefixWarning": "Anthropic keys start with “sk-ant-”: part of it may have been left out when copying.",
     "autoSuggest": "Automatic suggestions when importing",
-    "autoSuggestHint": "When on, rows without a category are sent to the model as soon as the review opens. When off, they are sent only with the “Suggest with AI” button, after you could check them with “See what is sent”."
+    "autoSuggestHint": "When on, rows without a category are sent to the model as soon as the review opens. When off, they are sent only with the “Suggest with AI” button, after you could check them with “See what is sent”.",
+    "fallbackModel": "Fallback model for the remaining rows",
+    "fallbackHint": "Rows the first model leaves without a category are passed again to this more capable one. It works on few rows: it usually costs a few tenths of a cent.",
+    "fallbackOff": "None"
   },
   "users": {
     "title": "Users",
@@ -1197,7 +1207,8 @@
       "description": "Description",
       "payee": "Payee",
       "place": "Place",
-      "notes": "Notes"
+      "notes": "Notes",
+      "bankCategory": "Bank’s category"
     },
     "dateFormats": {
       "DD/MM/YYYY": "DD/MM/YYYY",
@@ -1285,7 +1296,8 @@
       "amountCredit": "Inflows",
       "dateFormat": "Date format",
       "amountSign": "Sign",
-      "skipRows": "Rows to skip"
+      "skipRows": "Rows to skip",
+      "bankCategory": "Bank’s category"
     },
     "signs": {
       "absolute": "all positive",

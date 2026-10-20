@@ -18,6 +18,7 @@ const needsSuggestion = (r) => !r.categoryId && !r._isDuplicate && !r._catManual
 /** I campi che lasciano il browser verso il server; il server li maschera prima del modello. */
 const toAiRow = (r) => ({
   id: r._rowId, description: r.description, payee: r.payee, place: r.place, type: r.type, amount: r.amount,
+  bankCategory: r.bankCategory || '',
 });
 
 /**
@@ -84,7 +85,7 @@ export default function StepReview({
         if (!data.available) { setAi({ status: 'error', asked: asked.length, error: data.reason === 'budget' ? 'budget' : 'failed' }); return; }
         setRows((rs) => mergeSuggestions(rs, data.suggestions));
         const suggested = new Set(data.suggestions.filter((x) => x.categoryId).map((x) => x.id)).size;
-        setAi({ status: data.error && suggested === 0 ? 'error' : 'done', asked: asked.length, suggested, costUsd: data.costUsd, error: data.error });
+        setAi({ status: data.error && suggested === 0 ? 'error' : 'done', asked: asked.length, suggested, costUsd: data.costUsd, error: data.error, fallbackModel: data.fallbackModel });
       })
       .catch((err) => {
         if (err.name !== 'AbortError') setAi({ status: 'error', asked: asked.length, error: 'failed' });
@@ -110,7 +111,7 @@ export default function StepReview({
 
   const selected         = rows.filter(r => r.selected);
   const autocat          = rows.filter(r => r._autocat).length;
-  const fromHistory      = rows.filter(r => r._histCat && r.categoryId).length;
+  const fromHistory      = rows.filter(r => (r._histCat || r._bankCat) && r.categoryId).length;
   const duplicatesCount  = rows.filter(r => r._isDuplicate).length;
   const missingMethod    = rows.filter(r => r.selected && !r.paymentMethod).length;
   const undetectedMethod = missingMethod;
@@ -123,7 +124,7 @@ export default function StepReview({
 
   // Category changes are always manual — protect from future mapping re-applies
   const updateCategory = (i, field, value) =>
-    setRows(rs => rs.map((r, idx) => idx === i ? { ...r, [field]: value, _catManual: true, _aiCat: false, _histCat: false } : r));
+    setRows(rs => rs.map((r, idx) => idx === i ? { ...r, [field]: value, _catManual: true, _aiCat: false, _histCat: false, _bankCat: false } : r));
 
   const updatePaymentMethod = (i, value) =>
     setRows(rs => rs.map((r, idx) => idx === i ? { ...r, paymentMethod: value, _methodAutoDetected: true } : r));
@@ -202,6 +203,7 @@ export default function StepReview({
       place:               r.place,
       payee:               r.payee,
       notes:               r.notes,
+      bankCategory:        r.bankCategory || '',
       categoryId:          r.categoryId || null,
       subCategory1Id:      r.subCategory1Id || null,
       subCategory2Id:      null,
@@ -289,6 +291,7 @@ export default function StepReview({
       {ai.status === 'done' && (
         <div className="alert text-sm py-2" role="status">
           <span>{tAi('done', { suggested: ai.suggested, asked: ai.asked, cost: fmtUsd(ai.costUsd) })}</span>
+          {ai.fallbackModel && <span className="text-base-content/60">{tAi('withFallback', { model: ai.fallbackModel })}</span>}
           {ai.error && <span className="text-warning">{tAi(`partial.${ai.error}`)}</span>}
         </div>
       )}
@@ -409,6 +412,9 @@ export default function StepReview({
                         {row.payee && row.description && (
                           <p className="text-xs text-base-content/50">{row.description}</p>
                         )}
+                        {row.bankCategory && (
+                          <p className="text-xs text-base-content/40">{tAi('bankLabel', { label: row.bankCategory })}</p>
+                        )}
                       </td>
                       <td>
                         <select
@@ -435,7 +441,7 @@ export default function StepReview({
                       <td>
                         <div className="flex flex-col gap-1">
                           <select
-                            className={`select select-xs select-bordered min-w-[130px] ${row._autocat && row.categoryId ? 'border-success' : row._histCat && row.categoryId ? 'border-secondary' : row._aiCat && row.categoryId ? 'border-info' : ''}`}
+                            className={`select select-xs select-bordered min-w-[130px] ${row._autocat && row.categoryId ? 'border-success' : (row._histCat || row._bankCat) && row.categoryId ? 'border-secondary' : row._aiCat && row.categoryId ? 'border-info' : ''}`}
                             value={row.categoryId || ''}
                             onChange={e => updateCategory(i, 'categoryId', e.target.value || null)}
                           >
@@ -460,6 +466,11 @@ export default function StepReview({
                           {row._histCat && row.categoryId && (
                             <span className="badge badge-secondary badge-xs" title={tAi('historyTitle', { count: row._histSupport ?? 0, text: row._histText ?? '' })}>
                               {tAi('historyBadge')}
+                            </span>
+                          )}
+                          {row._bankCat && row.categoryId && (
+                            <span className="badge badge-secondary badge-outline badge-xs" title={tAi('bankTitle', { count: row._bankSupport ?? 0, label: row.bankCategory ?? '' })}>
+                              {tAi('bankBadge')}
                             </span>
                           )}
                           {row._aiCat && row.categoryId && (

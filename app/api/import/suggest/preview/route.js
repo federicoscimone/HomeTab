@@ -23,10 +23,13 @@ export async function POST(req) {
 
   await connectDB();
   const { system, schema, codes, groups, examples, batches } = await buildRequests(rows);
-  const availability = aiAvailability('importCategorize', await loadAiSettings());
+  const settings = await loadAiSettings();
+  const availability = aiAvailability('importCategorize', settings);
+  const fallback = aiAvailability('importCategorizeFallback', settings);
   return NextResponse.json({
     model: availability.model,
     available: availability.available,
+    fallbackModel: fallback.available && fallback.model !== availability.model ? fallback.model : null,
     system,
     schema,
     categories: codes.list,

@@ -726,7 +726,13 @@
     "previewRaw": "Richiesta completa (JSON)",
     "fromHistoryCount": "{count, plural, one {# dallo storico} other {# dallo storico}}",
     "historyBadge": "dallo storico",
-    "historyTitle": "Come {count, plural, one {# movimento passato} other {# movimenti passati}} con «{text}»"
+    "historyTitle": "Come {count, plural, one {# movimento passato} other {# movimenti passati}} con «{text}»",
+    "withFallback": "Le righe rimaste sono state ripassate a {model}.",
+    "previewBank": "categoria della banca: {label}",
+    "previewFallback": "Le righe che restano senza categoria verrebbero ripassate a {model}.",
+    "bankBadge": "dalla banca",
+    "bankTitle": "Come {count, plural, one {# movimento passato} other {# movimenti passati}} con categoria della banca «{label}»",
+    "bankLabel": "Banca: {label}"
   },
   "goalStates": {
     "on_track": {
@@ -976,7 +982,8 @@
     },
     "tasks": {
       "importCategorize": "Categorie nell’import",
-      "importTemplate": "Proposta di template"
+      "importTemplate": "Proposta di template",
+      "importCategorizeFallback": "Categorie, secondo passaggio"
     },
     "outcomes": {
       "ok": "Riuscita",
@@ -1023,7 +1030,10 @@
     "keyHint": "La chiave non viene mai mostrata né restituita dal server. Creala in un workspace con un limite di spesa mensile: è la seconda rete di sicurezza.",
     "keyPrefixWarning": "Le chiavi Anthropic iniziano con «sk-ant-»: forse una parte è rimasta fuori dalla copia.",
     "autoSuggest": "Suggerimenti automatici nell’import",
-    "autoSuggestHint": "Se attivo, le righe senza categoria partono verso il modello appena si apre la revisione. Se spento, partono solo con il pulsante «Suggerisci con l’IA», dopo averle potute vedere con «Vedi cosa viene inviato»."
+    "autoSuggestHint": "Se attivo, le righe senza categoria partono verso il modello appena si apre la revisione. Se spento, partono solo con il pulsante «Suggerisci con l’IA», dopo averle potute vedere con «Vedi cosa viene inviato».",
+    "fallbackModel": "Modello di riserva per le righe rimaste",
+    "fallbackHint": "Le righe che il primo modello lascia senza categoria vengono ripassate a questo, più capace. Lavora su poche righe: di solito costa qualche decimo di centesimo.",
+    "fallbackOff": "Nessuno"
   },
   "users": {
     "title": "Utenti",
@@ -1197,7 +1207,8 @@
       "description": "Causale / Descrizione",
       "payee": "Esercente",
       "place": "Luogo",
-      "notes": "Note"
+      "notes": "Note",
+      "bankCategory": "Categoria della banca"
     },
     "dateFormats": {
       "DD/MM/YYYY": "GG/MM/AAAA",
@@ -1285,7 +1296,8 @@
       "amountCredit": "Entrate",
       "dateFormat": "Formato data",
       "amountSign": "Segno",
-      "skipRows": "Righe da saltare"
+      "skipRows": "Righe da saltare",
+      "bankCategory": "Categoria della banca"
     },
     "signs": {
       "absolute": "tutti positivi",

@@ -37,6 +37,7 @@ export default function AiPreviewModal({ rows, onClose }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rows: rows.map((r) => ({
         id: r._rowId, description: r.description, payee: r.payee, place: r.place, type: r.type, amount: r.amount,
+        bankCategory: r.bankCategory || '',
       })) }),
       signal: controller.signal,
     })
@@ -65,6 +66,7 @@ export default function AiPreviewModal({ rows, onClose }) {
                 {data.available
                   ? t('previewSummary', { requests: data.batches.length, model: data.model, rows: rows.length, distinct: items.length, examples: data.examples.length, categories: data.categories.length })
                   : t('previewSummaryOff', { requests: data.batches.length, rows: rows.length, distinct: items.length, examples: data.examples.length, categories: data.categories.length })}
+                {data.available && data.fallbackModel && ` ${t('previewFallback', { model: data.fallbackModel })}`}
               </span>
             </div>
 
@@ -85,7 +87,10 @@ export default function AiPreviewModal({ rows, onClose }) {
                     return (
                       <tr key={`${it.id}`}>
                         <td className="text-base-content/60 max-w-xs">{first ? originalText(first) : ''}</td>
-                        <td className="font-mono max-w-xs"><Masked text={it.text} /></td>
+                        <td className="font-mono max-w-xs">
+                          <Masked text={it.text} />
+                          {it.bankCategory && <div className="text-base-content/60">{t('previewBank', { label: it.bankCategory })}</div>}
+                        </td>
                         <td className="font-mono text-base-content/70 max-w-[14rem]">
                           {(it.similar ?? []).map((sim) => <div key={`${sim.text}-${sim.category}`}>{`${sim.text} → ${sim.category}`}</div>)}
                         </td>

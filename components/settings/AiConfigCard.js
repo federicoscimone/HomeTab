@@ -24,6 +24,7 @@ export default function AiConfigCard({ data, onSaved }) {
 
   const [form, setForm] = useState({
     importModel: settings.importModel.value,
+    importFallbackModel: settings.importFallbackModel.value,
     importEffort: settings.importEffort.value,
     monthlyBudgetUsd: String(settings.monthlyBudgetUsd.value),
     importAutoSuggest: settings.importAutoSuggest.value === true,
@@ -59,7 +60,8 @@ export default function AiConfigCard({ data, onSaved }) {
     e.preventDefault();
     const budget = Number(form.monthlyBudgetUsd.replace(',', '.'));
     save({
-      importModel: form.importModel, importEffort: form.importEffort, monthlyBudgetUsd: budget,
+      importModel: form.importModel, importFallbackModel: form.importFallbackModel,
+      importEffort: form.importEffort, monthlyBudgetUsd: budget,
       importAutoSuggest: form.importAutoSuggest,
     }, t('saved'));
   };
@@ -129,6 +131,28 @@ export default function AiConfigCard({ data, onSaved }) {
                 </optgroup>
               ))}
             </select>
+          </label>
+
+          <label className="flex flex-col gap-1 md:col-span-2">
+            <span className="text-sm font-medium flex flex-wrap items-center gap-2">{t('fallbackModel')} {sourceBadge(settings.importFallbackModel.source)}</span>
+            <select
+              className="select w-full"
+              value={form.importFallbackModel}
+              disabled={disabled}
+              onChange={(e) => setForm((f) => ({ ...f, importFallbackModel: e.target.value }))}
+            >
+              <option value="none">{t('fallbackOff')}</option>
+              {catalog.map((p) => (
+                <optgroup key={p.id} label={p.label}>
+                  {p.models.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {t('modelOption', { model: m.id.split(':')[1], input: fmtUsd(m.input), output: fmtUsd(m.output) })}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <span className="text-xs text-base-content/60">{t('fallbackHint')}</span>
           </label>
 
           <label className="flex flex-col gap-1">

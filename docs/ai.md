@@ -19,7 +19,21 @@ and bank boilerplate ("PAGAMENTO POS CARTA…") are ignored, and each word weigh
 rare in the history, so "ESSELUNGA" counts and "MILANO" barely does. A category is applied by
 itself, marked "from history", only when the whole merchant name matches, the past movements
 agree (80%) and they are of the same kind (an outflow is never matched with an income). On a test
-statement of 8 rows: 1 by keyword, 5 from history, 2 left for the AI.
+statement of 8 rows: 1 by keyword, 5 from history, 2 left for the AI. Names truncated by the
+bank ("ESSELUNG") or with one typo ("MCDONLDS") still match, on words of five letters or more.
+
+**The bank's own category.** If the statement has a column where the bank classifies each
+movement ("Alimentari", "Trasporti"), map it in the template as *Bank's category* (the AI
+template proposal finds it by itself). It is saved on each movement, and the history teaches what
+it means for the family: when at least 3 past movements with that label, of the same kind, went
+80% into one category, a new one goes there by itself, marked "from bank". Until then the label is
+sent to the AI as a hint.
+
+**Second pass.** Rows the first model leaves without a category can be passed again to a more
+capable model, chosen in Settings → AI (default Claude Sonnet 5.5, or "None"). Each request
+carries the category tree and the examples again, so on the test statement the second pass on a
+single row cost $0.0070, against $0.0004 for the whole first pass: still about 400 imports a
+month within a $3 cap.
 
 On the review screen of an import, **Suggest with AI** sends the rows without a category to the
 model in one request (identical rows only once), together with the category tree, twenty recent
@@ -171,7 +185,22 @@ famiglia li ha già categorizzati in passato. I prefissi dei circuiti di pagamen
 pesa quanto è rara nello storico: «ESSELUNGA» conta, «MILANO» quasi nulla. La categoria si applica
 da sola, segnata «dallo storico», solo se il nome dell'esercente combacia per intero, i movimenti
 passati sono concordi (80%) e dello stesso tipo (un'uscita non si confronta mai con un'entrata).
-Su un estratto di prova di 8 righe: 1 dalle regole, 5 dallo storico, 2 lasciate all'IA.
+Su un estratto di prova di 8 righe: 1 dalle regole, 5 dallo storico, 2 lasciate all'IA. I nomi
+troncati dalla banca («ESSELUNG») o con un errore di battitura («MCDONLDS») combaciano lo stesso,
+sulle parole di almeno cinque lettere.
+
+**La categoria della banca.** Se l'estratto ha una colonna in cui la banca classifica ogni
+movimento («Alimentari», «Trasporti»), mappala nel template come *Categoria della banca* (la
+proposta del template con l'IA la trova da sola). Si salva su ogni movimento, e lo storico insegna
+che cosa vuol dire per la famiglia: quando almeno 3 movimenti passati con quell'etichetta, dello
+stesso tipo, sono finiti all'80% in una categoria, uno nuovo ci va da solo, segnato «dalla banca».
+Fino ad allora l'etichetta parte verso l'IA come indizio.
+
+**Secondo passaggio.** Le righe che il primo modello lascia senza categoria si possono ripassare
+a un modello più capace, scelto in Impostazioni → IA (predefinito Claude Sonnet 5.5, oppure
+«Nessuno»). Ogni richiesta riporta l'albero delle categorie e gli esempi, quindi sull'estratto di
+prova il secondo passaggio su una sola riga è costato 0,0070 $, contro 0,0004 $ dell'intero primo
+passaggio: restano comunque circa 400 import al mese dentro un tetto di 3 $.
 
 Nella revisione di un import, **Suggerisci con l'IA** manda al modello le righe senza categoria in
 una sola richiesta (le righe uguali una volta sola), insieme all'albero delle categorie, a venti

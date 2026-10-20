@@ -17,6 +17,7 @@ import { aiSettingsInput, MAX_BUDGET_USD } from '@/lib/ai/settingsInput';
 /** Etichette dei campi per la descrizione dell'audit log (registrata in italiano, come le altre). */
 const CHANGE_LABELS = {
   importModel: 'modello per l\'import',
+  importFallbackModel: 'modello di riserva per l\'import',
   importEffort: 'effort per l\'import',
   monthlyBudgetUsd: 'tetto mensile',
   importAutoSuggest: 'suggerimenti automatici nell\'import',
@@ -45,6 +46,7 @@ async function settingsView() {
     demo: isDemoMode(),
     settings: {
       importModel: settings.importModel,
+      importFallbackModel: settings.importFallbackModel,
       importEffort: settings.importEffort,
       monthlyBudgetUsd: settings.monthlyBudgetUsd,
       importAutoSuggest: settings.importAutoSuggest,
