@@ -141,3 +141,37 @@ test('input delle impostazioni: solo modelli con prezzo, tetto entro i limiti, c
     process.env = saved;
   }
 });
+
+test('movimenti tra persone: la controparte non parte mai, le attività sì', async () => {
+  const { maskRow } = await import('../lib/ai/mask.js');
+  const sent = (row) => { const m = maskRow(row); return [m.description, m.payee].filter(Boolean).join(' | '); };
+  // Nome nella colonna dell'esercente, senza diciture davanti.
+  assert.equal(sent({ description: 'BONIFICO SEPA', payee: 'GIUSEPPE VERDI' }), 'BONIFICO SEPA | [NOME]');
+  assert.equal(sent({ description: 'SATISPAY', payee: 'GIULIA ROSSI' }), 'SATISPAY | [NOME]');
+  // Nome nella causale, subito dopo la dicitura del trasferimento.
+  assert.equal(sent({ description: 'SATISPAY GIULIA ROSSI' }), 'SATISPAY [NOME]');
+  assert.equal(sent({ description: 'RICARICA POSTEPAY A MARIO ROSSI' }), 'RICARICA POSTEPAY A [NOME]');
+  assert.equal(sent({ description: 'PAYPAL *MARIOROSSI' }), 'PAYPAL *[NOME]');
+  // La causale vera resta: è ciò che serve per categorizzare.
+  assert.equal(sent({ description: 'BONIFICO A FAVORE DI GIUSEPPE MARIA VERDI AFFITTO OTTOBRE' }), 'BONIFICO A FAVORE DI [NOME] AFFITTO OTTOBRE');
+  assert.equal(sent({ description: 'BONIFICO IN ENTRATA RIMBORSO SPESE MEDICHE' }), 'BONIFICO IN ENTRATA RIMBORSO SPESE MEDICHE');
+  // Un'attività resta, anche pagata con Satispay o con bonifico; il professionista perde il cognome.
+  assert.equal(sent({ description: 'PAGAMENTO SATISPAY', payee: 'PASTICCERIA MARCHESI' }), 'PAGAMENTO SATISPAY | PASTICCERIA MARCHESI');
+  assert.equal(sent({ description: 'BONIFICO A FAVORE DI STUDIO DENTISTICO DR BIANCHI' }), 'BONIFICO A FAVORE DI STUDIO DENTISTICO DR [NOME]');
+  // Un conto proprio non è una persona.
+  assert.equal(sent({ description: 'GIROCONTO', payee: 'CONTO DEPOSITO' }), 'GIROCONTO | CONTO DEPOSITO');
+  // Un pagamento con carta non è un trasferimento: l'esercente resta.
+  assert.equal(maskRow({ description: 'PAGAMENTO POS', payee: 'DECATHLON SAN DONATO' }).transfer, false);
+  assert.equal(sent({ description: 'PAGAMENTO POS', payee: 'DECATHLON SAN DONATO' }), 'PAGAMENTO POS | DECATHLON SAN DONATO');
+});
+
+test('mascheramento: ultime cifre e cognomi dopo un titolo', async () => {
+  const { maskText } = await import('../lib/ai/mask.js');
+  assert.equal(maskText('CARTA *1234 AMAZON'), 'CARTA *[NUM] AMAZON');
+  assert.equal(maskText('GIROCONTO DA CC 4521'), 'GIROCONTO DA CC [NUM]');
+  assert.equal(maskText('PRATICA N. 12345'), 'PRATICA N. [NUM]');
+  assert.equal(maskText('VETERINARIO DR ROSSI CLINICA'), 'VETERINARIO DR [NOME] CLINICA');
+  assert.equal(maskText('AVV. MARIA BIANCHI PARCELLA'), 'AVV. [NOME] PARCELLA');
+  // Le date e gli orari non sono identificativi: restano.
+  assert.equal(maskText('PAGAMENTO POS 22/10 ORE 18.32 FARMACIA'), 'PAGAMENTO POS 22/10 ORE 18.32 FARMACIA');
+});

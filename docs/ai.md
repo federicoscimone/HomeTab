@@ -11,12 +11,16 @@ vendor. Out of the box it uses Anthropic's Claude.
 
 ## What it does today
 
-On the review screen of an import, the rows without a category are sent to the model in one
-request (identical rows only once), together with the category tree and about forty merchants
+On the review screen of an import, **Suggest with AI** sends the rows without a category to the
+model in one request (identical rows only once), together with the category tree and about forty merchants
 the family has already categorized, as examples. Suggestions below 60% confidence are dropped.
 Each suggestion is marked "suggested by AI" and disappears as soon as the category is changed by
 hand; keyword rules always win. When the payee is empty, the merchant is extracted from the bank
 description. If the AI is off, over budget or failing, the import works exactly as before.
+
+Nothing is sent until you press the button; **See what is sent**, next to it, shows the request
+exactly as it would leave, without sending it, also when the AI is off. Suggestions can start by
+themselves when the review opens: switch on "Automatic suggestions" in Settings → AI.
 
 Measured on 2026-10-20 with Claude Haiku 5.5 on a test statement of 18 rows: 5 recognised by
 keyword rules, 13 sent to the model, 12 categorized plausibly, in 7.7 seconds, for $0.0011.
@@ -81,16 +85,36 @@ The counter can only overestimate the spending, never underestimate it.
 
 ## 4. Privacy
 
-Before anything is sent, `lib/ai/mask.js` replaces card numbers (also partial ones such as
-`CARTA 782872`), IBANs, tax codes, email addresses, phone numbers and other long digit
-sequences, and the name of the other party in bank transfers, with a placeholder. The model
-gets the merchant, the place and the kind of operation, which is what it needs.
+Only the description, the payee, the place, the type and the amount of each row are sent, plus
+the category tree and some merchants from history as examples. Dates, notes, payment methods,
+user names and account data never leave the server. `lib/ai/mask.js` then cleans the text:
 
-**Known limit:** a person's name is recognised only after the usual transfer wording ("a favore
-di", "ordinante"…). A name written elsewhere in a description is sent as it is.
+- **Identifiers**, everywhere: card numbers (also partial: `CARTA 782872`, `*1234`), IBANs, tax
+  codes, email addresses, phone numbers and any sequence of 6+ digits, the last digits after
+  `N.`, `CC`, `RIF`… They become `[CARTA]`, `[IBAN]`, `[CF]`, `[EMAIL]`, `[NUM]`.
+- **Names**, everywhere: after the usual transfer wording ("a favore di", "ordinante"…) and the
+  surname after a title ("DR ROSSI", "AVV. BIANCHI"). They become `[NOME]`.
+- **Transfers between people** (bank transfers, Satispay, PayPal, top-ups, giroconti): the payee
+  column is sent only if it looks like a business (BAR, FARMACIA, SRL, SPA, STUDIO…), otherwise it
+  becomes `[NOME]`; in the description, the name right after the transfer wording is masked,
+  while the reason words ("AFFITTO", "RIMBORSO") stay. Keyword rules run locally on the original
+  text, so well-known merchants paid through PayPal are categorized before the AI.
+- **Examples from history** that masking would reduce to a placeholder are not sent.
+
+It is data minimization, not anonymization: merchants and amounts stay, because they are what
+categorization needs, and they reveal spending habits (a pharmacy, a vet). The rules are
+heuristics, so check them on your own statements:
+
+- **See what is sent** in the import review shows each row as you see it next to what the model
+  would receive, the examples and the full JSON request, without sending anything;
+- `node scripts/mask-preview.js statement.csv --description B --payee C --skip 1` does the same
+  on a whole file, locally, and flags with ⚠ the transfers where no name was masked.
 
 The usage log (`aiusages`) stores numbers only: model, tokens, cost, outcome. Never the text
 sent or received.
+
+If the LangSmith tracing variables (`LANGSMITH_TRACING`, `LANGCHAIN_TRACING_V2`) were ever set,
+LangChain would also send a copy of the (masked) prompts to LangSmith: leave them unset.
 
 In the public demo (`DEMO_MODE=true`) the AI is always off: anyone could use up the credit.
 
@@ -108,13 +132,18 @@ fornitore. Di serie usa Claude di Anthropic.
 
 ## Cosa fa oggi
 
-Nella revisione di un import, le righe senza categoria partono verso il modello in una sola
-richiesta (le righe uguali una volta sola), insieme all'albero delle categorie e a una quarantina
+Nella revisione di un import, **Suggerisci con l'IA** manda al modello le righe senza categoria in
+una sola richiesta (le righe uguali una volta sola), insieme all'albero delle categorie e a una quarantina
 di esercenti già categorizzati dalla famiglia, come esempi. I suggerimenti con confidenza sotto
 il 60% vengono scartati. Ogni suggerimento è segnato «suggerita dall'IA» e sparisce appena la
 categoria si cambia a mano; le regole per parola chiave vincono sempre. Se manca l'esercente,
 viene ricavato dalla causale. Con l'IA spenta, a tetto raggiunto o in errore, l'import funziona
 esattamente come prima.
+
+Finché non premi il pulsante non parte nulla; **Vedi cosa viene inviato**, accanto, mostra la
+richiesta esattamente come partirebbe, senza inviarla, anche con l'IA spenta. I suggerimenti
+possono partire da soli all'apertura della revisione: attiva «Suggerimenti automatici» in
+Impostazioni → IA.
 
 Misurato il 20 ottobre 2026 con Claude Haiku 5.5 su un estratto conto di prova di 18 righe: 5
 riconosciute dalle regole, 13 inviate al modello, 12 categorizzate in modo sensato, in 7,7
@@ -182,16 +211,40 @@ Il contatore può solo sovrastimare la spesa, mai sottostimarla.
 
 ## 4. Riservatezza
 
-Prima di ogni invio, `lib/ai/mask.js` sostituisce con un segnaposto i numeri di carta (anche
-parziali, come `CARTA 782872`), gli IBAN, i codici fiscali, le email, i numeri di telefono e le
-altre sequenze lunghe di cifre, e il nome della controparte nei bonifici. Al modello arrivano
-esercente, luogo e tipo di operazione, cioè quello che gli serve.
+Di ogni riga partono solo causale, esercente, luogo, tipo e importo, più l'albero delle categorie
+e alcuni esercenti dello storico come esempi. Date, note, metodi di pagamento, nomi degli utenti
+e dati del conto non lasciano mai il server. Poi `lib/ai/mask.js` ripulisce il testo:
 
-**Limite noto:** un nome di persona si riconosce solo dopo le diciture tipiche dei bonifici («a
-favore di», «ordinante»…). Un nome scritto altrove in una causale viene inviato così com'è.
+- **Identificativi**, ovunque: numeri di carta (anche parziali: `CARTA 782872`, `*1234`), IBAN,
+  codici fiscali, email, telefoni e qualsiasi sequenza di 6+ cifre, le ultime cifre dopo `N.`,
+  `CC`, `RIF`… Diventano `[CARTA]`, `[IBAN]`, `[CF]`, `[EMAIL]`, `[NUM]`.
+- **Nomi**, ovunque: dopo le diciture tipiche dei bonifici («a favore di», «ordinante»…) e il
+  cognome dopo un titolo («DR ROSSI», «AVV. BIANCHI»). Diventano `[NOME]`.
+- **Trasferimenti tra persone** (bonifici, Satispay, PayPal, ricariche, giroconti): la colonna
+  dell'esercente si invia solo se ha l'aria di un'attività (BAR, FARMACIA, SRL, SPA, STUDIO…),
+  altrimenti diventa `[NOME]`; nella causale si maschera il nome subito dopo la dicitura del
+  trasferimento, mentre le parole della causale («AFFITTO», «RIMBORSO») restano. Le regole per
+  parola chiave girano in locale sul testo originale, quindi gli esercenti noti pagati con PayPal
+  sono categorizzati prima dell'IA.
+- **Gli esempi dallo storico** che il mascheramento ridurrebbe a un segnaposto non partono.
+
+È una minimizzazione, non un'anonimizzazione: esercenti e importi restano, perché servono a
+categorizzare, e rivelano le abitudini di spesa (una farmacia, un veterinario). Le regole sono
+euristiche, quindi provale sui tuoi estratti conto:
+
+- **Vedi cosa viene inviato**, nella revisione dell'import, mostra ogni riga come la vedi tu
+  accanto a quella che riceverebbe il modello, gli esempi e la richiesta JSON completa, senza
+  inviare nulla;
+- `node scripts/mask-preview.js estratto.csv --description B --payee C --skip 1` fa lo stesso su
+  un file intero, in locale, e segnala con ⚠ i trasferimenti in cui non è stato mascherato nessun
+  nome.
 
 Il registro delle chiamate (`aiusages`) contiene solo numeri: modello, token, costo, esito. Mai
 il testo inviato o ricevuto.
+
+Se un giorno fossero impostate le variabili di tracciamento di LangSmith (`LANGSMITH_TRACING`,
+`LANGCHAIN_TRACING_V2`), LangChain manderebbe una copia dei prompt (mascherati) anche a LangSmith:
+lasciale vuote.
 
 Nella demo pubblica (`DEMO_MODE=true`) l'IA è sempre spenta: chiunque potrebbe consumare il
 credito.

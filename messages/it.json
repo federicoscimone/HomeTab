@@ -701,7 +701,23 @@
     "badge": "IA",
     "suggestedBadge": "suggerita dall’IA",
     "payeeTitle": "Esercente ricavato dall’IA dalla causale",
-    "categoryTitle": "Suggerita dall’IA, confidenza {pct}%"
+    "categoryTitle": "Suggerita dall’IA, confidenza {pct}%",
+    "previewButton": "Vedi cosa viene inviato",
+    "suggestButton": "Suggerisci con l’IA ({count, plural, one {# riga} other {# righe}})",
+    "previewTitle": "Cosa viene inviato all’IA",
+    "previewIntro": "Anteprima: non è stato inviato nulla. A sinistra le righe come le vedi tu, a destra come le riceverebbe il modello dopo il mascheramento.",
+    "previewFailed": "Impossibile preparare l’anteprima.",
+    "previewSummary": "Partirebbero {requests, plural, one {# richiesta} other {# richieste}} a {model}: {rows, plural, one {# riga} other {# righe}} ridotte a {distinct} distinte, {examples} esempi dallo storico e {categories} categorie.",
+    "previewSummaryOff": "L’IA è spenta, ma questa è la richiesta che partirebbe: {requests, plural, one {# richiesta} other {# richieste}}, {rows, plural, one {# riga} other {# righe}} ridotte a {distinct} distinte, {examples} esempi dallo storico e {categories} categorie.",
+    "previewCols": {
+      "original": "Originale (resta qui)",
+      "sent": "Inviato",
+      "amount": "Importo",
+      "rows": "Righe"
+    },
+    "previewExamples": "Esempi dallo storico ({count})",
+    "previewExamplesHint": "Esercenti già categorizzati, con il codice della categoria. Quelli che il mascheramento riduce a un segnaposto non vengono inviati.",
+    "previewRaw": "Richiesta completa (JSON)"
   },
   "goalStates": {
     "on_track": {
@@ -996,7 +1012,9 @@
     "saveKey": "Salva chiave",
     "removeKey": "Elimina",
     "keyHint": "La chiave non viene mai mostrata né restituita dal server. Creala in un workspace con un limite di spesa mensile: è la seconda rete di sicurezza.",
-    "keyPrefixWarning": "Le chiavi Anthropic iniziano con «sk-ant-»: forse una parte è rimasta fuori dalla copia."
+    "keyPrefixWarning": "Le chiavi Anthropic iniziano con «sk-ant-»: forse una parte è rimasta fuori dalla copia.",
+    "autoSuggest": "Suggerimenti automatici nell’import",
+    "autoSuggestHint": "Se attivo, le righe senza categoria partono verso il modello appena si apre la revisione. Se spento, partono solo con il pulsante «Suggerisci con l’IA», dopo averle potute vedere con «Vedi cosa viene inviato»."
   },
   "users": {
     "title": "Utenti",

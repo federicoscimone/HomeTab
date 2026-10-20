@@ -701,7 +701,23 @@
     "badge": "AI",
     "suggestedBadge": "suggested by AI",
     "payeeTitle": "Merchant extracted by AI from the description",
-    "categoryTitle": "Suggested by AI, {pct}% confidence"
+    "categoryTitle": "Suggested by AI, {pct}% confidence",
+    "previewButton": "See what is sent",
+    "suggestButton": "Suggest with AI ({count, plural, one {# row} other {# rows}})",
+    "previewTitle": "What is sent to the AI",
+    "previewIntro": "Preview: nothing has been sent. On the left the rows as you see them, on the right as the model would receive them after masking.",
+    "previewFailed": "Could not prepare the preview.",
+    "previewSummary": "{requests, plural, one {# request} other {# requests}} would go to {model}: {rows, plural, one {# row} other {# rows}} reduced to {distinct} distinct, {examples} examples from history and {categories} categories.",
+    "previewSummaryOff": "AI is off, but this is the request that would be sent: {requests, plural, one {# request} other {# requests}}, {rows, plural, one {# row} other {# rows}} reduced to {distinct} distinct, {examples} examples from history and {categories} categories.",
+    "previewCols": {
+      "original": "Original (stays here)",
+      "sent": "Sent",
+      "amount": "Amount",
+      "rows": "Rows"
+    },
+    "previewExamples": "Examples from history ({count})",
+    "previewExamplesHint": "Merchants already categorized, with the category code. Those that masking reduces to a placeholder are not sent.",
+    "previewRaw": "Full request (JSON)"
   },
   "goalStates": {
     "on_track": {
@@ -996,7 +1012,9 @@
     "saveKey": "Save key",
     "removeKey": "Remove",
     "keyHint": "The key is never shown or returned by the server. Create it in a workspace with a monthly spend limit: that is the second safety net.",
-    "keyPrefixWarning": "Anthropic keys start with “sk-ant-”: part of it may have been left out when copying."
+    "keyPrefixWarning": "Anthropic keys start with “sk-ant-”: part of it may have been left out when copying.",
+    "autoSuggest": "Automatic suggestions when importing",
+    "autoSuggestHint": "When on, rows without a category are sent to the model as soon as the review opens. When off, they are sent only with the “Suggest with AI” button, after you could check them with “See what is sent”."
   },
   "users": {
     "title": "Users",

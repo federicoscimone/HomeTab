@@ -10,7 +10,7 @@ import { autoCategorize } from '@/lib/utils/autoCategorize';
 import { importMaxBytes } from '@/lib/demoAccounts';
 import { serverTranslator } from '@/lib/i18n/server';
 import { aiAvailability } from '@/lib/ai';
-import { loadAiSettings } from '@/lib/ai/settings';
+import { loadAiSettings, resolveAiSettings } from '@/lib/ai/settings';
 
 export async function POST(req) {
   const { session, denied } = await requirePermission('movements:create');
@@ -89,6 +89,12 @@ export async function POST(req) {
   });
 
   // La revisione chiede i suggerimenti dell'IA solo se servono e se l'IA è utilizzabile.
-  const ai = aiAvailability('importCategorize', await loadAiSettings());
-  return NextResponse.json({ rows: enriched, total: enriched.length, aiAvailable: ai.available });
+  const aiDoc = await loadAiSettings();
+  const ai = aiAvailability('importCategorize', aiDoc);
+  return NextResponse.json({
+    rows: enriched,
+    total: enriched.length,
+    aiAvailable: ai.available,
+    aiAutoSuggest: ai.available && resolveAiSettings(aiDoc).importAutoSuggest.value === true,
+  });
 }

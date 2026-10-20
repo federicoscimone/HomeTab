@@ -1,18 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
 import MappingModal from '@/components/shared/MappingModal';
 import useCan from '@/lib/auth/useCan';
 import { useFormat } from '@/lib/hooks/useFormat';
+import AiPreviewModal from '@/components/import/AiPreviewModal';
 
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Righe da chiedere all'IA: senza categoria e non duplicate. */
-const needsSuggestion = (r) => !r.categoryId && !r._isDuplicate;
+/** Righe da chiedere all'IA: senza categoria, non duplicate e non già sistemate a mano. */
+const needsSuggestion = (r) => !r.categoryId && !r._isDuplicate && !r._catManual;
+
+/** I campi che lasciano il browser verso il server; il server li maschera prima del modello. */
+const toAiRow = (r) => ({
+  id: r._rowId, description: r.description, payee: r.payee, place: r.place, type: r.type, amount: r.amount,
+});
 
 /**
  * Fonde i suggerimenti nelle righe. Non tocca mai ciò che l'utente ha cambiato a mano né ciò che
@@ -33,15 +39,19 @@ function mergeSuggestions(rows, suggestions) {
   });
 }
 
-export default function StepReview({ rows: initialRows, categories, aiAvailable = false, onImported, onSaved, onBack }) {
+export default function StepReview({
+  rows: initialRows, categories, aiAvailable = false, aiAutoSuggest = false, onImported, onSaved, onBack,
+}) {
   const [rows, setRows] = useState(initialRows);
   const tAi = useTranslations('importAi');
   // Lo stato iniziale si decide qui, non nell'effetto: impostarlo lì farebbe un render in più.
+  // Di serie i suggerimenti partono solo dal pulsante: i dati escono quando l'utente lo decide.
+  const autoStart = aiAvailable && aiAutoSuggest && initialRows.some(needsSuggestion);
   const [ai, setAi] = useState(() => (
-    aiAvailable && initialRows.some(needsSuggestion)
-      ? { status: 'loading', asked: initialRows.filter(needsSuggestion).length }
-      : { status: 'idle' }
+    autoStart ? { status: 'loading', asked: initialRows.filter(needsSuggestion).length } : { status: 'idle' }
   ));
+  const [previewRows, setPreviewRows] = useState(null);
+  const aiRequest = useRef(null);
   const canDo = useCan();
   const t = useTranslations('import');
   const tMov = useTranslations('movements');
@@ -57,12 +67,12 @@ export default function StepReview({ rows: initialRows, categories, aiAvailable 
   const [mappingModal, setMappingModal] = useState(null); // { keyword, categoryId, subCategory1Id, priority, caseSensitive }
   const [mappingError, setMappingError] = useState('');
 
-  useEffect(() => {
-    if (ai.status !== 'loading') return undefined;
+  /** Chiede i suggerimenti per le righe date; l'esito arriva nello stato `ai`. */
+  const requestSuggestions = (sourceRows) => {
+    const asked = sourceRows.filter(needsSuggestion).map(toAiRow);
+    aiRequest.current?.abort();
     const controller = new AbortController();
-    const asked = initialRows.filter(needsSuggestion).map((r) => ({
-      id: r._rowId, description: r.description, payee: r.payee, place: r.place, type: r.type, amount: r.amount,
-    }));
+    aiRequest.current = controller;
     fetch('/api/import/suggest', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -71,7 +81,7 @@ export default function StepReview({ rows: initialRows, categories, aiAvailable 
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((data) => {
-        if (!data.available) { setAi({ status: 'idle' }); return; }
+        if (!data.available) { setAi({ status: 'error', asked: asked.length, error: data.reason === 'budget' ? 'budget' : 'failed' }); return; }
         setRows((rs) => mergeSuggestions(rs, data.suggestions));
         const suggested = new Set(data.suggestions.filter((x) => x.categoryId).map((x) => x.id)).size;
         setAi({ status: data.error && suggested === 0 ? 'error' : 'done', asked: asked.length, suggested, costUsd: data.costUsd, error: data.error });
@@ -79,10 +89,21 @@ export default function StepReview({ rows: initialRows, categories, aiAvailable 
       .catch((err) => {
         if (err.name !== 'AbortError') setAi({ status: 'error', asked: asked.length, error: 'failed' });
       });
-    return () => controller.abort();
+  };
+
+  const handleSuggest = () => {
+    setAi({ status: 'loading', asked: rows.filter(needsSuggestion).length });
+    requestSuggestions(rows);
+  };
+
+  useEffect(() => {
+    if (autoStart) requestSuggestions(initialRows);
+    return () => aiRequest.current?.abort();
     // Una sola volta, all'apertura della revisione.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const pendingAi = rows.filter(needsSuggestion);
 
   const level1 = categories.filter(c => c.level === 1);
   const level2of = (catId) => categories.filter(c => c.level === 2 && c.parentId?.toString() === catId);
@@ -310,10 +331,24 @@ export default function StepReview({ rows: initialRows, categories, aiAvailable 
         </div>
       </div>
 
-      {/* Seleziona tutto / nessuno */}
-      <div className="flex gap-2 text-xs">
+      {/* Seleziona tutto / nessuno, e i comandi dell'IA */}
+      <div className="flex gap-2 text-xs flex-wrap items-center">
         <button className="btn btn-ghost btn-xs" onClick={() => toggleAll(true)}>{tCommon('selectAll')}</button>
         <button className="btn btn-ghost btn-xs" onClick={() => toggleAll(false)}>{tCommon('deselectAll')}</button>
+        {pendingAi.length > 0 && (
+          <div className="ml-auto flex gap-2">
+            {/* L'anteprima non invia nulla: c'è anche con l'IA spenta, per provare il mascheramento. */}
+            <button className="btn btn-outline btn-xs" onClick={() => setPreviewRows(pendingAi)}>
+              {tAi('previewButton')}
+            </button>
+            {aiAvailable && (
+              <button className="btn btn-info btn-xs" onClick={handleSuggest} disabled={ai.status === 'loading'}>
+                {ai.status === 'loading' && <span className="loading loading-spinner loading-xs" />}
+                {tAi('suggestButton', { count: pendingAi.length })}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tabella */}
@@ -454,6 +489,8 @@ export default function StepReview({ rows: initialRows, categories, aiAvailable 
           </table>
         </div>
       </div>
+
+      {previewRows && <AiPreviewModal rows={previewRows} onClose={() => setPreviewRows(null)} />}
 
       {/* Modale nuovo mapping */}
       {mappingModal && (

@@ -41,7 +41,7 @@ export default function StepUpload({ templates: loadedTemplates, sampleHref, onP
       const res = await fetch('/api/import/parse', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) { onError(data.error || t('parseFailed')); }
-      else onParsed(data.rows, { aiAvailable: Boolean(data.aiAvailable) });
+      else onParsed(data.rows, { aiAvailable: Boolean(data.aiAvailable), aiAutoSuggest: Boolean(data.aiAutoSuggest) });
     } catch {
       onError(tCommon('networkError'));
     }

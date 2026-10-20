@@ -19,6 +19,7 @@ const CHANGE_LABELS = {
   importModel: 'modello per l\'import',
   importEffort: 'effort per l\'import',
   monthlyBudgetUsd: 'tetto mensile',
+  importAutoSuggest: 'suggerimenti automatici nell\'import',
   'anthropicApiKey:replaced': 'chiave Anthropic sostituita',
   'anthropicApiKey:removed': 'chiave Anthropic eliminata',
 };
@@ -46,6 +47,7 @@ async function settingsView() {
       importModel: settings.importModel,
       importEffort: settings.importEffort,
       monthlyBudgetUsd: settings.monthlyBudgetUsd,
+      importAutoSuggest: settings.importAutoSuggest,
     },
     keys: { anthropic: { configured: Boolean(source), source, hint, unreadable } },
     catalog: providerCatalog().map((p) => ({
