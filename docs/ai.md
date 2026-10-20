@@ -22,6 +22,24 @@ Nothing is sent until you press the button; **See what is sent**, next to it, sh
 exactly as it would leave, without sending it, also when the AI is off. Suggestions can start by
 themselves when the review opens: switch on "Automatic suggestions" in Settings → AI.
 
+**Template for a new bank.** In Settings → Import templates, **Suggest with AI** takes a
+statement from a bank HomeTab doesn't know yet and proposes the template: columns, date format,
+sign of the amounts, rows to skip and keywords for the payment method. What is sent is even less
+than for categories:
+
+- the code finds the column titles and the first data row by itself (a date and an amount);
+  everything above the titles (account holder, account number, IBAN, balances) is **never
+  sent**, only how many rows were left out. The rows to skip are counted by the code too;
+- only the titles and the first 5 data rows leave, cell by cell: dates and amounts stay as they
+  are, because their format is what the model must recognise; long numbers without decimals
+  (references, account numbers) become `[NUM]`; text goes through the same masking as the
+  import, with the stricter rule for transfers between people.
+
+**See what is sent** shows the original cells next to the sent ones before anything leaves. The
+proposal comes back already tried with the app's own parser on the whole file ("read 7
+movements out of 7 rows with a date"), opens in the template form, and is saved by you. One call
+per bank: $0.0004 with Claude Haiku 5.5 on the test statement.
+
 Measured on 2026-10-20 with Claude Haiku 5.5 on a test statement of 18 rows: 5 recognised by
 keyword rules, 13 sent to the model, 12 categorized plausibly, in 7.7 seconds, for $0.0011.
 
@@ -144,6 +162,24 @@ Finché non premi il pulsante non parte nulla; **Vedi cosa viene inviato**, acca
 richiesta esattamente come partirebbe, senza inviarla, anche con l'IA spenta. I suggerimenti
 possono partire da soli all'apertura della revisione: attiva «Suggerimenti automatici» in
 Impostazioni → IA.
+
+**Template per una banca nuova.** In Impostazioni → Template Import, **Proponi con l'IA** prende
+un estratto conto di una banca che HomeTab non conosce ancora e propone il template: colonne,
+formato della data, segno degli importi, righe da saltare e parole chiave per il metodo di
+pagamento. Parte ancora meno che per le categorie:
+
+- il codice trova da solo i titoli delle colonne e la prima riga di dati (una data e un
+  importo); tutto ciò che sta sopra i titoli (intestatario, numero di conto, IBAN, saldi) **non
+  parte mai**, solo quante righe sono state omesse. Anche le righe da saltare le conta il codice;
+- partono solo i titoli e le prime 5 righe di dati, cella per cella: date e importi restano come
+  sono, perché il modello deve riconoscerne il formato; i numeri lunghi senza decimali
+  (riferimenti, numeri di conto) diventano `[NUM]`; il testo passa dallo stesso mascheramento
+  dell'import, con la regola più stretta sui trasferimenti tra persone.
+
+**Vedi cosa viene inviato** mostra le celle originali accanto a quelle inviate prima che parta
+qualsiasi cosa. La proposta torna già provata con il parser dell'app su tutto il file («letti 7
+movimenti su 7 righe con una data»), si apre nel modulo del template e la salvi tu. Una chiamata
+per banca: 0,0004 $ con Claude Haiku 5.5 sull'estratto di prova.
 
 Misurato il 20 ottobre 2026 con Claude Haiku 5.5 su un estratto conto di prova di 18 righe: 5
 riconosciute dalle regole, 13 inviate al modello, 12 categorizzate in modo sensato, in 7,7

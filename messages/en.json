@@ -252,7 +252,12 @@
     "invalidModel": "Unrecognised model",
     "invalidEffort": "Invalid effort",
     "invalidBudget": "The cap must be between $0.01 and $100",
-    "invalidApiKey": "The API key is not in a valid format"
+    "invalidApiKey": "The API key is not in a valid format",
+    "templateFileUnreadable": "The file can’t be read: a CSV or an Excel sheet is needed.",
+    "templateNoDataRows": "The file has no row with a date and an amount.",
+    "aiUnavailable": "AI is not available: check Settings → AI.",
+    "aiBudgetReached": "This month’s spending cap is reached.",
+    "aiFailed": "The AI service did not answer. Try again shortly."
   },
   "auth": {
     "email": "Email",
@@ -1238,7 +1243,51 @@
     "saveFailed": "Could not save",
     "deleteFailed": "Could not delete",
     "deleteTitle": "Delete template",
-    "deleteText": "Delete the template <b>{name}</b>?"
+    "deleteText": "Delete the template <b>{name}</b>?",
+    "proposeWithAi": "Suggest with AI"
+  },
+  "templatesAi": {
+    "title": "Suggest a template with AI",
+    "intro": "Upload a statement from the bank. The code finds the titles and first rows by itself; rows above the titles (holder, account, IBAN, balances) are never sent.",
+    "file": "Statement",
+    "previewButton": "See what is sent",
+    "proposeButton": "Suggest with AI",
+    "previewFirst": "First check what would be sent: the suggestion is enabled after the preview.",
+    "failed": "The operation failed",
+    "previewSummary": "The titles of {columns, plural, one {# column} other {# columns}} and {rows, plural, one {# data row} other {# data rows}} would be sent, masked. {omitted, plural, =0 {There are no rows above the titles.} one {# row above the titles is not sent.} other {# rows above the titles are not sent.}}",
+    "aiOff": "AI is off: you can see the preview, but not ask for a suggestion.",
+    "original": "Original (stays here)",
+    "sent": "Sent",
+    "raw": "Full request (JSON)",
+    "proposalTitle": "Suggestion: {name}",
+    "checkSummary": "Checked with the app’s parser: read {parsed} movements out of {dataRows} rows with a date.",
+    "notes": "Model’s note: {notes}",
+    "sample": {
+      "date": "Date",
+      "description": "Payee · description",
+      "method": "Method",
+      "amount": "Amount"
+    },
+    "cost": "Cost {cost} · {model}",
+    "use": "Use this suggestion",
+    "fields": {
+      "date": "Date",
+      "amount": "Amount",
+      "description": "Description",
+      "payee": "Payee",
+      "place": "Place",
+      "notes": "Notes",
+      "amountDebit": "Outflows",
+      "amountCredit": "Inflows",
+      "dateFormat": "Date format",
+      "amountSign": "Sign",
+      "skipRows": "Rows to skip"
+    },
+    "signs": {
+      "absolute": "all positive",
+      "negative_is_expense": "negative = outflow",
+      "negative_is_income": "negative = inflow"
+    }
   },
   "paymentMethodsPage": {
     "title": "Payment methods",

@@ -252,7 +252,12 @@
     "invalidModel": "Modello non riconosciuto",
     "invalidEffort": "Effort non valido",
     "invalidBudget": "Il tetto deve essere fra 0,01 e 100 dollari",
-    "invalidApiKey": "La chiave API non ha un formato valido"
+    "invalidApiKey": "La chiave API non ha un formato valido",
+    "templateFileUnreadable": "Il file non si riesce a leggere: serve un CSV o un foglio Excel.",
+    "templateNoDataRows": "Nel file non c’è nessuna riga con una data e un importo.",
+    "aiUnavailable": "L’IA non è disponibile: controlla Impostazioni → IA.",
+    "aiBudgetReached": "Tetto di spesa del mese raggiunto.",
+    "aiFailed": "Il servizio IA non ha risposto. Riprova fra poco."
   },
   "auth": {
     "email": "Email",
@@ -1238,7 +1243,51 @@
     "saveFailed": "Salvataggio non riuscito",
     "deleteFailed": "Eliminazione non riuscita",
     "deleteTitle": "Elimina template",
-    "deleteText": "Elimina il template <b>{name}</b>?"
+    "deleteText": "Elimina il template <b>{name}</b>?",
+    "proposeWithAi": "Proponi con l’IA"
+  },
+  "templatesAi": {
+    "title": "Proponi un template con l’IA",
+    "intro": "Carica un estratto conto della banca. Il codice trova da solo intestazione e prime righe; le righe sopra i titoli (intestatario, conto, IBAN, saldi) non vengono mai inviate.",
+    "file": "Estratto conto",
+    "previewButton": "Vedi cosa viene inviato",
+    "proposeButton": "Proponi con l’IA",
+    "previewFirst": "Prima guarda cosa partirebbe: la proposta si attiva dopo l’anteprima.",
+    "failed": "Operazione non riuscita",
+    "previewSummary": "Partirebbero i titoli di {columns, plural, one {# colonna} other {# colonne}} e {rows, plural, one {# riga} other {# righe}} di dati, mascherate. {omitted, plural, =0 {Non ci sono righe sopra i titoli.} one {# riga sopra i titoli non viene inviata.} other {# righe sopra i titoli non vengono inviate.}}",
+    "aiOff": "L’IA è spenta: puoi vedere l’anteprima, ma non chiedere la proposta.",
+    "original": "Originale (resta qui)",
+    "sent": "Inviato",
+    "raw": "Richiesta completa (JSON)",
+    "proposalTitle": "Proposta: {name}",
+    "checkSummary": "Verifica con il parser dell’app: letti {parsed} movimenti su {dataRows} righe con una data.",
+    "notes": "Nota del modello: {notes}",
+    "sample": {
+      "date": "Data",
+      "description": "Esercente · causale",
+      "method": "Metodo",
+      "amount": "Importo"
+    },
+    "cost": "Costo {cost} · {model}",
+    "use": "Usa questa proposta",
+    "fields": {
+      "date": "Data",
+      "amount": "Importo",
+      "description": "Causale",
+      "payee": "Esercente",
+      "place": "Luogo",
+      "notes": "Note",
+      "amountDebit": "Uscite",
+      "amountCredit": "Entrate",
+      "dateFormat": "Formato data",
+      "amountSign": "Segno",
+      "skipRows": "Righe da saltare"
+    },
+    "signs": {
+      "absolute": "tutti positivi",
+      "negative_is_expense": "negativo = uscita",
+      "negative_is_income": "negativo = entrata"
+    }
   },
   "paymentMethodsPage": {
     "title": "Metodi di Pagamento",

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useApiData } from '@/lib/hooks/useApiData';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
+import TemplateAiModal from '@/components/import/TemplateAiModal';
 
 /** Campi mappabili; le etichette stanno in messages/*.json, sotto templates.fields. */
 const FIELDS = ['date', 'amount', 'amountDebit', 'amountCredit', 'description', 'payee', 'place', 'notes'];
@@ -32,10 +33,27 @@ export default function TemplateImportPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [aiOpen, setAiOpen] = useState(false);
 
   const openAdd = () => {
     setForm(EMPTY_FORM);
     setError('');
+    setModal({ mode: 'add' });
+  };
+
+  /** Apre il modulo di un template nuovo già compilato con la proposta dell'IA, da controllare. */
+  const applyProposal = (tpl) => {
+    setForm({
+      ...EMPTY_FORM,
+      name: tpl.name, fileType: tpl.fileType, skipRows: tpl.skipRows, delimiter: tpl.delimiter,
+      dateFormat: tpl.dateFormat,
+      columnMapping: Object.fromEntries(Object.keys(EMPTY_FORM.columnMapping).map((k) => [k, tpl.columnMapping[k] || ''])),
+      amountDebit: tpl.amountDebit || '', amountCredit: tpl.amountCredit || '',
+      amountSign: tpl.amountSign, defaultPaymentMethod: tpl.defaultPaymentMethod || '',
+      payeeMethodKeywords: tpl.payeeMethodKeywords.map((k) => ({ ...k })),
+    });
+    setError('');
+    setAiOpen(false);
     setModal({ mode: 'add' });
   };
 
@@ -104,8 +122,13 @@ export default function TemplateImportPage() {
           <h1 className="text-2xl font-bold">{t('title')}</h1>
           <p className="text-sm text-base-content/50 mt-1">{t('subtitle')}</p>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={openAdd}>{'+'} {t('new')}</button>
+        <div className="flex gap-2">
+          <button className="btn btn-outline btn-info btn-sm" onClick={() => setAiOpen(true)}>{t('proposeWithAi')}</button>
+          <button className="btn btn-primary btn-sm" onClick={openAdd}>{'+'} {t('new')}</button>
+        </div>
       </div>
+
+      {aiOpen && <TemplateAiModal onUse={applyProposal} onClose={() => setAiOpen(false)} />}
 
       {loading ? (
         <div className="flex justify-center py-10"><span className="loading loading-spinner loading-md text-primary" /></div>
