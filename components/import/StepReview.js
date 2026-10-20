@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
 import MappingModal from '@/components/shared/MappingModal';
@@ -11,15 +11,44 @@ function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export default function StepReview({ rows: initialRows, categories, onImported, onSaved, onBack }) {
+/** Righe da chiedere all'IA: senza categoria e non duplicate. */
+const needsSuggestion = (r) => !r.categoryId && !r._isDuplicate;
+
+/**
+ * Fonde i suggerimenti nelle righe. Non tocca mai ciò che l'utente ha cambiato a mano né ciò che
+ * le parole chiave hanno già riempito: l'IA completa, non sovrascrive.
+ */
+function mergeSuggestions(rows, suggestions) {
+  const byId = new Map(suggestions.map((s) => [s.id, s]));
+  return rows.map((r) => {
+    const s = byId.get(r._rowId);
+    if (!s) return r;
+    const next = { ...r };
+    if (s.categoryId && !r.categoryId && !r._catManual) {
+      Object.assign(next, { categoryId: s.categoryId, subCategory1Id: s.subCategory1Id, _aiCat: true, _aiConfidence: s.confidence });
+    }
+    if (s.merchant && !r.payee) Object.assign(next, { payee: s.merchant, _aiPayee: true });
+    if (s.place && !r.place) next.place = s.place;
+    return next;
+  });
+}
+
+export default function StepReview({ rows: initialRows, categories, aiAvailable = false, onImported, onSaved, onBack }) {
   const [rows, setRows] = useState(initialRows);
+  const tAi = useTranslations('importAi');
+  // Lo stato iniziale si decide qui, non nell'effetto: impostarlo lì farebbe un render in più.
+  const [ai, setAi] = useState(() => (
+    aiAvailable && initialRows.some(needsSuggestion)
+      ? { status: 'loading', asked: initialRows.filter(needsSuggestion).length }
+      : { status: 'idle' }
+  ));
   const canDo = useCan();
   const t = useTranslations('import');
   const tMov = useTranslations('movements');
   const tForm = useTranslations('movementForm');
   const tCommon = useTranslations('common');
   const tPay = useTranslations('payments');
-  const { fmtFull } = useFormat();
+  const { fmtFull, fmtUsd } = useFormat();
   const [skipDuplicates, setSkipDuplicates] = useState(true);
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
@@ -27,6 +56,33 @@ export default function StepReview({ rows: initialRows, categories, onImported, 
   const [editingRow, setEditingRow] = useState(null); // indice riga in modifica
   const [mappingModal, setMappingModal] = useState(null); // { keyword, categoryId, subCategory1Id, priority, caseSensitive }
   const [mappingError, setMappingError] = useState('');
+
+  useEffect(() => {
+    if (ai.status !== 'loading') return undefined;
+    const controller = new AbortController();
+    const asked = initialRows.filter(needsSuggestion).map((r) => ({
+      id: r._rowId, description: r.description, payee: r.payee, place: r.place, type: r.type, amount: r.amount,
+    }));
+    fetch('/api/import/suggest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rows: asked }),
+      signal: controller.signal,
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((data) => {
+        if (!data.available) { setAi({ status: 'idle' }); return; }
+        setRows((rs) => mergeSuggestions(rs, data.suggestions));
+        const suggested = new Set(data.suggestions.filter((x) => x.categoryId).map((x) => x.id)).size;
+        setAi({ status: data.error && suggested === 0 ? 'error' : 'done', asked: asked.length, suggested, costUsd: data.costUsd, error: data.error });
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') setAi({ status: 'error', asked: asked.length, error: 'failed' });
+      });
+    return () => controller.abort();
+    // Una sola volta, all'apertura della revisione.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const level1 = categories.filter(c => c.level === 1);
   const level2of = (catId) => categories.filter(c => c.level === 2 && c.parentId?.toString() === catId);
@@ -45,7 +101,7 @@ export default function StepReview({ rows: initialRows, categories, onImported, 
 
   // Category changes are always manual — protect from future mapping re-applies
   const updateCategory = (i, field, value) =>
-    setRows(rs => rs.map((r, idx) => idx === i ? { ...r, [field]: value, _catManual: true } : r));
+    setRows(rs => rs.map((r, idx) => idx === i ? { ...r, [field]: value, _catManual: true, _aiCat: false } : r));
 
   const updatePaymentMethod = (i, value) =>
     setRows(rs => rs.map((r, idx) => idx === i ? { ...r, paymentMethod: value, _methodAutoDetected: true } : r));
@@ -202,6 +258,24 @@ export default function StepReview({ rows: initialRows, categories, onImported, 
         </div>
       )}
 
+      {ai.status === 'loading' && (
+        <div className="alert alert-info text-sm py-2" role="status">
+          <span className="loading loading-spinner loading-sm" />
+          <span>{tAi('loading', { count: ai.asked })}</span>
+        </div>
+      )}
+      {ai.status === 'done' && (
+        <div className="alert text-sm py-2" role="status">
+          <span>{tAi('done', { suggested: ai.suggested, asked: ai.asked, cost: fmtUsd(ai.costUsd) })}</span>
+          {ai.error && <span className="text-warning">{tAi(`partial.${ai.error}`)}</span>}
+        </div>
+      )}
+      {ai.status === 'error' && (
+        <div className="alert alert-warning text-sm py-2" role="status">
+          <span>{tAi(`errors.${ai.error === 'budget' ? 'budget' : 'failed'}`)}</span>
+        </div>
+      )}
+
       {saveError && (
         <div className="alert alert-error text-sm py-2" role="alert"><span>{saveError}</span></div>
       )}
@@ -276,6 +350,9 @@ export default function StepReview({ rows: initialRows, categories, onImported, 
                       <td>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <p className="font-medium">{row.payee || row.description || '—'}</p>
+                          {row._aiPayee && (
+                            <span className="badge badge-info badge-outline badge-xs shrink-0" title={tAi('payeeTitle')}>{tAi('badge')}</span>
+                          )}
                           {row._isDuplicate && (
                             <span className="badge badge-warning badge-xs shrink-0" title={t('duplicateTitle')}>{t('duplicateBadge')}</span>
                           )}
@@ -321,7 +398,7 @@ export default function StepReview({ rows: initialRows, categories, onImported, 
                       <td>
                         <div className="flex flex-col gap-1">
                           <select
-                            className={`select select-xs select-bordered min-w-[130px] ${row._autocat && row.categoryId ? 'border-success' : ''}`}
+                            className={`select select-xs select-bordered min-w-[130px] ${row._autocat && row.categoryId ? 'border-success' : row._aiCat && row.categoryId ? 'border-info' : ''}`}
                             value={row.categoryId || ''}
                             onChange={e => updateCategory(i, 'categoryId', e.target.value || null)}
                           >
@@ -342,6 +419,11 @@ export default function StepReview({ rows: initialRows, categories, onImported, 
                           )}
                           {row._autocat && row.categoryId && (
                             <span className="badge badge-success badge-xs">{t('autoBadge')}</span>
+                          )}
+                          {row._aiCat && row.categoryId && (
+                            <span className="badge badge-info badge-xs" title={tAi('categoryTitle', { pct: Math.round((row._aiConfidence ?? 0) * 100) })}>
+                              {tAi('suggestedBadge')}
+                            </span>
                           )}
                         </div>
                       </td>

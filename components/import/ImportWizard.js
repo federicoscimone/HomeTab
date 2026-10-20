@@ -22,6 +22,7 @@ export default function ImportWizard({ sampleHref }) {
   const [templates, setTemplates] = useState(null);
   const [categories, setCategories] = useState([]);
   const [parsedRows, setParsedRows] = useState([]);
+  const [aiAvailable, setAiAvailable] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -42,7 +43,7 @@ export default function ImportWizard({ sampleHref }) {
     });
   }, [tCommon]);
 
-  const handleParsed = async (rows) => {
+  const handleParsed = async (rows, { aiAvailable: ai = false } = {}) => {
     if (rows.length === 0) {
       setError(t('noValidRows'));
       return;
@@ -71,6 +72,7 @@ export default function ImportWizard({ sampleHref }) {
     }
 
     setParsedRows(rows);
+    setAiAvailable(ai);
     setStep(2);
   };
 
@@ -106,6 +108,7 @@ export default function ImportWizard({ sampleHref }) {
         <StepReview
           rows={parsedRows}
           categories={categories}
+          aiAvailable={aiAvailable}
           onImported={() => setStep(3)}
           onSaved={() => router.push('/movimenti')}
           onBack={() => { setStep(1); setError(''); }}

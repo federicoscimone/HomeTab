@@ -20,6 +20,12 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   what, date format, how to read the sign of amounts), and keyword rules assign the category.
   Duplicates are detected before saving. In demo mode a template and a sample bank statement are
   ready to try it.
+- **AI-assisted import** — optional: rows that no keyword rule recognises get a category
+  suggested by a language model (Claude Haiku 5.5 by default, through LangChain), learned from
+  the family's own past categories, and the merchant is extracted from the bank description.
+  Personal data is masked before sending, and a hard monthly cap (default $3) is enforced
+  atomically; a typical month costs a few cents ([docs/ai.md](docs/ai.md)). Off in the public
+  demo.
 - **Reports** — monthly dashboard, category × month pivot, year-over-year comparison by
   category, custom date ranges with a year-end projection. Movements, the pivot and the
   custom-range analysis export to Excel.

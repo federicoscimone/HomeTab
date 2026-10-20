@@ -685,6 +685,24 @@
     "editDetails": "Modifica dettagli",
     "amount": "Importo (€)"
   },
+  "importAi": {
+    "loading": "L’IA sta suggerendo le categorie per {count, plural, one {# riga} other {# righe}}…",
+    "done": "IA: {suggested, plural, =0 {nessuna categoria suggerita} one {# categoria suggerita} other {# categorie suggerite}} su {asked, plural, one {# riga} other {# righe}} · costo {cost}. Controllale prima di importare.",
+    "partial": {
+      "budget": "Una parte non è stata elaborata: tetto mensile raggiunto.",
+      "failed": "Una parte non è stata elaborata per un errore del servizio.",
+      "invalid": "Una parte della risposta non era valida ed è stata scartata.",
+      "unavailable": "Una parte non è stata elaborata."
+    },
+    "errors": {
+      "budget": "Suggerimenti dell’IA non disponibili: tetto di spesa del mese raggiunto. L’import funziona come sempre.",
+      "failed": "Suggerimenti dell’IA non disponibili in questo momento. L’import funziona come sempre."
+    },
+    "badge": "IA",
+    "suggestedBadge": "suggerita dall’IA",
+    "payeeTitle": "Esercente ricavato dall’IA dalla causale",
+    "categoryTitle": "Suggerita dall’IA, confidenza {pct}%"
+  },
   "goalStates": {
     "on_track": {
       "label": "In linea",

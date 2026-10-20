@@ -685,6 +685,24 @@
     "editDetails": "Edit details",
     "amount": "Amount (€)"
   },
+  "importAi": {
+    "loading": "AI is suggesting categories for {count, plural, one {# row} other {# rows}}…",
+    "done": "AI: {suggested, plural, =0 {no categories suggested} one {# category suggested} other {# categories suggested}} for {asked, plural, one {# row} other {# rows}} · cost {cost}. Check them before importing.",
+    "partial": {
+      "budget": "Part of it was not processed: monthly cap reached.",
+      "failed": "Part of it was not processed because of a service error.",
+      "invalid": "Part of the answer was invalid and was discarded.",
+      "unavailable": "Part of it was not processed."
+    },
+    "errors": {
+      "budget": "AI suggestions unavailable: this month’s spending cap is reached. Importing works as usual.",
+      "failed": "AI suggestions are unavailable right now. Importing works as usual."
+    },
+    "badge": "AI",
+    "suggestedBadge": "suggested by AI",
+    "payeeTitle": "Merchant extracted by AI from the description",
+    "categoryTitle": "Suggested by AI, {pct}% confidence"
+  },
   "goalStates": {
     "on_track": {
       "label": "On track",

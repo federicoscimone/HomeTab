@@ -9,6 +9,18 @@ here is optional: without a key the AI features stay off and imports work exactl
 Models are reached through [LangChain](https://js.langchain.com), so the app is not tied to one
 vendor. Out of the box it uses Anthropic's Claude.
 
+## What it does today
+
+On the review screen of an import, the rows without a category are sent to the model in one
+request (identical rows only once), together with the category tree and about forty merchants
+the family has already categorized, as examples. Suggestions below 60% confidence are dropped.
+Each suggestion is marked "suggested by AI" and disappears as soon as the category is changed by
+hand; keyword rules always win. When the payee is empty, the merchant is extracted from the bank
+description. If the AI is off, over budget or failing, the import works exactly as before.
+
+Measured on 2026-10-20 with Claude Haiku 5.5 on a test statement of 18 rows: 5 recognised by
+keyword rules, 13 sent to the model, 12 categorized plausibly, in 7.7 seconds, for $0.0011.
+
 ## 1. Get an API key with a spending limit
 
 1. On the [Claude Console](https://platform.claude.com) create a workspace for HomeTab and give
@@ -93,6 +105,20 @@ funziona esattamente come prima.
 
 I modelli passano da [LangChain](https://js.langchain.com), quindi l'app non è legata a un solo
 fornitore. Di serie usa Claude di Anthropic.
+
+## Cosa fa oggi
+
+Nella revisione di un import, le righe senza categoria partono verso il modello in una sola
+richiesta (le righe uguali una volta sola), insieme all'albero delle categorie e a una quarantina
+di esercenti già categorizzati dalla famiglia, come esempi. I suggerimenti con confidenza sotto
+il 60% vengono scartati. Ogni suggerimento è segnato «suggerita dall'IA» e sparisce appena la
+categoria si cambia a mano; le regole per parola chiave vincono sempre. Se manca l'esercente,
+viene ricavato dalla causale. Con l'IA spenta, a tetto raggiunto o in errore, l'import funziona
+esattamente come prima.
+
+Misurato il 20 ottobre 2026 con Claude Haiku 5.5 su un estratto conto di prova di 18 righe: 5
+riconosciute dalle regole, 13 inviate al modello, 12 categorizzate in modo sensato, in 7,7
+secondi, per 0,0011 $.
 
 ## 1. Procurati una chiave API con un limite di spesa
 
