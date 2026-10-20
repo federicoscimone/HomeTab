@@ -45,6 +45,7 @@ export async function POST(req) {
         place:          row.place || '',
         payee:          row.payee || '',
         notes:          row.notes || '',
+        bankCategory:   typeof row.bankCategory === 'string' ? row.bankCategory.slice(0, 100) : '',
         type:           row.type || 'expense',
         categoryId:     row.categoryId || null,
         subCategory1Id: row.subCategory1Id || null,

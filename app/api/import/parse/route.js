@@ -8,7 +8,8 @@ import KeywordMapping from '@/lib/models/KeywordMapping';
 import { parseExcelBuffer, parsePasteText } from '@/lib/utils/importParser';
 import { autoCategorize } from '@/lib/utils/autoCategorize';
 import { lookupMerchant } from '@/lib/utils/merchantHistory';
-import { loadHistoryIndex } from '@/lib/services/merchantHistory';
+import { loadBankCategoryMap, loadHistoryIndex } from '@/lib/services/merchantHistory';
+import { lookupBankCategory } from '@/lib/utils/bankCategoryMap';
 import { importMaxBytes } from '@/lib/demoAccounts';
 import { serverTranslator } from '@/lib/i18n/server';
 import { aiAvailability } from '@/lib/ai';
@@ -73,21 +74,25 @@ export async function POST(req) {
     ? (template.fileType === 'csv' ? 'csv' : 'xlsx')
     : 'paste';
 
-  // Categorie in locale, senza IA: prima le parole chiave (regole esplicite), poi lo storico,
-  // cioè gli esercenti che la famiglia ha già categorizzato in passato.
+  // Categorie in locale, senza IA, dalla fonte più specifica alla più generale: le parole chiave
+  // (regole esplicite), poi l'esercente nello storico, poi la categoria assegnata dalla banca,
+  // tradotta con quello che lo storico ha insegnato.
   const history = rows.length ? await loadHistoryIndex() : null;
+  const bankMap = rows.some((r) => r.bankCategory) ? await loadBankCategoryMap() : null;
   const enriched = rows.map((row, i) => {
     const cat = autoCategorize(row, mappings);
     const hist = !cat && history ? lookupMerchant(history, [row.description, row.payee, row.place].join(' '), row.type).match : null;
+    const bank = !cat && !hist && bankMap ? lookupBankCategory(bankMap, row.bankCategory, row.type) : null;
     return {
       _rowId: i,
       ...row,
       // paymentMethod proviene dal parser (rilevato via keyword/default) o null se non rilevato
       // _methodAutoDetected è già impostato dal parser
-      categoryId:     cat?.categoryId     || hist?.categoryId     || null,
-      subCategory1Id: cat?.subCategory1Id || hist?.subCategory1Id || null,
+      categoryId:     cat?.categoryId     || hist?.categoryId     || bank?.categoryId     || null,
+      subCategory1Id: cat?.subCategory1Id || hist?.subCategory1Id || bank?.subCategory1Id || null,
       // Riconosciuta dallo storico: quanti movimenti passati e con quale esercente.
       ...(hist ? { _histCat: true, _histSupport: hist.support, _histText: hist.text } : {}),
+      ...(bank ? { _bankCat: true, _bankSupport: bank.support } : {}),
       subCategory2Id: null,
       selected:       true,
       _autocat:       !!cat,

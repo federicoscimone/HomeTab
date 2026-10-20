@@ -71,7 +71,7 @@ test('la proposta diventa un template valido e il parser vero la verifica', () =
   }, req, { fileType: 'csv', fallbackName: 'estratto' });
   assert.equal(template.skipRows, 6);
   assert.equal(template.name, 'estratto');
-  assert.deepEqual(template.columnMapping, { date: 'A', amount: 'E', description: 'C', payee: null, place: null, notes: null });
+  assert.deepEqual(template.columnMapping, { date: 'A', amount: 'E', description: 'C', payee: null, place: null, notes: null, bankCategory: null });
   assert.deepEqual(template.payeeMethodKeywords, [{ keyword: 'POS', method: 'debit_card' }, { keyword: 'SDD', method: 'direct_debit' }]);
 
   const check = checkTemplate(buffer, rows, template);

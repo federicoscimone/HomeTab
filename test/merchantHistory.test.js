@@ -73,3 +73,32 @@ test('solo movimenti dello stesso tipo: un\'uscita non è uno stipendio', () => 
   assert.equal(lookupMerchant(idx, 'PAGAMENTO POS AZIENDA AGRICOLA BIO', 'expense').match, null);
   assert.equal(lookupMerchant(idx, 'BONIFICO DA AZIENDA', 'income').match.categoryId, 'stipendio');
 });
+
+test('nomi troncati dalla banca e piccoli errori di battitura', async () => {
+  const { sameWord } = await import('../lib/utils/merchantHistory.js');
+  assert.equal(sameWord('ESSELUNG', 'ESSELUNGA'), true);
+  assert.equal(sameWord('MCDONALD', 'MCDONALDS'), true);
+  assert.equal(sameWord('MCDONLADS', 'MCDONALDS'), true);
+  assert.equal(sameWord('MCDONLDS', 'MCDONALDS'), true);
+  assert.equal(sameWord('BAR', 'BARI'), false);
+  assert.equal(sameWord('ROMA', 'ROMANO'), false);
+  assert.equal(sameWord('FARMA', 'FARMACIA'), false);
+  const idx = buildHistoryIndex(HISTORY);
+  assert.equal(lookupMerchant(idx, 'PAGAMENTO POS ESSELUNG VIALE MONZA').match?.subCategory1Id, 'super');
+});
+
+test('categoria della banca: imparata dallo storico solo se concorde e con abbastanza movimenti', async () => {
+  const { buildBankCategoryMap, lookupBankCategory } = await import('../lib/utils/bankCategoryMap.js');
+  const map = buildBankCategoryMap([
+    { label: 'Alimentari', type: 'expense', categoryId: 'spesa', subCategory1Id: 'super', count: 18 },
+    { label: 'ALIMENTARI ', type: 'expense', categoryId: 'cibo', subCategory1Id: null, count: 2 },
+    { label: 'Tempo libero', type: 'expense', categoryId: 'svago', subCategory1Id: null, count: 3 },
+    { label: 'Tempo libero', type: 'expense', categoryId: 'viaggi', subCategory1Id: null, count: 3 },
+    { label: 'Salute', type: 'expense', categoryId: 'salute', subCategory1Id: null, count: 2 },
+  ]);
+  assert.deepEqual(lookupBankCategory(map, 'alimentari', 'expense'), { categoryId: 'spesa', subCategory1Id: 'super', support: 18, agreement: 0.9 });
+  assert.equal(lookupBankCategory(map, 'Alimentari', 'income'), null);
+  assert.equal(lookupBankCategory(map, 'Tempo libero', 'expense'), null);
+  assert.equal(lookupBankCategory(map, 'Salute', 'expense'), null);
+  assert.equal(lookupBankCategory(map, '', 'expense'), null);
+});

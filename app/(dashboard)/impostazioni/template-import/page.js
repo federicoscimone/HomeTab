@@ -7,13 +7,13 @@ import { PAYMENT_METHODS } from '@/lib/utils/payments';
 import TemplateAiModal from '@/components/import/TemplateAiModal';
 
 /** Campi mappabili; le etichette stanno in messages/*.json, sotto templates.fields. */
-const FIELDS = ['date', 'amount', 'amountDebit', 'amountCredit', 'description', 'payee', 'place', 'notes'];
+const FIELDS = ['date', 'amount', 'amountDebit', 'amountCredit', 'description', 'payee', 'place', 'notes', 'bankCategory'];
 
 const DATE_FORMATS = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD', 'DD-MM-YYYY', 'D/M/YYYY'];
 
 const EMPTY_FORM = {
   name: '', fileType: 'xlsx', skipRows: 0, delimiter: ';', dateFormat: 'DD/MM/YYYY',
-  columnMapping: { date:'', amount:'', description:'', payee:'', place:'', notes:'' },
+  columnMapping: { date:'', amount:'', description:'', payee:'', place:'', notes:'', bankCategory:'' },
   amountDebit: '', amountCredit: '', amountSign: 'absolute',
   defaultPaymentMethod: '',
   payeeMethodKeywords: [],

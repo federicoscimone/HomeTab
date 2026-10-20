@@ -39,6 +39,7 @@ export async function POST(req) {
     suggestions: result.suggestions,
     costUsd: microToUsd(result.costMicro),
     model: result.model,
+    fallbackModel: result.fallbackModel,
     failedBatches: result.failedBatches,
     error: result.error,
   });

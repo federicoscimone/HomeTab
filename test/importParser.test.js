@@ -88,7 +88,7 @@ test('il CSV di esempio della demo si importa con il suo template', async () => 
 
   assert.equal(rows.length, 9);
   assert.deepEqual(rows[0], {
-    date: '2026-10-06', description: 'PAGAMENTO POS', payee: 'ESSELUNGA MILANO', place: '', notes: '',
+    date: '2026-10-06', description: 'PAGAMENTO POS', payee: 'ESSELUNGA MILANO', place: '', notes: '', bankCategory: '',
     paymentMethod: 'debit_card', _methodAutoDetected: true, amount: 62.4, type: 'expense',
   });
   const refund = rows.find((r) => r.payee === 'RIMBORSO SPESE MEDICHE');
@@ -97,7 +97,7 @@ test('il CSV di esempio della demo si importa con il suo template', async () => 
   // Il prelievo non contiene parole chiave di metodo: la revisione lo segnala.
   assert.equal(rows.find((r) => r.payee === 'SPORTELLO')._methodAutoDetected, false);
   assert.deepEqual(rows.at(-1), {
-    date: '2026-10-07', description: 'Benzina - auto Marco', payee: 'Q8', place: '', notes: '',
+    date: '2026-10-07', description: 'Benzina - auto Marco', payee: 'Q8', place: '', notes: '', bankCategory: '',
     paymentMethod: null, _methodAutoDetected: false, amount: 46.78, type: 'expense',
   });
 });
