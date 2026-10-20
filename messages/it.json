@@ -586,7 +586,32 @@
       "no": "No",
       "imported": "Importazione",
       "manual": "Manuale"
-    }
+    },
+    "completeCategories": "Completa le categorie ({count})",
+    "categoriesApplied": "{count, plural, =0 {Nessuna categoria applicata.} one {Categoria applicata a # movimento.} other {Categorie applicate a # movimenti.}}"
+  },
+  "incompleteReview": {
+    "title": "Completa le categorie",
+    "intro": "Le categorie si propongono con la stessa catena dell’import: parole chiave, esercenti già categorizzati in passato e categoria della banca, tutto in locale. Poi, se vuoi, l’IA sulle righe rimaste. Non si salva nulla finché non premi «Applica».",
+    "loadFailed": "Impossibile caricare i movimenti incompleti.",
+    "applyFailed": "Applicazione non riuscita.",
+    "summary": "{shown, plural, one {# movimento} other {# movimenti}} senza categoria{local, plural, =0 {, nessuna proposta locale} one {, # proposta in locale} other {, # proposte in locale}}.",
+    "cols": {
+      "apply": "Applica",
+      "date": "Data",
+      "movement": "Movimento",
+      "category": "Categoria",
+      "amount": "Importo"
+    },
+    "subNone": "— nessuna sottocategoria —",
+    "sources": {
+      "keyword": "parola chiave",
+      "history": "dallo storico",
+      "bank": "dalla banca",
+      "ai": "suggerita dall’IA"
+    },
+    "apply": "Applica {count, plural, one {# categoria} other {# categorie}}",
+    "more": "Sono i {shown} più recenti su {total}: gli altri arriveranno alla prossima revisione."
   },
   "movementForm": {
     "saveFailed": "Errore durante il salvataggio",

@@ -7,19 +7,11 @@ import MappingModal from '@/components/shared/MappingModal';
 import useCan from '@/lib/auth/useCan';
 import { useFormat } from '@/lib/hooks/useFormat';
 import AiPreviewModal from '@/components/import/AiPreviewModal';
+import { needsSuggestion, toAiRow } from '@/components/import/aiRows';
 
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
-
-/** Righe da chiedere all'IA: senza categoria, non duplicate e non già sistemate a mano. */
-const needsSuggestion = (r) => !r.categoryId && !r._isDuplicate && !r._catManual;
-
-/** I campi che lasciano il browser verso il server; il server li maschera prima del modello. */
-const toAiRow = (r) => ({
-  id: r._rowId, description: r.description, payee: r.payee, place: r.place, type: r.type, amount: r.amount,
-  bankCategory: r.bankCategory || '',
-});
 
 /**
  * Fonde i suggerimenti nelle righe. Non tocca mai ciò che l'utente ha cambiato a mano né ciò che

@@ -4,12 +4,8 @@ import { requirePermission } from '@/lib/auth/guard';
 import { logApiError } from '@/lib/logger';
 import connectDB from '@/lib/mongodb';
 import ImportTemplate from '@/lib/models/ImportTemplate';
-import KeywordMapping from '@/lib/models/KeywordMapping';
 import { parseExcelBuffer, parsePasteText } from '@/lib/utils/importParser';
-import { autoCategorize } from '@/lib/utils/autoCategorize';
-import { lookupMerchant } from '@/lib/utils/merchantHistory';
-import { loadBankCategoryMap, loadHistoryIndex } from '@/lib/services/merchantHistory';
-import { lookupBankCategory } from '@/lib/utils/bankCategoryMap';
+import { localSuggester } from '@/lib/services/localCategorize';
 import { importMaxBytes } from '@/lib/demoAccounts';
 import { serverTranslator } from '@/lib/i18n/server';
 import { aiAvailability } from '@/lib/ai';
@@ -34,13 +30,6 @@ export async function POST(req) {
   const template = mongoose.isValidObjectId(templateId) ? await ImportTemplate.findById(templateId).lean() : null;
   if (!template)
     return NextResponse.json({ error: tErrors('templateNotFound') }, { status: 404 });
-
-  // Carica keyword mappings ordinati per priorità
-  const mappings = await KeywordMapping.find()
-    .populate('categoryId', 'name color')
-    .populate('subCategory1Id', 'name')
-    .sort({ priority: -1 })
-    .lean();
 
   // Il file intero passa in memoria per il parsing: senza limite un file enorme bloccherebbe la
   // richiesta, e nella demo pubblica chiunque può caricarne uno.
@@ -74,28 +63,24 @@ export async function POST(req) {
     ? (template.fileType === 'csv' ? 'csv' : 'xlsx')
     : 'paste';
 
-  // Categorie in locale, senza IA, dalla fonte più specifica alla più generale: le parole chiave
-  // (regole esplicite), poi l'esercente nello storico, poi la categoria assegnata dalla banca,
-  // tradotta con quello che lo storico ha insegnato.
-  const history = rows.length ? await loadHistoryIndex() : null;
-  const bankMap = rows.some((r) => r.bankCategory) ? await loadBankCategoryMap() : null;
+  // Categorie in locale, senza IA: parole chiave, poi esercente nello storico, poi categoria
+  // della banca (lib/services/localCategorize.js).
+  const suggest = rows.length ? await localSuggester({ withBank: rows.some((r) => r.bankCategory) }) : null;
   const enriched = rows.map((row, i) => {
-    const cat = autoCategorize(row, mappings);
-    const hist = !cat && history ? lookupMerchant(history, [row.description, row.payee, row.place].join(' '), row.type).match : null;
-    const bank = !cat && !hist && bankMap ? lookupBankCategory(bankMap, row.bankCategory, row.type) : null;
+    const s = suggest ? suggest(row) : null;
     return {
       _rowId: i,
       ...row,
       // paymentMethod proviene dal parser (rilevato via keyword/default) o null se non rilevato
       // _methodAutoDetected è già impostato dal parser
-      categoryId:     cat?.categoryId     || hist?.categoryId     || bank?.categoryId     || null,
-      subCategory1Id: cat?.subCategory1Id || hist?.subCategory1Id || bank?.subCategory1Id || null,
-      // Riconosciuta dallo storico: quanti movimenti passati e con quale esercente.
-      ...(hist ? { _histCat: true, _histSupport: hist.support, _histText: hist.text } : {}),
-      ...(bank ? { _bankCat: true, _bankSupport: bank.support } : {}),
+      categoryId:     s?.categoryId     || null,
+      subCategory1Id: s?.subCategory1Id || null,
+      // Da dove viene la categoria: la revisione lo mostra con un segno diverso per fonte.
+      ...(s?.source === 'history' ? { _histCat: true, _histSupport: s.support, _histText: s.text } : {}),
+      ...(s?.source === 'bank' ? { _bankCat: true, _bankSupport: s.support } : {}),
       subCategory2Id: null,
       selected:       true,
-      _autocat:       !!cat,
+      _autocat:       s?.source === 'keyword',
       importMethod,
     };
   });
