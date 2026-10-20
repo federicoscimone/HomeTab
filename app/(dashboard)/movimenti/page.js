@@ -13,6 +13,7 @@ import MappingModal from '@/components/shared/MappingModal';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
 import { useFormat } from '@/lib/hooks/useFormat';
 import useCan from '@/lib/auth/useCan';
+import IncompleteReviewModal from '@/components/movimenti/IncompleteReviewModal';
 
 /** Number of records per page. */
 const PAGE_SIZE = 20;
@@ -125,6 +126,8 @@ export default function SpesePage() {
   const [mappingModal,    setMappingModal]    = useState(null); // { keyword, categoryId, subCategory1Id, priority, caseSensitive }
   const [mappingError,    setMappingError]    = useState('');
   const [actionError,     setActionError]     = useState('');
+  const [reviewOpen,      setReviewOpen]      = useState(false);
+  const [actionMessage,   setActionMessage]   = useState('');
 
   useEffect(() => {
     fetch('/api/movimenti?incomplete=1&limit=1')
@@ -374,6 +377,36 @@ export default function SpesePage() {
           <span>{actionError}</span>
           <button className="btn btn-ghost btn-xs ml-auto" onClick={() => setActionError('')} aria-label={tCommon('close')}>{'✕'}</button>
         </div>
+      )}
+
+      {actionMessage && (
+        <div className="alert alert-success mb-4 text-sm" role="status">
+          <span>{actionMessage}</span>
+          <button className="btn btn-ghost btn-xs ml-auto" onClick={() => setActionMessage('')} aria-label={tCommon('close')}>{'✕'}</button>
+        </div>
+      )}
+
+      {/* Completa le categorie: stessa catena dell'import (regole, storico, banca, poi IA). */}
+      {incompleteCount > 0 && canDo('movements:edit') && (
+        <div className="flex justify-end mb-2">
+          <button type="button" className="btn btn-sm btn-outline btn-warning" onClick={() => setReviewOpen(true)}>
+            {t('completeCategories', { count: incompleteCount })}
+          </button>
+        </div>
+      )}
+      {reviewOpen && (
+        <IncompleteReviewModal
+          onClose={() => setReviewOpen(false)}
+          onApplied={(updated) => {
+            setReviewOpen(false);
+            setActionMessage(t('categoriesApplied', { count: updated }));
+            reloadExpenses();
+            fetch('/api/movimenti?incomplete=1&limit=1')
+              .then((r) => r.json())
+              .then((d) => setIncompleteCount(d.total ?? 0))
+              .catch(() => {});
+          }}
+        />
       )}
 
       {/* ── Alert movimenti incompleti ─────────────────────────────── */}

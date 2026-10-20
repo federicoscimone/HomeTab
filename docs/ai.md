@@ -49,6 +49,13 @@ Nothing is sent until you press the button; **See what is sent**, next to it, sh
 exactly as it would leave, without sending it, also when the AI is off. Suggestions can start by
 themselves when the review opens: switch on "Automatic suggestions" in Settings → AI.
 
+**Movements without a category.** On the Movements page, **Complete the categories** opens the
+same review for the movements already saved without a category (the 300 most recent): keywords,
+history and bank's category locally, then on request the AI with the same preview and second
+pass. Nothing changes until you press **Apply**, and only movements still without a category are
+touched, so a choice made by hand in the meantime is kept. On the demo data: 97 incomplete
+movements, 17 proposed locally, 26 more by the AI ($0.0225), 43 applied after review.
+
 **Template for a new bank.** In Settings → Import templates, **Suggest with AI** takes a
 statement from a bank HomeTab doesn't know yet and proposes the template: columns, date format,
 sign of the amounts, rows to skip and keywords for the payment method. What is sent is even less
@@ -216,6 +223,13 @@ Finché non premi il pulsante non parte nulla; **Vedi cosa viene inviato**, acca
 richiesta esattamente come partirebbe, senza inviarla, anche con l'IA spenta. I suggerimenti
 possono partire da soli all'apertura della revisione: attiva «Suggerimenti automatici» in
 Impostazioni → IA.
+
+**Movimenti senza categoria.** Nella pagina Movimenti, **Completa le categorie** apre la stessa
+revisione sui movimenti già salvati senza categoria (i 300 più recenti): parole chiave, storico e
+categoria della banca in locale, poi su richiesta l'IA con la stessa anteprima e lo stesso secondo
+passaggio. Non cambia nulla finché non premi **Applica**, e si toccano solo i movimenti ancora
+senza categoria: una scelta fatta a mano nel frattempo resta. Sui dati della demo: 97 movimenti
+incompleti, 17 proposti in locale, altri 26 dall'IA (0,0225 $), 43 applicati dopo la revisione.
 
 **Template per una banca nuova.** In Impostazioni → Template Import, **Proponi con l'IA** prende
 un estratto conto di una banca che HomeTab non conosce ancora e propone il template: colonne,
