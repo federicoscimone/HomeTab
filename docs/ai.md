@@ -49,6 +49,26 @@ Nothing is sent until you press the button; **See what is sent**, next to it, sh
 exactly as it would leave, without sending it, also when the AI is off. Suggestions can start by
 themselves when the review opens: switch on "Automatic suggestions" in Settings → AI.
 
+**Uncertain suggestions.** A suggestion between 30% and 60% confidence is not applied: in the
+import review it appears under the category menu as "Maybe: …", one click to use it; in the review
+of incomplete movements it fills the category but stays unticked, marked "uncertain". Below 30%
+it is dropped.
+
+**Web search.** For the rows no other source recognises, **Search the web** asks the model to
+look each merchant up (Anthropic's web search tool, one search per row at most, at most 15 rows per
+click). It runs only from its button, after the AI pass, and **See what it would search** shows
+beforehand the exact text the searches would be built from: the same masked rows, without the
+examples from history. Each search costs $0.01 plus the tokens of the results, and both are
+reserved before the call; a result also says what the business is ("airport operator",
+"lakeside restaurant"), shown on the suggestion. On Claude Haiku 5.5 the basic tool version is
+used: with the dynamic-filtering version the searches are billed but the model never sees the
+results (tried on 2026-10-20). On the demo data: 15 rows, 11 searches, 7 categories found (most
+of them uncertain), $0.1256. It can be switched off in Settings → AI.
+
+**Known limit.** Card payments to sole traders often carry the owner's name ("GUIZZARDI DAVIDE",
+"LUMA SAS DI MARCO B."): they are merchants, not transfers, so masking leaves them as they are,
+and the web search would look them up. Check them with the preview before searching.
+
 **Movements without a category.** On the Movements page, **Complete the categories** opens the
 same review for the movements already saved without a category (the 300 most recent): keywords,
 history and bank's category locally, then on request the AI with the same preview and second
@@ -223,6 +243,28 @@ Finché non premi il pulsante non parte nulla; **Vedi cosa viene inviato**, acca
 richiesta esattamente come partirebbe, senza inviarla, anche con l'IA spenta. I suggerimenti
 possono partire da soli all'apertura della revisione: attiva «Suggerimenti automatici» in
 Impostazioni → IA.
+
+**Suggerimenti incerti.** Un suggerimento fra il 30% e il 60% di confidenza non si applica: nella
+revisione dell'import compare sotto il menu della categoria come «Forse: …», un clic per usarlo;
+nella revisione dei movimenti incompleti compila la categoria ma resta senza spunta, segnato
+«incerta». Sotto il 30% si scarta.
+
+**Ricerca web.** Per le righe che nessuna altra fonte riconosce, **Cerca sul web** chiede al modello
+di cercare ogni esercente (lo strumento di ricerca web di Anthropic, al massimo una ricerca per
+riga e 15 righe per clic). Parte solo dal suo pulsante, dopo il passaggio dell'IA, e **Vedi cosa
+cercherebbe** mostra prima il testo esatto da cui verrebbero costruite le ricerche: le stesse
+righe mascherate, senza gli esempi dallo storico. Ogni ricerca costa 0,01 $ più i token dei
+risultati, ed entrambi si prenotano prima della chiamata; il risultato dice anche che attività è
+(«gestore aeroportuale», «ristorante sul lago»), mostrato sul suggerimento. Con Claude Haiku 5.5 si
+usa la versione di base dello strumento: con quella a filtro dinamico le ricerche vengono
+addebitate ma il modello non ne vede mai i risultati (provato il 20 ottobre 2026). Sui dati della
+demo: 15 righe, 11 ricerche, 7 categorie trovate (quasi tutte incerte), 0,1256 $. Si spegne in
+Impostazioni → IA.
+
+**Limite noto.** I pagamenti con carta alle ditte individuali riportano spesso il nome del titolare
+(«GUIZZARDI DAVIDE», «LUMA SAS DI MARCO B.»): sono esercenti, non trasferimenti, quindi il
+mascheramento li lascia come sono, e la ricerca web li cercherebbe. Controllali con l'anteprima
+prima di cercare.
 
 **Movimenti senza categoria.** Nella pagina Movimenti, **Completa le categorie** apre la stessa
 revisione sui movimenti già salvati senza categoria (i 300 più recenti): parole chiave, storico e

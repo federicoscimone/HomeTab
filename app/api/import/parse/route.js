@@ -10,6 +10,7 @@ import { importMaxBytes } from '@/lib/demoAccounts';
 import { serverTranslator } from '@/lib/i18n/server';
 import { aiAvailability } from '@/lib/ai';
 import { loadAiSettings, resolveAiSettings } from '@/lib/ai/settings';
+import { webAvailability } from '@/lib/ai/webAvailability';
 
 export async function POST(req) {
   const { session, denied } = await requirePermission('movements:create');
@@ -93,5 +94,6 @@ export async function POST(req) {
     total: enriched.length,
     aiAvailable: ai.available,
     aiAutoSuggest: ai.available && resolveAiSettings(aiDoc).importAutoSuggest.value === true,
+    ...webAvailability(aiDoc),
   });
 }

@@ -17,14 +17,22 @@ function escapeRegex(s) {
  * Fonde i suggerimenti nelle righe. Non tocca mai ciò che l'utente ha cambiato a mano né ciò che
  * le parole chiave hanno già riempito: l'IA completa, non sovrascrive.
  */
-function mergeSuggestions(rows, suggestions) {
+function mergeSuggestions(rows, suggestions, source = 'ai') {
   const byId = new Map(suggestions.map((s) => [s.id, s]));
   return rows.map((r) => {
     const s = byId.get(r._rowId);
     if (!s) return r;
     const next = { ...r };
     if (s.categoryId && !r.categoryId && !r._catManual) {
-      Object.assign(next, { categoryId: s.categoryId, subCategory1Id: s.subCategory1Id, _aiCat: true, _aiConfidence: s.confidence });
+      if (s.uncertain) {
+        // Incerta: non si applica, si propone sotto il menu («Forse: …»), un clic per usarla.
+        next._aiHint = { categoryId: s.categoryId, subCategory1Id: s.subCategory1Id, confidence: s.confidence, source, kind: s.kind ?? null };
+      } else {
+        Object.assign(next, {
+          categoryId: s.categoryId, subCategory1Id: s.subCategory1Id, _aiCat: true, _aiConfidence: s.confidence,
+          _aiSource: source, _webKind: s.kind ?? null, _aiHint: null,
+        });
+      }
     }
     if (s.merchant && !r.payee) Object.assign(next, { payee: s.merchant, _aiPayee: true });
     if (s.place && !r.place) next.place = s.place;
@@ -33,7 +41,8 @@ function mergeSuggestions(rows, suggestions) {
 }
 
 export default function StepReview({
-  rows: initialRows, categories, aiAvailable = false, aiAutoSuggest = false, onImported, onSaved, onBack,
+  rows: initialRows, categories, aiAvailable = false, aiAutoSuggest = false, webAvailable = false, webRowUsd = 0,
+  onImported, onSaved, onBack,
 }) {
   const [rows, setRows] = useState(initialRows);
   const tAi = useTranslations('importAi');
@@ -44,6 +53,8 @@ export default function StepReview({
     autoStart ? { status: 'loading', asked: initialRows.filter(needsSuggestion).length } : { status: 'idle' }
   ));
   const [previewRows, setPreviewRows] = useState(null);
+  const [previewMode, setPreviewMode] = useState('categorize');
+  const [web, setWeb] = useState({ status: 'idle' });
   const aiRequest = useRef(null);
   const canDo = useCan();
   const t = useTranslations('import');
@@ -82,6 +93,36 @@ export default function StepReview({
       .catch((err) => {
         if (err.name !== 'AbortError') setAi({ status: 'error', asked: asked.length, error: 'failed' });
       });
+  };
+
+  /** Ricerca web delle righe rimaste: al massimo 15 per clic, circa un centesimo a riga. */
+  const handleWebSearch = () => {
+    const asked = rows.filter(needsSuggestion).map(toAiRow);
+    setWeb({ status: 'loading', asked: asked.length });
+    fetch('/api/import/suggest/web', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rows: asked }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((data) => {
+        if (!data.available) { setWeb({ status: 'error', error: data.reason === 'budget' ? 'budget' : 'failed' }); return; }
+        setRows((rs) => mergeSuggestions(rs, data.suggestions, 'web'));
+        const suggested = new Set(data.suggestions.filter((x) => x.categoryId).map((x) => x.id)).size;
+        setWeb({ status: 'done', asked: Math.min(asked.length, 15), suggested, searches: data.searches, costUsd: data.costUsd, error: data.error, skipped: data.skipped });
+      })
+      .catch(() => setWeb({ status: 'error', error: 'failed' }));
+  };
+
+  /** Usa il suggerimento incerto di una riga: diventa una scelta manuale. */
+  const acceptHint = (i) => setRows((rs) => rs.map((r, idx) => (idx === i && r._aiHint
+    ? { ...r, categoryId: r._aiHint.categoryId, subCategory1Id: r._aiHint.subCategory1Id, _aiHint: null, _catManual: true }
+    : r)));
+
+  const categoryLabel = (catId, subId) => {
+    const c = categories.find((x) => String(x._id) === String(catId));
+    const sub = subId ? categories.find((x) => String(x._id) === String(subId)) : null;
+    return [c?.name, sub?.name].filter(Boolean).join(' / ');
   };
 
   const handleSuggest = () => {
@@ -292,6 +333,23 @@ export default function StepReview({
           <span>{tAi(`errors.${ai.error === 'budget' ? 'budget' : 'failed'}`)}</span>
         </div>
       )}
+      {web.status === 'loading' && (
+        <div className="alert alert-info text-sm py-2" role="status">
+          <span className="loading loading-spinner loading-sm" />
+          <span>{tAi('webLoading', { count: Math.min(web.asked, 15) })}</span>
+        </div>
+      )}
+      {web.status === 'done' && (
+        <div className="alert text-sm py-2" role="status">
+          <span>{tAi('webDone', { suggested: web.suggested, asked: web.asked, searches: web.searches, cost: fmtUsd(web.costUsd) })}</span>
+          {web.skipped > 0 && <span className="text-base-content/60">{tAi('webSkipped', { count: web.skipped })}</span>}
+        </div>
+      )}
+      {web.status === 'error' && (
+        <div className="alert alert-warning text-sm py-2" role="status">
+          <span>{tAi(`errors.${web.error === 'budget' ? 'budget' : 'failed'}`)}</span>
+        </div>
+      )}
 
       {saveError && (
         <div className="alert alert-error text-sm py-2" role="alert"><span>{saveError}</span></div>
@@ -335,7 +393,7 @@ export default function StepReview({
         {pendingAi.length > 0 && (
           <div className="ml-auto flex gap-2">
             {/* L'anteprima non invia nulla: c'è anche con l'IA spenta, per provare il mascheramento. */}
-            <button className="btn btn-outline btn-xs" onClick={() => setPreviewRows(pendingAi)}>
+            <button className="btn btn-outline btn-xs" onClick={() => { setPreviewMode('categorize'); setPreviewRows(pendingAi); }}>
               {tAi('previewButton')}
             </button>
             {aiAvailable && (
@@ -343,6 +401,18 @@ export default function StepReview({
                 {ai.status === 'loading' && <span className="loading loading-spinner loading-xs" />}
                 {tAi('suggestButton', { count: pendingAi.length })}
               </button>
+            )}
+            {/* La ricerca web dopo il passaggio dell'IA: costa a riga, quindi sulle sole rimaste. */}
+            {webAvailable && ['done', 'error'].includes(ai.status) && (
+              <>
+                <button className="btn btn-outline btn-xs" onClick={() => { setPreviewMode('web'); setPreviewRows(pendingAi); }}>
+                  {tAi('webPreviewButton')}
+                </button>
+                <button className="btn btn-warning btn-xs" onClick={handleWebSearch} disabled={web.status === 'loading'}>
+                  {web.status === 'loading' && <span className="loading loading-spinner loading-xs" />}
+                  {tAi('webButton', { count: Math.min(pendingAi.length, 15), cost: fmtUsd(webRowUsd) })}
+                </button>
+              </>
             )}
           </div>
         )}
@@ -466,9 +536,24 @@ export default function StepReview({
                             </span>
                           )}
                           {row._aiCat && row.categoryId && (
-                            <span className="badge badge-info badge-xs" title={tAi('categoryTitle', { pct: Math.round((row._aiConfidence ?? 0) * 100) })}>
-                              {tAi('suggestedBadge')}
+                            <span
+                              className={`badge badge-xs ${row._aiSource === 'web' ? 'badge-warning' : 'badge-info'}`}
+                              title={row._aiSource === 'web' && row._webKind
+                                ? tAi('webTitle', { kind: row._webKind, pct: Math.round((row._aiConfidence ?? 0) * 100) })
+                                : tAi('categoryTitle', { pct: Math.round((row._aiConfidence ?? 0) * 100) })}
+                            >
+                              {row._aiSource === 'web' ? tAi('webBadge') : tAi('suggestedBadge')}
                             </span>
+                          )}
+                          {!row.categoryId && row._aiHint && (
+                            <button
+                              type="button"
+                              className="badge badge-warning badge-outline badge-xs cursor-pointer"
+                              title={[tAi('hintTitle', { pct: Math.round(row._aiHint.confidence * 100) }), row._aiHint.kind].filter(Boolean).join(' — ')}
+                              onClick={() => acceptHint(i)}
+                            >
+                              {tAi('hint', { name: categoryLabel(row._aiHint.categoryId, row._aiHint.subCategory1Id) })}
+                            </button>
                           )}
                         </div>
                       </td>
@@ -500,7 +585,7 @@ export default function StepReview({
         </div>
       </div>
 
-      {previewRows && <AiPreviewModal rows={previewRows} onClose={() => setPreviewRows(null)} />}
+      {previewRows && <AiPreviewModal rows={previewRows} mode={previewMode} onClose={() => setPreviewRows(null)} />}
 
       {/* Modale nuovo mapping */}
       {mappingModal && (

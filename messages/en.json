@@ -608,10 +608,13 @@
       "keyword": "keyword",
       "history": "from history",
       "bank": "from bank",
-      "ai": "suggested by AI"
+      "ai": "suggested by AI",
+      "web": "from web"
     },
     "apply": "Apply {count, plural, one {# category} other {# categories}}",
-    "more": "These are the {shown} most recent out of {total}: the others will come at the next review."
+    "more": "These are the {shown} most recent out of {total}: the others will come at the next review.",
+    "uncertainBadge": "uncertain · {source}",
+    "uncertainCount": "{count, plural, one {# uncertain proposal, unticked} other {# uncertain proposals, unticked}}: check them and tick the right ones."
   },
   "movementForm": {
     "saveFailed": "Could not save",
@@ -757,7 +760,17 @@
     "previewFallback": "Rows still without a category would be passed again to {model}.",
     "bankBadge": "from bank",
     "bankTitle": "Like {count, plural, one {# past movement} other {# past movements}} with the bank’s category “{label}”",
-    "bankLabel": "Bank: {label}"
+    "bankLabel": "Bank: {label}",
+    "webButton": "Search the web ({count, plural, one {# row} other {# rows}}) · about {cost} per row",
+    "webPreviewButton": "See what it would search",
+    "webLoading": "Searching the web for {count, plural, one {# row} other {# rows}}…",
+    "webDone": "Web: {suggested, plural, =0 {no categories found} one {# category found} other {# categories found}} for {asked, plural, one {# row} other {# rows}} · {searches, plural, one {# search} other {# searches}} · cost {cost}.",
+    "webSkipped": "{count} more rows at the next search: at most 15 at a time.",
+    "webBadge": "from web",
+    "webTitle": "From the web: {kind} ({pct}% confidence)",
+    "hint": "Maybe: {name}",
+    "hintTitle": "Uncertain suggestion ({pct}%): click to use it",
+    "previewWebSummary": "{requests, plural, one {# request} other {# requests}} would go to {model} with web search, for {distinct} distinct rows: at most one search per row, built from this text. Examples from history are not sent."
   },
   "goalStates": {
     "on_track": {
@@ -996,7 +1009,8 @@
       "off": "AI for imports is off: pick a model above.",
       "unknownModel": "The model {model} is not recognised: pick one from the list.",
       "notConfigured": "The provider’s API key is missing: enter it above.",
-      "noBudget": "The monthly cap is not valid: set one above."
+      "noBudget": "The monthly cap is not valid: set one above.",
+      "noWebSearch": "The chosen model does not support web search."
     },
     "cols": {
       "when": "When",
@@ -1008,7 +1022,8 @@
     "tasks": {
       "importCategorize": "Import categories",
       "importTemplate": "Template suggestion",
-      "importCategorizeFallback": "Categories, second pass"
+      "importCategorizeFallback": "Categories, second pass",
+      "importWebSearch": "Web search"
     },
     "outcomes": {
       "ok": "Succeeded",
@@ -1058,7 +1073,9 @@
     "autoSuggestHint": "When on, rows without a category are sent to the model as soon as the review opens. When off, they are sent only with the “Suggest with AI” button, after you could check them with “See what is sent”.",
     "fallbackModel": "Fallback model for the remaining rows",
     "fallbackHint": "Rows the first model leaves without a category are passed again to this more capable one. It works on few rows: it usually costs a few tenths of a cent.",
-    "fallbackOff": "None"
+    "fallbackOff": "None",
+    "webSearch": "Web search for unknown merchants",
+    "webSearchHint": "Adds the “Search the web” button for rows no other source recognises. It runs only on request, at most 15 rows at a time; about 1 cent per row with Haiku 5.5, 3 with Sonnet 5.5."
   },
   "users": {
     "title": "Users",

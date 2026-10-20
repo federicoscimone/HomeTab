@@ -5,6 +5,7 @@ import Movement from '@/lib/models/Movement';
 import { aiAvailability } from '@/lib/ai';
 import { loadAiSettings, resolveAiSettings } from '@/lib/ai/settings';
 import { localSuggester } from '@/lib/services/localCategorize';
+import { webAvailability } from '@/lib/ai/webAvailability';
 
 /** Movimenti per revisione: i più recenti; gli altri arrivano alla revisione successiva. */
 const LIMIT = 300;
@@ -41,5 +42,6 @@ export async function GET() {
     })),
     aiAvailable: ai.available,
     aiAutoSuggest: ai.available && resolveAiSettings(aiDoc).importAutoSuggest.value === true,
+    ...webAvailability(aiDoc),
   });
 }

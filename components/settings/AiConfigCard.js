@@ -28,6 +28,7 @@ export default function AiConfigCard({ data, onSaved }) {
     importEffort: settings.importEffort.value,
     monthlyBudgetUsd: String(settings.monthlyBudgetUsd.value),
     importAutoSuggest: settings.importAutoSuggest.value === true,
+    importWebSearch: settings.importWebSearch.value === true,
   });
   const [apiKey, setApiKey] = useState('');
   const [busy, setBusy] = useState(false);
@@ -63,6 +64,7 @@ export default function AiConfigCard({ data, onSaved }) {
       importModel: form.importModel, importFallbackModel: form.importFallbackModel,
       importEffort: form.importEffort, monthlyBudgetUsd: budget,
       importAutoSuggest: form.importAutoSuggest,
+      importWebSearch: form.importWebSearch,
     }, t('saved'));
   };
 
@@ -194,6 +196,19 @@ export default function AiConfigCard({ data, onSaved }) {
             <span className="flex flex-col gap-1">
               <span className="text-sm font-medium flex flex-wrap items-center gap-2">{t('autoSuggest')} {sourceBadge(settings.importAutoSuggest.source)}</span>
               <span className="text-xs text-base-content/60">{t('autoSuggestHint')}</span>
+            </span>
+          </label>
+          <label className="md:col-span-2 flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              className="toggle toggle-primary mt-0.5"
+              checked={form.importWebSearch}
+              disabled={disabled}
+              onChange={(e) => setForm((f) => ({ ...f, importWebSearch: e.target.checked }))}
+            />
+            <span className="flex flex-col gap-1">
+              <span className="text-sm font-medium flex flex-wrap items-center gap-2">{t('webSearch')} {sourceBadge(settings.importWebSearch.source)}</span>
+              <span className="text-xs text-base-content/60">{t('webSearchHint')}</span>
             </span>
           </label>
           <div className="md:col-span-2 flex justify-end">

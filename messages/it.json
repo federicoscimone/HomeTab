@@ -608,10 +608,13 @@
       "keyword": "parola chiave",
       "history": "dallo storico",
       "bank": "dalla banca",
-      "ai": "suggerita dall’IA"
+      "ai": "suggerita dall’IA",
+      "web": "dal web"
     },
     "apply": "Applica {count, plural, one {# categoria} other {# categorie}}",
-    "more": "Sono i {shown} più recenti su {total}: gli altri arriveranno alla prossima revisione."
+    "more": "Sono i {shown} più recenti su {total}: gli altri arriveranno alla prossima revisione.",
+    "uncertainBadge": "incerta · {source}",
+    "uncertainCount": "{count, plural, one {# proposta incerta, senza spunta} other {# proposte incerte, senza spunta}}: controllale e spunta quelle giuste."
   },
   "movementForm": {
     "saveFailed": "Errore durante il salvataggio",
@@ -757,7 +760,17 @@
     "previewFallback": "Le righe che restano senza categoria verrebbero ripassate a {model}.",
     "bankBadge": "dalla banca",
     "bankTitle": "Come {count, plural, one {# movimento passato} other {# movimenti passati}} con categoria della banca «{label}»",
-    "bankLabel": "Banca: {label}"
+    "bankLabel": "Banca: {label}",
+    "webButton": "Cerca sul web ({count, plural, one {# riga} other {# righe}}) · circa {cost} a riga",
+    "webPreviewButton": "Vedi cosa cercherebbe",
+    "webLoading": "Ricerca sul web per {count, plural, one {# riga} other {# righe}}…",
+    "webDone": "Web: {suggested, plural, =0 {nessuna categoria trovata} one {# categoria trovata} other {# categorie trovate}} su {asked, plural, one {# riga} other {# righe}} · {searches, plural, one {# ricerca} other {# ricerche}} · costo {cost}.",
+    "webSkipped": "Altre {count} righe alla prossima ricerca: al massimo 15 per volta.",
+    "webBadge": "dal web",
+    "webTitle": "Dal web: {kind} (confidenza {pct}%)",
+    "hint": "Forse: {name}",
+    "hintTitle": "Suggerimento incerto ({pct}%): clicca per usarlo",
+    "previewWebSummary": "Partirebbero {requests, plural, one {# richiesta} other {# richieste}} a {model} con ricerca web, per {distinct} righe distinte: al massimo una ricerca per riga, costruita da questo testo. Gli esempi dallo storico non partono."
   },
   "goalStates": {
     "on_track": {
@@ -996,7 +1009,8 @@
       "off": "L’IA per l’import è spenta: scegli un modello qui sopra.",
       "unknownModel": "Il modello {model} non è riconosciuto: scegline uno dall’elenco.",
       "notConfigured": "Manca la chiave API del fornitore: inseriscila qui sopra.",
-      "noBudget": "Il tetto mensile non è valido: impostane uno qui sopra."
+      "noBudget": "Il tetto mensile non è valido: impostane uno qui sopra.",
+      "noWebSearch": "Il modello scelto non supporta la ricerca web."
     },
     "cols": {
       "when": "Quando",
@@ -1008,7 +1022,8 @@
     "tasks": {
       "importCategorize": "Categorie nell’import",
       "importTemplate": "Proposta di template",
-      "importCategorizeFallback": "Categorie, secondo passaggio"
+      "importCategorizeFallback": "Categorie, secondo passaggio",
+      "importWebSearch": "Ricerca web"
     },
     "outcomes": {
       "ok": "Riuscita",
@@ -1058,7 +1073,9 @@
     "autoSuggestHint": "Se attivo, le righe senza categoria partono verso il modello appena si apre la revisione. Se spento, partono solo con il pulsante «Suggerisci con l’IA», dopo averle potute vedere con «Vedi cosa viene inviato».",
     "fallbackModel": "Modello di riserva per le righe rimaste",
     "fallbackHint": "Le righe che il primo modello lascia senza categoria vengono ripassate a questo, più capace. Lavora su poche righe: di solito costa qualche decimo di centesimo.",
-    "fallbackOff": "Nessuno"
+    "fallbackOff": "Nessuno",
+    "webSearch": "Ricerca web degli esercenti sconosciuti",
+    "webSearchHint": "Aggiunge il pulsante «Cerca sul web» per le righe che nessuna altra fonte riconosce. Parte solo su richiesta, al massimo 15 righe per volta; costa circa 1 centesimo a riga con Haiku 5.5, 3 con Sonnet 5.5."
   },
   "users": {
     "title": "Utenti",

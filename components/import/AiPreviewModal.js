@@ -21,9 +21,10 @@ function Masked({ text }) {
  * Le righe originali restano nel browser: il server riceve gli stessi campi della chiamata vera
  * e restituisce la richiesta già mascherata, prodotta dalla stessa funzione.
  *
- * @param {{ rows: object[], onClose: () => void }} props - Righe della revisione da suggerire.
+ * @param {{ rows: object[], mode?: 'categorize'|'web', onClose: () => void }} props
+ *   rows: righe della revisione da suggerire; mode: 'web' mostra le richieste con ricerca web.
  */
-export default function AiPreviewModal({ rows, onClose }) {
+export default function AiPreviewModal({ rows, mode = 'categorize', onClose }) {
   const t = useTranslations('importAi');
   const tCommon = useTranslations('common');
   const { fmtFull } = useFormat();
@@ -35,7 +36,7 @@ export default function AiPreviewModal({ rows, onClose }) {
     fetch('/api/import/suggest/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rows: rows.map((r) => ({
+      body: JSON.stringify({ mode, rows: rows.map((r) => ({
         id: r._rowId, description: r.description, payee: r.payee, place: r.place, type: r.type, amount: r.amount,
         bankCategory: r.bankCategory || '',
       })) }),
@@ -45,7 +46,7 @@ export default function AiPreviewModal({ rows, onClose }) {
       .then(setData)
       .catch((err) => { if (err.name !== 'AbortError') setError(true); });
     return () => controller.abort();
-  }, [rows]);
+  }, [rows, mode]);
 
   const byId = new Map(rows.map((r) => [r._rowId, r]));
   const items = data?.batches.flatMap((b) => b.items) ?? [];
@@ -63,9 +64,10 @@ export default function AiPreviewModal({ rows, onClose }) {
           <div className="flex flex-col gap-4 mt-4">
             <div className="alert text-sm py-2">
               <span>
-                {data.available
+                {data.web && t('previewWebSummary', { requests: data.batches.length, distinct: items.length, model: data.model ?? '' })}
+                {!data.web && (data.available
                   ? t('previewSummary', { requests: data.batches.length, model: data.model, rows: rows.length, distinct: items.length, examples: data.examples.length, categories: data.categories.length })
-                  : t('previewSummaryOff', { requests: data.batches.length, rows: rows.length, distinct: items.length, examples: data.examples.length, categories: data.categories.length })}
+                  : t('previewSummaryOff', { requests: data.batches.length, rows: rows.length, distinct: items.length, examples: data.examples.length, categories: data.categories.length }))}
                 {data.available && data.fallbackModel && ` ${t('previewFallback', { model: data.fallbackModel })}`}
               </span>
             </div>
