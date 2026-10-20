@@ -11,9 +11,22 @@ vendor. Out of the box it uses Anthropic's Claude.
 
 ## What it does today
 
+**Before any AI: the family's own history.** Right after the keyword rules, the import looks for
+each merchant among the movements already categorized, locally (nothing leaves the server).
+Many merchants have names that say nothing ("SUMUP *LA BOTTEGA DI SARA", "SQ *GIO 2"), but the
+family has categorized them before. Payment-processor prefixes ("SUMUP *", "SQ *", "PAYPAL *")
+and bank boilerplate ("PAGAMENTO POS CARTA…") are ignored, and each word weighs as much as it is
+rare in the history, so "ESSELUNGA" counts and "MILANO" barely does. A category is applied by
+itself, marked "from history", only when the whole merchant name matches, the past movements
+agree (80%) and they are of the same kind (an outflow is never matched with an income). On a test
+statement of 8 rows: 1 by keyword, 5 from history, 2 left for the AI.
+
 On the review screen of an import, **Suggest with AI** sends the rows without a category to the
-model in one request (identical rows only once), together with the category tree and about forty merchants
-the family has already categorized, as examples. Suggestions below 60% confidence are dropped.
+model in one request (identical rows only once), together with the category tree, twenty recent
+merchants of the family and, **for each row, up to three similar past movements** with their
+category, found in the history as above. They are masked like everything else, using the whole
+original row, so a transfer saved with a person's name as payee is never sent. Suggestions below
+60% confidence are dropped.
 Each suggestion is marked "suggested by AI" and disappears as soon as the category is changed by
 hand; keyword rules always win. When the payee is empty, the merchant is extracted from the bank
 description. If the AI is off, over budget or failing, the import works exactly as before.
@@ -150,9 +163,21 @@ fornitore. Di serie usa Claude di Anthropic.
 
 ## Cosa fa oggi
 
+**Prima dell'IA, lo storico della famiglia.** Subito dopo le regole per parola chiave, l'import
+cerca ogni esercente tra i movimenti già categorizzati, in locale (nulla lascia il server). Molti
+esercenti hanno nomi che non dicono nulla («SUMUP *LA BOTTEGA DI SARA», «SQ *GIO 2»), ma la
+famiglia li ha già categorizzati in passato. I prefissi dei circuiti di pagamento («SUMUP *»,
+«SQ *», «PAYPAL *») e le formule della banca («PAGAMENTO POS CARTA…») si ignorano, e ogni parola
+pesa quanto è rara nello storico: «ESSELUNGA» conta, «MILANO» quasi nulla. La categoria si applica
+da sola, segnata «dallo storico», solo se il nome dell'esercente combacia per intero, i movimenti
+passati sono concordi (80%) e dello stesso tipo (un'uscita non si confronta mai con un'entrata).
+Su un estratto di prova di 8 righe: 1 dalle regole, 5 dallo storico, 2 lasciate all'IA.
+
 Nella revisione di un import, **Suggerisci con l'IA** manda al modello le righe senza categoria in
-una sola richiesta (le righe uguali una volta sola), insieme all'albero delle categorie e a una quarantina
-di esercenti già categorizzati dalla famiglia, come esempi. I suggerimenti con confidenza sotto
+una sola richiesta (le righe uguali una volta sola), insieme all'albero delle categorie, a venti
+esercenti recenti della famiglia e, **per ogni riga, fino a tre movimenti passati simili** con la
+loro categoria, trovati nello storico come sopra. Sono mascherati come tutto il resto, usando la
+riga originale intera: un bonifico salvato con il nome di una persona come esercente non parte. I suggerimenti con confidenza sotto
 il 60% vengono scartati. Ogni suggerimento è segnato «suggerita dall'IA» e sparisce appena la
 categoria si cambia a mano; le regole per parola chiave vincono sempre. Se manca l'esercente,
 viene ricavato dalla causale. Con l'IA spenta, a tetto raggiunto o in errore, l'import funziona

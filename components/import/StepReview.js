@@ -110,6 +110,7 @@ export default function StepReview({
 
   const selected         = rows.filter(r => r.selected);
   const autocat          = rows.filter(r => r._autocat).length;
+  const fromHistory      = rows.filter(r => r._histCat && r.categoryId).length;
   const duplicatesCount  = rows.filter(r => r._isDuplicate).length;
   const missingMethod    = rows.filter(r => r.selected && !r.paymentMethod).length;
   const undetectedMethod = missingMethod;
@@ -122,7 +123,7 @@ export default function StepReview({
 
   // Category changes are always manual — protect from future mapping re-applies
   const updateCategory = (i, field, value) =>
-    setRows(rs => rs.map((r, idx) => idx === i ? { ...r, [field]: value, _catManual: true, _aiCat: false } : r));
+    setRows(rs => rs.map((r, idx) => idx === i ? { ...r, [field]: value, _catManual: true, _aiCat: false, _histCat: false } : r));
 
   const updatePaymentMethod = (i, value) =>
     setRows(rs => rs.map((r, idx) => idx === i ? { ...r, paymentMethod: value, _methodAutoDetected: true } : r));
@@ -307,6 +308,7 @@ export default function StepReview({
           <h2 className="text-lg font-semibold">{t('reviewTitle')}</h2>
           <p className="text-sm text-base-content/50">
             {`${t('analyzedRows', { count: rows.length })} · ${t('autocategorized', { count: autocat })} · `}
+            {fromHistory > 0 && `${tAi('fromHistoryCount', { count: fromHistory })} · `}
             {duplicatesCount > 0 && (
               <span className="text-warning font-medium">{`${t('duplicates', { count: duplicatesCount })} · `}</span>
             )}
@@ -433,7 +435,7 @@ export default function StepReview({
                       <td>
                         <div className="flex flex-col gap-1">
                           <select
-                            className={`select select-xs select-bordered min-w-[130px] ${row._autocat && row.categoryId ? 'border-success' : row._aiCat && row.categoryId ? 'border-info' : ''}`}
+                            className={`select select-xs select-bordered min-w-[130px] ${row._autocat && row.categoryId ? 'border-success' : row._histCat && row.categoryId ? 'border-secondary' : row._aiCat && row.categoryId ? 'border-info' : ''}`}
                             value={row.categoryId || ''}
                             onChange={e => updateCategory(i, 'categoryId', e.target.value || null)}
                           >
@@ -454,6 +456,11 @@ export default function StepReview({
                           )}
                           {row._autocat && row.categoryId && (
                             <span className="badge badge-success badge-xs">{t('autoBadge')}</span>
+                          )}
+                          {row._histCat && row.categoryId && (
+                            <span className="badge badge-secondary badge-xs" title={tAi('historyTitle', { count: row._histSupport ?? 0, text: row._histText ?? '' })}>
+                              {tAi('historyBadge')}
+                            </span>
                           )}
                           {row._aiCat && row.categoryId && (
                             <span className="badge badge-info badge-xs" title={tAi('categoryTitle', { pct: Math.round((row._aiConfidence ?? 0) * 100) })}>

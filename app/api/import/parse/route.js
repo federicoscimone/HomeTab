@@ -7,6 +7,8 @@ import ImportTemplate from '@/lib/models/ImportTemplate';
 import KeywordMapping from '@/lib/models/KeywordMapping';
 import { parseExcelBuffer, parsePasteText } from '@/lib/utils/importParser';
 import { autoCategorize } from '@/lib/utils/autoCategorize';
+import { lookupMerchant } from '@/lib/utils/merchantHistory';
+import { loadHistoryIndex } from '@/lib/services/merchantHistory';
 import { importMaxBytes } from '@/lib/demoAccounts';
 import { serverTranslator } from '@/lib/i18n/server';
 import { aiAvailability } from '@/lib/ai';
@@ -71,16 +73,21 @@ export async function POST(req) {
     ? (template.fileType === 'csv' ? 'csv' : 'xlsx')
     : 'paste';
 
-  // Applica auto-categorizzazione
+  // Categorie in locale, senza IA: prima le parole chiave (regole esplicite), poi lo storico,
+  // cioè gli esercenti che la famiglia ha già categorizzato in passato.
+  const history = rows.length ? await loadHistoryIndex() : null;
   const enriched = rows.map((row, i) => {
     const cat = autoCategorize(row, mappings);
+    const hist = !cat && history ? lookupMerchant(history, [row.description, row.payee, row.place].join(' '), row.type).match : null;
     return {
       _rowId: i,
       ...row,
       // paymentMethod proviene dal parser (rilevato via keyword/default) o null se non rilevato
       // _methodAutoDetected è già impostato dal parser
-      categoryId:     cat?.categoryId     || null,
-      subCategory1Id: cat?.subCategory1Id || null,
+      categoryId:     cat?.categoryId     || hist?.categoryId     || null,
+      subCategory1Id: cat?.subCategory1Id || hist?.subCategory1Id || null,
+      // Riconosciuta dallo storico: quanti movimenti passati e con quale esercente.
+      ...(hist ? { _histCat: true, _histSupport: hist.support, _histText: hist.text } : {}),
       subCategory2Id: null,
       selected:       true,
       _autocat:       !!cat,

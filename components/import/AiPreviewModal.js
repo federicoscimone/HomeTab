@@ -74,6 +74,7 @@ export default function AiPreviewModal({ rows, onClose }) {
                   <tr>
                     <th>{t('previewCols.original')}</th>
                     <th>{t('previewCols.sent')}</th>
+                    <th>{t('previewCols.similar')}</th>
                     <th className="text-right">{t('previewCols.amount')}</th>
                     <th className="text-right">{t('previewCols.rows')}</th>
                   </tr>
@@ -85,6 +86,9 @@ export default function AiPreviewModal({ rows, onClose }) {
                       <tr key={`${it.id}`}>
                         <td className="text-base-content/60 max-w-xs">{first ? originalText(first) : ''}</td>
                         <td className="font-mono max-w-xs"><Masked text={it.text} /></td>
+                        <td className="font-mono text-base-content/70 max-w-[14rem]">
+                          {(it.similar ?? []).map((sim) => <div key={`${sim.text}-${sim.category}`}>{`${sim.text} → ${sim.category}`}</div>)}
+                        </td>
                         <td className="text-right whitespace-nowrap">{`${it.type === 'income' ? '+' : '-'}${fmtFull(it.amount)}`}</td>
                         <td className="text-right">{it.rowIds.length}</td>
                       </tr>
