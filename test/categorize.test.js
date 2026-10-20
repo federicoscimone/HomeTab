@@ -72,3 +72,34 @@ test('fra due suggerimenti per la stessa riga vince il più affidabile', async (
   assert.equal(mergeSuggestion(strong, weak).categoryId, 'b');
   assert.equal(mergeSuggestion(undefined, weak), weak);
 });
+
+test('le categorie contenitore non partono verso il modello', async () => {
+  const { isGenericCategory } = await import('../lib/ai/tasks/categorize.js');
+  for (const n of ['Altro', 'altre', 'Varie', 'Spese varie', 'Altre spese', 'Other', 'Miscellaneous', 'Non classificato', '  Altro  ']) {
+    assert.equal(isGenericCategory(n), true, n);
+  }
+  for (const n of ['Alimentari', 'Altroconsumo', 'Variazioni', 'Spesa', 'Cibo Pronto']) assert.equal(isGenericCategory(n), false, n);
+
+  const { list, byCode, codeOf } = categoryCodes([
+    { _id: 'a', name: 'Spesa', level: 1 },
+    { _id: 'z', name: 'Altro', level: 1 },
+    { _id: 'a1', name: 'Supermercato', level: 2, parentId: 'a' },
+    { _id: 'a9', name: 'Altro', level: 2, parentId: 'a' },
+    { _id: 'z1', name: 'Regali', level: 2, parentId: 'z' },
+    { _id: 'v', name: 'Varie', level: 1 },
+  ]);
+  // «Varie» senza figlie sparisce; «Altro» resta solo come raggruppamento di «Regali».
+  assert.deepEqual(list, [
+    { code: 'c1', name: 'Spesa', parent: null },
+    { code: 'c1.1', name: 'Supermercato', parent: 'c1' },
+    { code: 'c2', name: 'Altro', parent: null, pickable: false },
+    { code: 'c2.1', name: 'Regali', parent: 'c2' },
+  ]);
+  assert.equal(byCode.has('c2'), false);
+  assert.deepEqual(byCode.get('c2.1'), { categoryId: 'z', subCategory1Id: 'z1' });
+  assert.equal([...byCode.values()].some((v) => v.subCategory1Id === 'a9'), false);
+  // Negli esempi: «Spesa → Altro» vale come «Spesa», «Altro» da solo non diventa un esempio.
+  assert.equal(codeOf('a', 'a9'), 'c1');
+  assert.equal(codeOf('z', null), null);
+  assert.equal(codeOf('z', 'z1'), 'c2.1');
+});
