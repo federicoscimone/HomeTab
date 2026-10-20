@@ -22,7 +22,9 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   ready to try it.
 - **AI-assisted import** — optional: rows that no keyword rule recognises get a category
   suggested by a language model (Claude Haiku 5.5 by default, through LangChain), learned from
-  the family's own past categories, and the merchant is extracted from the bank description.
+  the family's own past categories, and the merchant is extracted from the bank description;
+  for a bank it doesn't know yet, the model proposes the import template, checked against the
+  app's parser.
   Personal data is masked before sending, and a hard monthly cap (default $3) is enforced
   atomically; a typical month costs a few cents ([docs/ai.md](docs/ai.md)). Off in the public
   demo.

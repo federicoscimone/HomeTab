@@ -30,7 +30,8 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
 - **Import assistito dall'IA**: facoltativo. Le righe che nessuna regola riconosce ricevono una
   categoria suggerita da un modello linguistico (di serie Claude Haiku 5.5, attraverso
   LangChain), che impara dalle categorie usate finora dalla famiglia; dalla causale ricava anche
-  l'esercente. I dati personali vengono mascherati prima dell'invio e un tetto mensile rigido
+  l'esercente, e per una banca nuova propone il template di import, verificato con il parser
+  dell'app. I dati personali vengono mascherati prima dell'invio e un tetto mensile rigido
   (3 $ di default) è garantito da una prenotazione atomica; un mese tipico costa pochi centesimi
   ([docs/ai.md](docs/ai.md#import-assistito-dallia)). Spento nella demo pubblica.
 - **Obiettivi di risparmio**: il risparmio di ogni mese chiuso si ripartisce tra gli obiettivi;
