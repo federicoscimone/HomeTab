@@ -26,6 +26,7 @@ export default function AiConfigCard({ data, onSaved }) {
     importModel: settings.importModel.value,
     importEffort: settings.importEffort.value,
     monthlyBudgetUsd: String(settings.monthlyBudgetUsd.value),
+    importAutoSuggest: settings.importAutoSuggest.value === true,
   });
   const [apiKey, setApiKey] = useState('');
   const [busy, setBusy] = useState(false);
@@ -57,7 +58,10 @@ export default function AiConfigCard({ data, onSaved }) {
   const handleSaveSettings = (e) => {
     e.preventDefault();
     const budget = Number(form.monthlyBudgetUsd.replace(',', '.'));
-    save({ importModel: form.importModel, importEffort: form.importEffort, monthlyBudgetUsd: budget }, t('saved'));
+    save({
+      importModel: form.importModel, importEffort: form.importEffort, monthlyBudgetUsd: budget,
+      importAutoSuggest: form.importAutoSuggest,
+    }, t('saved'));
   };
 
   const handleSaveKey = async (e) => {
@@ -155,6 +159,19 @@ export default function AiConfigCard({ data, onSaved }) {
           </label>
 
           <p className="text-xs text-base-content/60 md:col-span-2">{t('effortHint')}</p>
+          <label className="md:col-span-2 flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              className="toggle toggle-primary mt-0.5"
+              checked={form.importAutoSuggest}
+              disabled={disabled}
+              onChange={(e) => setForm((f) => ({ ...f, importAutoSuggest: e.target.checked }))}
+            />
+            <span className="flex flex-col gap-1">
+              <span className="text-sm font-medium flex flex-wrap items-center gap-2">{t('autoSuggest')} {sourceBadge(settings.importAutoSuggest.source)}</span>
+              <span className="text-xs text-base-content/60">{t('autoSuggestHint')}</span>
+            </span>
+          </label>
           <div className="md:col-span-2 flex justify-end">
             <button type="submit" className="btn btn-primary" disabled={disabled}>
               {busy && <span className="loading loading-spinner loading-sm" />}
