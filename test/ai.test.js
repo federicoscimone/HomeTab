@@ -175,3 +175,14 @@ test('mascheramento: ultime cifre e cognomi dopo un titolo', async () => {
   // Le date e gli orari non sono identificativi: restano.
   assert.equal(maskText('PAGAMENTO POS 22/10 ORE 18.32 FARMACIA'), 'PAGAMENTO POS 22/10 ORE 18.32 FARMACIA');
 });
+
+test('ricerca web: strumento giusto per modello e costo tipico per riga', async () => {
+  const { webSearchTool, typicalWebRowMicro, WEB_SEARCH_MICRO } = await import('../lib/ai/pricing.js');
+  // Su Haiku 5.5 la versione con filtro dinamico addebita le ricerche senza mostrarne i risultati.
+  assert.equal(webSearchTool('claude-haiku-5-5'), 'web_search_20250305');
+  assert.equal(webSearchTool('claude-sonnet-5-5'), 'web_search_20260209');
+  assert.equal(webSearchTool('modello-inventato'), null);
+  // Misurati: circa 1,1 centesimi con Haiku 5.5 e 3 con Sonnet 5.5.
+  assert.equal(typicalWebRowMicro('claude-haiku-5-5'), WEB_SEARCH_MICRO + 1_000 + 150);
+  assert.equal(typicalWebRowMicro('claude-sonnet-5-5'), WEB_SEARCH_MICRO + 20_000 + 3_000);
+});

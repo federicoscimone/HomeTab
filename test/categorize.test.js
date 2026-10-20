@@ -51,12 +51,24 @@ test('la risposta del modello: codici inventati, confidenza bassa e segnaposto v
     { id: 0, category: 'c1.1', confidence: 0.92, merchant: 'Esselunga', place: 'Milano' },
     { id: 1, category: 'c9', confidence: 0.99, merchant: '[NOME]', place: null },
     { id: 2, category: 'c2', confidence: MIN_CONFIDENCE - 0.01, merchant: null, place: null },
+    { id: 3, category: 'c2', confidence: 0.2, merchant: null, place: null },
     { id: 0, category: 'c2', confidence: 1, merchant: null, place: null },
     { id: 99, category: 'c1', confidence: 1, merchant: null, place: null },
   ] }, groups, byCode);
   assert.deepEqual(out, [
-    { id: 10, categoryId: 'a', subCategory1Id: 'a1', confidence: 0.92, merchant: 'Esselunga', place: 'Milano' },
-    { id: 11, categoryId: 'a', subCategory1Id: 'a1', confidence: 0.92, merchant: 'Esselunga', place: 'Milano' },
+    { id: 10, categoryId: 'a', subCategory1Id: 'a1', confidence: 0.92, uncertain: false, merchant: 'Esselunga', place: 'Milano' },
+    { id: 11, categoryId: 'a', subCategory1Id: 'a1', confidence: 0.92, uncertain: false, merchant: 'Esselunga', place: 'Milano' },
+    // Sotto la soglia di affidabilità ma sopra quella minima: proposta come incerta.
+    { id: 13, categoryId: 'b', subCategory1Id: null, confidence: MIN_CONFIDENCE - 0.01, uncertain: true, merchant: null, place: null },
   ]);
   assert.deepEqual(readSuggestions(null, groups, byCode), []);
+});
+
+test('fra due suggerimenti per la stessa riga vince il più affidabile', async () => {
+  const { mergeSuggestion } = await import('../lib/ai/tasks/categorize.js');
+  const weak = { id: 1, categoryId: 'a', subCategory1Id: null, confidence: 0.4, uncertain: true, merchant: 'Bar Luce', place: null };
+  const strong = { id: 1, categoryId: 'b', subCategory1Id: null, confidence: 0.9, uncertain: false, merchant: null, place: 'Milano' };
+  assert.deepEqual(mergeSuggestion(weak, strong), { ...strong, merchant: 'Bar Luce', place: 'Milano' });
+  assert.equal(mergeSuggestion(strong, weak).categoryId, 'b');
+  assert.equal(mergeSuggestion(undefined, weak), weak);
 });

@@ -6,7 +6,10 @@ import { useFormat } from '@/lib/hooks/useFormat';
 import AiPreviewModal from '@/components/import/AiPreviewModal';
 import { needsSuggestion, toAiRow } from '@/components/import/aiRows';
 
-const BADGE = { keyword: 'badge-success', history: 'badge-secondary', bank: 'badge-secondary badge-outline', ai: 'badge-info' };
+const BADGE = { keyword: 'badge-success', history: 'badge-secondary', bank: 'badge-secondary badge-outline', ai: 'badge-info', web: 'badge-warning' };
+
+/** Righe ancora da chiedere: vuote, oppure con un suggerimento incerto non toccato dall'utente. */
+const isPending = (r) => needsSuggestion(r) || (r._uncertain && !r._catManual);
 
 /** Una riga della revisione, dalla risposta del server. */
 function toRow(m, i) {
@@ -40,18 +43,26 @@ export default function IncompleteReviewModal({ onClose, onApplied }) {
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState('');
   const [ai, setAi] = useState({ status: 'idle' });
+  const [web, setWeb] = useState({ status: 'idle' });
+  const [previewMode, setPreviewMode] = useState('categorize');
   const [preview, setPreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const aiRequest = useRef(null);
 
-  const requestSuggestions = (sourceRows) => {
-    const asked = sourceRows.filter(needsSuggestion).map(toAiRow);
+  /**
+   * Chiede i suggerimenti per le righe ancora vuote, all'IA o alla ricerca web. Si toccano solo le
+   * righe vuote: l'IA completa, non sovrascrive. Un suggerimento incerto compila la categoria ma
+   * lascia la spunta tolta: si applica solo se l'utente la mette.
+   */
+  const requestSuggestions = (sourceRows, source = 'ai') => {
+    const asked = sourceRows.filter(isPending).map(toAiRow);
     if (asked.length === 0) return;
-    setAi({ status: 'loading', asked: asked.length });
+    const setState = source === 'web' ? setWeb : setAi;
+    setState({ status: 'loading', asked: source === 'web' ? Math.min(asked.length, 15) : asked.length });
     aiRequest.current?.abort();
     const controller = new AbortController();
     aiRequest.current = controller;
-    fetch('/api/import/suggest', {
+    fetch(source === 'web' ? '/api/import/suggest/web' : '/api/import/suggest', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rows: asked }),
@@ -59,17 +70,25 @@ export default function IncompleteReviewModal({ onClose, onApplied }) {
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((res) => {
-        if (!res.available) { setAi({ status: 'error', error: res.reason === 'budget' ? 'budget' : 'failed' }); return; }
+        if (!res.available) { setState({ status: 'error', error: res.reason === 'budget' ? 'budget' : 'failed' }); return; }
         const byId = new Map(res.suggestions.filter((x) => x.categoryId).map((x) => [x.id, x]));
-        // Solo la categoria, e solo sulle righe ancora vuote: l'IA completa, non sovrascrive.
         setRows((rs) => rs.map((r) => {
           const s = byId.get(r._rowId);
-          if (!s || r.categoryId || r._catManual) return r;
-          return { ...r, categoryId: s.categoryId, subCategory1Id: s.subCategory1Id, _src: 'ai', _confidence: s.confidence, apply: true };
+          // Una riga incerta si può sostituire con un suggerimento affidabile o più sicuro.
+          if (!s || r._catManual || (r.categoryId && !(r._uncertain && (!s.uncertain || s.confidence > (r._confidence ?? 0))))) return r;
+          return {
+            ...r, categoryId: s.categoryId, subCategory1Id: s.subCategory1Id, _src: source,
+            _confidence: s.confidence, _uncertain: s.uncertain, _kind: s.kind ?? null, apply: !s.uncertain,
+          };
         }));
-        setAi({ status: res.error && byId.size === 0 ? 'error' : 'done', asked: asked.length, suggested: byId.size, costUsd: res.costUsd, error: res.error, fallbackModel: res.fallbackModel });
+        const confident = res.suggestions.filter((x) => x.categoryId && !x.uncertain).length;
+        setState({
+          status: res.error && byId.size === 0 ? 'error' : 'done', asked: asked.length, suggested: confident,
+          uncertain: byId.size - confident, costUsd: res.costUsd, searches: res.searches, error: res.error,
+          fallbackModel: res.fallbackModel, skipped: res.skipped,
+        });
       })
-      .catch((err) => { if (err.name !== 'AbortError') setAi({ status: 'error', error: 'failed' }); });
+      .catch((err) => { if (err.name !== 'AbortError') setState({ status: 'error', error: 'failed' }); });
   };
 
   useEffect(() => {
@@ -96,11 +115,11 @@ export default function IncompleteReviewModal({ onClose, onApplied }) {
   const setCategory = (i, field, value) => update(i, {
     [field]: value || null,
     ...(field === 'categoryId' ? { subCategory1Id: null } : {}),
-    _src: null, _catManual: true, apply: Boolean(field === 'categoryId' ? value : rows[i].categoryId),
+    _src: null, _uncertain: false, _catManual: true, apply: Boolean(field === 'categoryId' ? value : rows[i].categoryId),
   });
 
   const toApply = rows.filter((r) => r.apply && r.categoryId);
-  const pending = rows.filter(needsSuggestion);
+  const pending = rows.filter(isPending);
   const local = rows.filter((r) => ['keyword', 'history', 'bank'].includes(r._src)).length;
 
   const handleApply = async () => {
@@ -124,7 +143,8 @@ export default function IncompleteReviewModal({ onClose, onApplied }) {
   const sourceTitle = (r) => {
     if (r._src === 'history') return tAi('historyTitle', { count: r._support ?? 0, text: r._text ?? '' });
     if (r._src === 'bank') return tAi('bankTitle', { count: r._support ?? 0, label: r.bankCategory });
-    if (r._src === 'ai') return tAi('categoryTitle', { pct: Math.round((r._confidence ?? 0) * 100) });
+    if (r._src === 'web' && r._kind) return tAi('webTitle', { kind: r._kind, pct: Math.round((r._confidence ?? 0) * 100) });
+    if (r._src === 'ai' || r._src === 'web') return tAi('categoryTitle', { pct: Math.round((r._confidence ?? 0) * 100) });
     return '';
   };
 
@@ -154,6 +174,7 @@ export default function IncompleteReviewModal({ onClose, onApplied }) {
             {ai.status === 'done' && (
               <div className="alert text-sm py-2" role="status">
                 <span>{tAi('done', { suggested: ai.suggested, asked: ai.asked, cost: fmtUsd(ai.costUsd) })}</span>
+                {ai.uncertain > 0 && <span className="text-base-content/60">{t('uncertainCount', { count: ai.uncertain })}</span>}
                 {ai.fallbackModel && <span className="text-base-content/60">{tAi('withFallback', { model: ai.fallbackModel })}</span>}
               </div>
             )}
@@ -162,15 +183,42 @@ export default function IncompleteReviewModal({ onClose, onApplied }) {
                 <span>{tAi(`errors.${ai.error === 'budget' ? 'budget' : 'failed'}`)}</span>
               </div>
             )}
+            {web.status === 'loading' && (
+              <div className="alert alert-info text-sm py-2" role="status">
+                <span className="loading loading-spinner loading-sm" />
+                <span>{tAi('webLoading', { count: web.asked })}</span>
+              </div>
+            )}
+            {web.status === 'done' && (
+              <div className="alert text-sm py-2" role="status">
+                <span>{tAi('webDone', { suggested: web.suggested, asked: Math.min(web.asked, 15), searches: web.searches, cost: fmtUsd(web.costUsd) })}</span>
+                {web.uncertain > 0 && <span className="text-base-content/60">{t('uncertainCount', { count: web.uncertain })}</span>}
+                {web.skipped > 0 && <span className="text-base-content/60">{tAi('webSkipped', { count: web.skipped })}</span>}
+              </div>
+            )}
+            {web.status === 'error' && (
+              <div className="alert alert-warning text-sm py-2" role="status">
+                <span>{tAi(`errors.${web.error === 'budget' ? 'budget' : 'failed'}`)}</span>
+              </div>
+            )}
 
             {pending.length > 0 && (
               <div className="flex gap-2 justify-end flex-wrap">
-                <button className="btn btn-outline btn-xs" onClick={() => setPreview(pending)}>{tAi('previewButton')}</button>
+                <button className="btn btn-outline btn-xs" onClick={() => { setPreviewMode('categorize'); setPreview(pending); }}>{tAi('previewButton')}</button>
                 {data.aiAvailable && (
                   <button className="btn btn-info btn-xs" onClick={() => requestSuggestions(rows)} disabled={ai.status === 'loading'}>
                     {ai.status === 'loading' && <span className="loading loading-spinner loading-xs" />}
                     {tAi('suggestButton', { count: pending.length })}
                   </button>
+                )}
+                {data.webAvailable && ['done', 'error'].includes(ai.status) && (
+                  <>
+                    <button className="btn btn-outline btn-xs" onClick={() => { setPreviewMode('web'); setPreview(pending); }}>{tAi('webPreviewButton')}</button>
+                    <button className="btn btn-warning btn-xs" onClick={() => requestSuggestions(rows, 'web')} disabled={web.status === 'loading'}>
+                      {web.status === 'loading' && <span className="loading loading-spinner loading-xs" />}
+                      {tAi('webButton', { count: Math.min(pending.length, 15), cost: fmtUsd(data.webRowUsd) })}
+                    </button>
+                  </>
                 )}
               </div>
             )}
@@ -218,7 +266,9 @@ export default function IncompleteReviewModal({ onClose, onApplied }) {
                             </select>
                           )}
                           {r._src && r.categoryId && (
-                            <span className={`badge badge-xs ${BADGE[r._src]}`} title={sourceTitle(r)}>{t(`sources.${r._src}`)}</span>
+                            <span className={`badge badge-xs ${r._uncertain ? 'badge-warning badge-outline' : BADGE[r._src]}`} title={sourceTitle(r)}>
+                              {r._uncertain ? t('uncertainBadge', { source: t(`sources.${r._src}`) }) : t(`sources.${r._src}`)}
+                            </span>
                           )}
                         </div>
                       </td>
@@ -242,7 +292,7 @@ export default function IncompleteReviewModal({ onClose, onApplied }) {
         </div>
       </div>
       <button className="modal-backdrop" aria-label={tCommon('close')} onClick={onClose} />
-      {preview && <AiPreviewModal rows={preview} onClose={() => setPreview(null)} />}
+      {preview && <AiPreviewModal rows={preview} mode={previewMode} onClose={() => setPreview(null)} />}
     </div>
   );
 }

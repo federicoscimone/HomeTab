@@ -22,7 +22,7 @@ export default function ImportWizard({ sampleHref }) {
   const [templates, setTemplates] = useState(null);
   const [categories, setCategories] = useState([]);
   const [parsedRows, setParsedRows] = useState([]);
-  const [ai, setAi] = useState({ available: false, autoSuggest: false });
+  const [ai, setAi] = useState({ available: false, autoSuggest: false, webAvailable: false, webRowUsd: 0 });
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function ImportWizard({ sampleHref }) {
     });
   }, [tCommon]);
 
-  const handleParsed = async (rows, { aiAvailable = false, aiAutoSuggest = false } = {}) => {
+  const handleParsed = async (rows, { aiAvailable = false, aiAutoSuggest = false, webAvailable = false, webRowUsd = 0 } = {}) => {
     if (rows.length === 0) {
       setError(t('noValidRows'));
       return;
@@ -72,7 +72,7 @@ export default function ImportWizard({ sampleHref }) {
     }
 
     setParsedRows(rows);
-    setAi({ available: aiAvailable, autoSuggest: aiAutoSuggest });
+    setAi({ available: aiAvailable, autoSuggest: aiAutoSuggest, webAvailable, webRowUsd });
     setStep(2);
   };
 
@@ -110,6 +110,8 @@ export default function ImportWizard({ sampleHref }) {
           categories={categories}
           aiAvailable={ai.available}
           aiAutoSuggest={ai.autoSuggest}
+          webAvailable={ai.webAvailable}
+          webRowUsd={ai.webRowUsd}
           onImported={() => setStep(3)}
           onSaved={() => router.push('/movimenti')}
           onBack={() => { setStep(1); setError(''); }}

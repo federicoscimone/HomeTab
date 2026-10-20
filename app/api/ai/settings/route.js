@@ -21,6 +21,7 @@ const CHANGE_LABELS = {
   importEffort: 'effort per l\'import',
   monthlyBudgetUsd: 'tetto mensile',
   importAutoSuggest: 'suggerimenti automatici nell\'import',
+  importWebSearch: 'ricerca web degli esercenti',
   'anthropicApiKey:replaced': 'chiave Anthropic sostituita',
   'anthropicApiKey:removed': 'chiave Anthropic eliminata',
 };
@@ -50,6 +51,7 @@ async function settingsView() {
       importEffort: settings.importEffort,
       monthlyBudgetUsd: settings.monthlyBudgetUsd,
       importAutoSuggest: settings.importAutoSuggest,
+      importWebSearch: settings.importWebSearch,
     },
     keys: { anthropic: { configured: Boolean(source), source, hint, unreadable } },
     catalog: providerCatalog().map((p) => ({
