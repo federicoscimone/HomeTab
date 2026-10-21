@@ -31,11 +31,14 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
 - **Chat on your data** — optional, read-only: questions like "how much did we spend on
   restaurants this year compared with last year?" are answered through tool calls to the same
   functions as the reports, so the model never does the arithmetic, and every answer links to the
-  page that shows the same number. Measured at 30/30 correct on a ten-question set, one or two
-  cents per question ([docs/ai.md](docs/ai.md#chat-on-the-data)). Off in the public demo.
+  page that shows the same number. Every answer correct over four runs of an eleven-question set,
+  one or two cents per question ([docs/ai.md](docs/ai.md#chat-on-the-data)). Off in the public demo.
 - **Reports** — monthly dashboard, category × month pivot, year-over-year comparison by
   category, custom date ranges with a year-end projection. Movements, the pivot and the
   custom-range analysis export to Excel.
+- **Similar households** — your average monthly spending by category next to the ISTAT average
+  for households with the same number of members in your region (2025 survey), from a versioned
+  snapshot of ISTAT's SDMX data; housing excludes imputed rent ([docs/istat.md](docs/istat.md)).
 - **Savings goals** — the savings of each closed month are split among goals; every goal shows
   the monthly amount it needs and its estimated arrival date.
 - **Two-step verification and Telegram** — optional for each user: after the password, a
@@ -143,7 +146,8 @@ A few decisions worth a look in the code:
 
 ## Roadmap
 
-- Comparison with ISTAT data on the spending of similar Italian households
+- Saving suggestions: signals computed by the code (subscriptions, growing categories, gaps from
+  similar households), ranked and explained by the AI
 
 ## Security notes
 

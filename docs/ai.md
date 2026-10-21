@@ -110,10 +110,10 @@ The **Ask** page answers questions such as "how much did we spend on restaurants
 compared with last year?" or "how much is missing for the new car goal?". It is read-only and
 uses the same functions as the reports.
 
-**The model doesn't compute; it picks.** It has five tools (`lib/ai/agent/tools.js`): month
+**The model doesn't compute; it picks.** It has six tools (`lib/ai/agent/tools.js`): month
 summary, totals by category or subcategory with the year-over-year comparison, any two date
-ranges compared, movement search, savings goals. The code computes every number. Each result
-carries the amounts already formatted, which the model must quote verbatim, and the link to the
+ranges compared, movement search, savings goals, comparison with similar households. The code
+computes every number. Each result carries the amounts already formatted, which the model must quote verbatim, and the link to the
 app page that shows the same number with the same filters, so every answer can be checked with
 one click. The tools use the pages' defaults (traditional payments, meal vouchers excluded),
 otherwise the chat and the linked page would disagree.
@@ -121,8 +121,8 @@ otherwise the chat and the linked page would disagree.
 **Why tools and not RAG.** The questions are about numbers, and numbers come from aggregations,
 not from text similar to the question: retrieving "relevant" movements and asking the model to
 sum them is how a chat invents totals. Tool use keeps arithmetic in the database. External data
-(the ISTAT comparison on the roadmap) will be a versioned snapshot behind one more tool, not a
-live call. A vector index would earn its place only with a large body of free text, which
+(the ISTAT comparison, [docs/istat.md](istat.md)) are a versioned snapshot behind one more tool,
+not a live call. A vector index would earn its place only with a large body of free text, which
 HomeTab does not have.
 
 **The loop** (`lib/ai/agent/run.js`) is written by hand on LangChain, not a ready-made agent:
@@ -135,9 +135,10 @@ browser tab (the last 6 turns are sent back with each question): nothing is save
 Default model: Claude Sonnet 5.5 with low effort, chosen from the same settings page. A question
 costs one or two cents.
 
-**Measured** with `node scripts/chat-eval.js` on the demo data: ten questions whose expected
-answers are read from the pages' own APIs (dashboard, reports, movements, goals), one of them off
-topic. On 2026-10-21 with Sonnet 5.5: 30 correct out of 30 over three runs, about $0.08 per run.
+**Measured** with `node scripts/chat-eval.js` on the demo data: eleven questions whose expected
+answers are read from the pages' own APIs (dashboard, reports, movements, goals, similar
+households), one of them off topic. On 2026-10-21 with Sonnet 5.5, every answer was correct over
+four runs (three of the first ten questions, one of all eleven), about $0.10 per run.
 
 ## 1. Get an API key with a spending limit
 
@@ -357,10 +358,10 @@ La pagina **Chiedi** risponde a domande come «quanto abbiamo speso in ristorant
 rispetto all'anno scorso?» o «quanto manca per l'obiettivo dell'auto nuova?». È in sola lettura
 e usa le stesse funzioni dei report.
 
-**Il modello non calcola: sceglie.** Ha cinque strumenti (`lib/ai/agent/tools.js`): riepilogo
+**Il modello non calcola: sceglie.** Ha sei strumenti (`lib/ai/agent/tools.js`): riepilogo
 del mese, totali per categoria o sottocategoria con il confronto sull'anno prima, confronto fra
-due intervalli qualsiasi, ricerca dei movimenti, obiettivi di risparmio. Ogni numero lo calcola
-il codice. Ogni risultato porta gli importi già formattati, che il modello deve citare così come
+due intervalli qualsiasi, ricerca dei movimenti, obiettivi di risparmio, confronto con le
+famiglie simili. Ogni numero lo calcola il codice. Ogni risultato porta gli importi già formattati, che il modello deve citare così come
 sono, e il link alla pagina dell'app che mostra lo stesso numero con gli stessi filtri: ogni
 risposta si verifica con un clic. Gli strumenti usano i valori predefiniti delle pagine
 (pagamenti tradizionali, buoni pasto esclusi), altrimenti chat e pagina collegata non
@@ -369,7 +370,7 @@ coinciderebbero.
 **Perché strumenti e non RAG.** Le domande riguardano numeri, e i numeri vengono da
 aggregazioni, non da testi simili alla domanda: recuperare i movimenti «pertinenti» e chiedere al
 modello di sommarli è il modo in cui una chat inventa i totali. Con gli strumenti l'aritmetica
-resta nel database. I dati esterni (il confronto ISTAT in programma) saranno un'istantanea
+resta nel database. I dati esterni (il confronto ISTAT, [docs/istat.md](istat.md)) sono un'istantanea
 versionata dietro un altro strumento, non una chiamata dal vivo. Un indice vettoriale avrebbe
 senso solo con una grande mole di testo libero, che HomeTab non ha.
 
@@ -383,10 +384,11 @@ del browser (gli ultimi 6 turni si rimandano a ogni domanda): sul server non si 
 Modello predefinito: Claude Sonnet 5.5 con effort basso, scelto dalla stessa pagina delle
 impostazioni. Una domanda costa uno o due centesimi.
 
-**Misurata** con `node scripts/chat-eval.js` sui dati della demo: dieci domande le cui risposte
-attese si leggono dalle API delle pagine (dashboard, report, movimenti, obiettivi), una delle
-quali fuori tema. Il 21 ottobre 2026 con Sonnet 5.5: 30 corrette su 30 in tre passate, circa
-0,08 $ a passata.
+**Misurata** con `node scripts/chat-eval.js` sui dati della demo: undici domande le cui risposte
+attese si leggono dalle API delle pagine (dashboard, report, movimenti, obiettivi, famiglie
+simili), una delle quali fuori tema. Il 21 ottobre 2026 con Sonnet 5.5 tutte le risposte sono
+state giuste in quattro passate (tre sulle prime dieci domande, una su tutte e undici), circa
+0,10 $ a passata.
 
 ## 1. Procurati una chiave API con un limite di spesa
 

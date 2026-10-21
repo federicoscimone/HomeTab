@@ -37,8 +37,12 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
 - **Chat sui dati**: facoltativa, in sola lettura. Domande come «quanto abbiamo speso in
   ristoranti quest'anno rispetto all'anno scorso?» ricevono risposta chiamando le stesse funzioni
   dei report, quindi il modello non fa mai i conti, e ogni risposta porta il link alla pagina che
-  mostra lo stesso numero. Misurata a 30 risposte giuste su 30 con un set di dieci domande, uno o
-  due centesimi a domanda ([docs/ai.md](docs/ai.md#la-chat-sui-dati)). Spenta nella demo pubblica.
+  mostra lo stesso numero. Tutte le risposte giuste in quattro passate di un set di undici
+  domande, uno o due centesimi a domanda ([docs/ai.md](docs/ai.md#la-chat-sui-dati)). Spenta nella demo pubblica.
+- **Famiglie simili**: le vostre spese medie mensili per capitolo accanto alla media ISTAT delle
+  famiglie con lo stesso numero di componenti nella vostra regione (indagine 2025), da
+  un'istantanea versionata dei dati SDMX di ISTAT; la casa è senza affitti figurativi
+  ([docs/istat.md](docs/istat.md#confronto-con-le-famiglie-simili)).
 - **Obiettivi di risparmio**: il risparmio di ogni mese chiuso si ripartisce tra gli obiettivi;
   per ciascuno si vedono la quota mensile che serve e la data prevista di arrivo.
 - **Verifica in due passaggi e Telegram**: facoltativa per ogni utente; dopo la password serve
@@ -148,7 +152,8 @@ Alcune scelte che vale la pena guardare nel codice:
 
 ## Roadmap
 
-- Confronto con i dati ISTAT sulla spesa delle famiglie italiane simili
+- Consigli di risparmio: segnali calcolati dal codice (abbonamenti, categorie in crescita, scarti
+  dalle famiglie simili), ordinati e spiegati dall'IA
 
 ## Note di sicurezza
 
