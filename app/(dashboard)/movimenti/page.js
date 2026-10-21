@@ -48,11 +48,13 @@ function SortTh({ field, current, dir, onClick, className = '', children }) {
   );
 }
 
-/** @typedef {{ from:string, to:string, categoryIds:string[], paymentMethod:string, paymentGroup:string, search:string, type:string, incomplete:boolean, excludeFromAnalysis:boolean }} Filters */
+/** @typedef {{ from:string, to:string, categoryIds:string[], paymentMethod:string, paymentGroup:string, search:string, type:string, incomplete:boolean, excludeFromAnalysis:boolean, inAnalysis:boolean }} Filters */
 
 /** @type {Filters} */
 const EMPTY_FILTERS = {
   from: '', to: '', categoryIds: [], paymentMethod: '', paymentGroup: '', search: '', type: '', incomplete: false, excludeFromAnalysis: false,
+  // Solo i movimenti che entrano nelle analisi: arriva dai link della chat, per verificarne un totale.
+  inAnalysis: false,
 };
 
 /**
@@ -66,8 +68,11 @@ function filtersFromSearchParams(searchParams) {
     to: searchParams.get('to') || '',
     categoryIds: (searchParams.get('categoryIds') || '').split(',').map(v => v.trim()).filter(Boolean),
     type: searchParams.get('type') || '',
+    search: searchParams.get('search') || '',
+    paymentGroup: searchParams.get('paymentGroup') || '',
     incomplete: searchParams.get('incomplete') === '1',
     excludeFromAnalysis: searchParams.get('excludeFromAnalysis') === '1',
+    inAnalysis: searchParams.get('inAnalysis') === '1',
   };
 }
 
@@ -90,6 +95,7 @@ function expensesQuery(f, p, s, sd) {
   if (f.type)          params.set('type',          f.type);
   if (f.incomplete)    params.set('incomplete',    '1');
   if (f.excludeFromAnalysis) params.set('excludeFromAnalysis', '1');
+  if (f.inAnalysis)    params.set('inAnalysis',    '1');
   return params.toString();
 }
 
@@ -108,6 +114,7 @@ export default function SpesePage() {
   const searchParamsKey = searchParams.toString();
   const [expenses, setExpenses]     = useState([]);
   const [total,    setTotal]        = useState(0);
+  const [sums,     setSums]         = useState(null);
   const [pages,    setPages]        = useState(1);
   const [page,     setPage]         = useState(1);
   const [categories, setCategories] = useState([]);
@@ -175,6 +182,7 @@ export default function SpesePage() {
       .then(data => {
         setExpenses(data.expenses || []);
         setTotal(data.total || 0);
+        setSums(data.sums ?? null);
         setPages(data.pages || 1);
         setLoaded({ key: requestKey, error: false });
       })
@@ -334,7 +342,7 @@ export default function SpesePage() {
       .catch(() => {});
   };
 
-  const hasActiveFilters = activeFilters.from || activeFilters.to || activeFilters.categoryIds.length > 0 || activeFilters.paymentMethod || activeFilters.paymentGroup || activeFilters.search || activeFilters.type || activeFilters.incomplete || activeFilters.excludeFromAnalysis;
+  const hasActiveFilters = activeFilters.from || activeFilters.to || activeFilters.categoryIds.length > 0 || activeFilters.paymentMethod || activeFilters.paymentGroup || activeFilters.search || activeFilters.type || activeFilters.incomplete || activeFilters.excludeFromAnalysis || activeFilters.inAnalysis;
 
   return (
     <div>
@@ -343,8 +351,12 @@ export default function SpesePage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold">{t('title')}</h1>
           {!loading && (
-            <p className="text-sm text-base-content/50">{t('found', { count: total })}</p>
+            <p className="text-sm text-base-content/50">
+              {t('found', { count: total })}
+              {sums && total > 0 && ` · ${t('sums', { expense: fmtFull(sums.expense), income: fmtFull(sums.income) })}`}
+            </p>
           )}
+          {activeFilters.inAnalysis && <p className="text-xs text-base-content/50">{t('inAnalysisNote')}</p>}
         </div>
         <div className="flex gap-2">
           <button

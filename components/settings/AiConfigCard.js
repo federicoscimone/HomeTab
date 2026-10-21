@@ -26,6 +26,8 @@ export default function AiConfigCard({ data, onSaved }) {
     importModel: settings.importModel.value,
     importFallbackModel: settings.importFallbackModel.value,
     importEffort: settings.importEffort.value,
+    chatModel: settings.chatModel.value,
+    chatEffort: settings.chatEffort.value,
     monthlyBudgetUsd: String(settings.monthlyBudgetUsd.value),
     importAutoSuggest: settings.importAutoSuggest.value === true,
     importWebSearch: settings.importWebSearch.value === true,
@@ -35,6 +37,15 @@ export default function AiConfigCard({ data, onSaved }) {
   const [message, setMessage] = useState(null); // { kind: 'success'|'error'|'info', text }
 
   const key = keys.anthropic;
+  const modelOptions = catalog.map((p) => (
+    <optgroup key={p.id} label={p.label}>
+      {p.models.map((m) => (
+        <option key={m.id} value={m.id}>
+          {t('modelOption', { model: m.id.split(':')[1], input: fmtUsd(m.input), output: fmtUsd(m.output) })}
+        </option>
+      ))}
+    </optgroup>
+  ));
   const disabled = demo || busy;
 
   const save = async (body, okText) => {
@@ -63,6 +74,7 @@ export default function AiConfigCard({ data, onSaved }) {
     save({
       importModel: form.importModel, importFallbackModel: form.importFallbackModel,
       importEffort: form.importEffort, monthlyBudgetUsd: budget,
+      chatModel: form.chatModel, chatEffort: form.chatEffort,
       importAutoSuggest: form.importAutoSuggest,
       importWebSearch: form.importWebSearch,
     }, t('saved'));
@@ -123,15 +135,7 @@ export default function AiConfigCard({ data, onSaved }) {
               onChange={(e) => setForm((f) => ({ ...f, importModel: e.target.value }))}
             >
               <option value="none">{t('modelOff')}</option>
-              {catalog.map((p) => (
-                <optgroup key={p.id} label={p.label}>
-                  {p.models.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {t('modelOption', { model: m.id.split(':')[1], input: fmtUsd(m.input), output: fmtUsd(m.output) })}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
+              {modelOptions}
             </select>
           </label>
 
@@ -144,15 +148,7 @@ export default function AiConfigCard({ data, onSaved }) {
               onChange={(e) => setForm((f) => ({ ...f, importFallbackModel: e.target.value }))}
             >
               <option value="none">{t('fallbackOff')}</option>
-              {catalog.map((p) => (
-                <optgroup key={p.id} label={p.label}>
-                  {p.models.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {t('modelOption', { model: m.id.split(':')[1], input: fmtUsd(m.input), output: fmtUsd(m.output) })}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
+              {modelOptions}
             </select>
             <span className="text-xs text-base-content/60">{t('fallbackHint')}</span>
           </label>
@@ -183,6 +179,32 @@ export default function AiConfigCard({ data, onSaved }) {
               onChange={(e) => setForm((f) => ({ ...f, monthlyBudgetUsd: e.target.value }))}
             />
           </label>
+
+          <label className="flex flex-col gap-1 md:col-span-2">
+            <span className="text-sm font-medium flex flex-wrap items-center gap-2">{t('chatModel')} {sourceBadge(settings.chatModel.source)}</span>
+            <select
+              className="select w-full"
+              value={form.chatModel}
+              disabled={disabled}
+              onChange={(e) => setForm((f) => ({ ...f, chatModel: e.target.value }))}
+            >
+              <option value="none">{t('modelOff')}</option>
+              {modelOptions}
+            </select>
+          </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium flex flex-wrap items-center gap-2">{t('chatEffort')} {sourceBadge(settings.chatEffort.source)}</span>
+            <select
+              className="select w-full"
+              value={form.chatEffort}
+              disabled={disabled}
+              onChange={(e) => setForm((f) => ({ ...f, chatEffort: e.target.value }))}
+            >
+              {efforts.map((e) => <option key={e} value={e}>{t(`efforts.${e}`)}</option>)}
+            </select>
+          </label>
+          <p className="text-xs text-base-content/60 self-end">{t('chatHint')}</p>
 
           <p className="text-xs text-base-content/60 md:col-span-2">{t('effortHint')}</p>
           <label className="md:col-span-2 flex items-start gap-3 cursor-pointer">

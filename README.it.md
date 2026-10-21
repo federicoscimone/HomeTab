@@ -34,6 +34,11 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
   dell'app. I dati personali vengono mascherati prima dell'invio e un tetto mensile rigido
   (3 $ di default) è garantito da una prenotazione atomica; un mese tipico costa pochi centesimi
   ([docs/ai.md](docs/ai.md#import-assistito-dallia)). Spento nella demo pubblica.
+- **Chat sui dati**: facoltativa, in sola lettura. Domande come «quanto abbiamo speso in
+  ristoranti quest'anno rispetto all'anno scorso?» ricevono risposta chiamando le stesse funzioni
+  dei report, quindi il modello non fa mai i conti, e ogni risposta porta il link alla pagina che
+  mostra lo stesso numero. Misurata a 30 risposte giuste su 30 con un set di dieci domande, uno o
+  due centesimi a domanda ([docs/ai.md](docs/ai.md#la-chat-sui-dati)). Spenta nella demo pubblica.
 - **Obiettivi di risparmio**: il risparmio di ogni mese chiuso si ripartisce tra gli obiettivi;
   per ciascuno si vedono la quota mensile che serve e la data prevista di arrivo.
 - **Verifica in due passaggi e Telegram**: facoltativa per ogni utente; dopo la password serve
@@ -143,9 +148,6 @@ Alcune scelte che vale la pena guardare nel codice:
 
 ## Roadmap
 
-- Import assistito dall'IA con Claude: riconoscimento del template di una banca nuova,
-  categorizzazione delle righe che nessuna parola chiave riconosce, con un tetto di spesa mensile
-- Un assistente in chat, in sola lettura, che risponde sui dati usando le stesse funzioni dei report
 - Confronto con i dati ISTAT sulla spesa delle famiglie italiane simili
 
 ## Note di sicurezza

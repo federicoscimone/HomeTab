@@ -22,6 +22,8 @@ const CHANGE_LABELS = {
   monthlyBudgetUsd: 'tetto mensile',
   importAutoSuggest: 'suggerimenti automatici nell\'import',
   importWebSearch: 'ricerca web degli esercenti',
+  chatModel: 'modello della chat',
+  chatEffort: 'effort della chat',
   'anthropicApiKey:replaced': 'chiave Anthropic sostituita',
   'anthropicApiKey:removed': 'chiave Anthropic eliminata',
 };
@@ -52,6 +54,8 @@ async function settingsView() {
       monthlyBudgetUsd: settings.monthlyBudgetUsd,
       importAutoSuggest: settings.importAutoSuggest,
       importWebSearch: settings.importWebSearch,
+      chatModel: settings.chatModel,
+      chatEffort: settings.chatEffort,
     },
     keys: { anthropic: { configured: Boolean(source), source, hint, unreadable } },
     catalog: providerCatalog().map((p) => ({
@@ -61,6 +65,7 @@ async function settingsView() {
     efforts: EFFORTS,
     maxBudgetUsd: MAX_BUDGET_USD,
     import: (({ available, reason, model }) => ({ available, reason, model }))(aiAvailability('importCategorize', doc)),
+    chat: (({ available, reason, model }) => ({ available, reason, model }))(aiAvailability('chat', doc)),
     month,
     spentUsd: microToUsd(spentMicro),
     capUsd: microToUsd(capMicro(settings.monthlyBudgetUsd.value)),

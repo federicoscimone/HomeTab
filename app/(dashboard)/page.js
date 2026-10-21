@@ -14,6 +14,7 @@ import PaymentGroupBar from '@/components/dashboard/PaymentGroupBar';
 import { useTranslations } from 'next-intl';
 import { useApiData } from '@/lib/hooks/useApiData';
 import { useFormat } from '@/lib/hooks/useFormat';
+import { intIn, oneOf, useInitialParams } from '@/lib/hooks/useInitialParams';
 
 /**
  * Dashboard page — renders a monthly snapshot with stat cards, charts,
@@ -27,9 +28,15 @@ export default function DashboardPage() {
   const tPay = useTranslations('payments');
   const { locale, fmtFull, monthsShort, monthsLong } = useFormat();
   const now = new Date();
-  const [month,   setMonth]   = useState(now.getMonth() + 1);
-  const [year,    setYear]    = useState(now.getFullYear());
-  const [paymentGroup, setPaymentGroup] = useState('traditional'); // traditional | alternative | all
+  // Valori iniziali anche dall'URL: i link della chat aprono la dashboard sul mese citato.
+  const initial = useInitialParams({
+    month: { fallback: now.getMonth() + 1, parse: Number, valid: intIn(1, 12) },
+    year: { fallback: now.getFullYear(), parse: Number, valid: intIn(2000, 2100) },
+    paymentGroup: { fallback: 'traditional', valid: oneOf('traditional', 'alternative', 'all') },
+  });
+  const [month,   setMonth]   = useState(initial.month);
+  const [year,    setYear]    = useState(initial.year);
+  const [paymentGroup, setPaymentGroup] = useState(initial.paymentGroup); // traditional | alternative | all
 
   const query = new URLSearchParams({ year: String(year), month: String(month), paymentGroup });
   const { data, loading, error } = useApiData(`/api/dashboard?${query}`, 'dashboard');
