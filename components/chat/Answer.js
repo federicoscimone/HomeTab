@@ -8,7 +8,7 @@ import Link from 'next/link';
  * esterno scritto dal modello, magari suggerito da una causale costruita apposta, potrebbe
  * portare fuori i dati con un clic. Quelli esterni restano testo.
  */
-function inline(text, keyBase) {
+function inline(text, keyBase, onLinkClick) {
   const parts = [];
   const re = /\*\*([^*]+)\*\*|\[([^\]]+)\]\(([^)\s]+)\)/g;
   let last = 0;
@@ -17,7 +17,7 @@ function inline(text, keyBase) {
   while ((m = re.exec(text))) {
     if (m.index > last) parts.push(text.slice(last, m.index));
     if (m[1] !== undefined) parts.push(<strong key={`${keyBase}-b${i}`}>{m[1]}</strong>);
-    else if (/^\/(?!\/)/.test(m[3])) parts.push(<Link key={`${keyBase}-l${i}`} href={m[3]} className="link link-primary">{m[2]}</Link>);
+    else if (/^\/(?!\/)/.test(m[3])) parts.push(<Link key={`${keyBase}-l${i}`} href={m[3]} className="link link-primary" onClick={onLinkClick}>{m[2]}</Link>);
     else parts.push(`${m[2]} (${m[3]})`);
     last = re.lastIndex;
     i += 1;
@@ -43,8 +43,8 @@ function runs(lines) {
   return out;
 }
 
-/** @param {{ text: string }} props */
-export default function Answer({ text }) {
+/** @param {{ text: string, onLinkClick?: () => void }} props */
+export default function Answer({ text, onLinkClick }) {
   const blocks = text.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
   return (
     <div className="flex flex-col gap-2 text-sm leading-relaxed">
@@ -53,11 +53,11 @@ export default function Answer({ text }) {
         if (run.list) {
           return (
             <ul key={key} className="list-disc pl-5">
-              {run.lines.map((l, li) => <li key={li}>{inline(l.replace(LIST_RE, ''), `${key}-${li}`)}</li>)}
+              {run.lines.map((l, li) => <li key={li}>{inline(l.replace(LIST_RE, ''), `${key}-${li}`, onLinkClick)}</li>)}
             </ul>
           );
         }
-        return <p key={key}>{run.lines.flatMap((l, li) => (li ? [<br key={`br${li}`} />, ...inline(l, `${key}-${li}`)] : inline(l, `${key}-${li}`)))}</p>;
+        return <p key={key}>{run.lines.flatMap((l, li) => (li ? [<br key={`br${li}`} />, ...inline(l, `${key}-${li}`, onLinkClick)] : inline(l, `${key}-${li}`, onLinkClick)))}</p>;
       }))}
     </div>
   );

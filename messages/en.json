@@ -46,7 +46,6 @@
     "movements": "Transactions",
     "newMovement": "New transaction",
     "import": "Import",
-    "chat": "Ask",
     "goals": "Goals",
     "reports": "Reports",
     "pivot": "Monthly pivot",
@@ -786,10 +785,10 @@
     "cost": "cost {cost}",
     "footnote": "Answers use only this app’s data, read-only. The conversation stays in this browser tab and is not saved.",
     "examples": {
-      "q1": "How much did we spend on restaurants this year compared with last year?",
-      "q2": "How did last month go?",
-      "q3": "Which categories grew the most this year?",
-      "q4": "How are the savings goals doing?"
+      "q1": "How much will we have saved this year at this pace?",
+      "q2": "Where can we improve to save more?",
+      "q3": "Will we reach our goals?",
+      "q4": "How much did we spend on restaurants this year compared with last year?"
     },
     "tools": {
       "riepilogo_mese": "month summary",
@@ -798,7 +797,8 @@
       "cerca_movimenti": "movement search",
       "stato_obiettivi": "goals",
       "confronto_istat": "similar households",
-      "segnali_risparmio": "saving signals"
+      "segnali_risparmio": "saving signals",
+      "proiezione_anno": "year projection"
     },
     "unavailable": {
       "demo": "Chat is off in the public demo: anyone could use up the credit.",
@@ -809,7 +809,10 @@
       "unavailable": "Chat is not available right now.",
       "tooManySteps": "The question needed too many steps: try asking it more precisely.",
       "failed": "The answer did not arrive. Try again."
-    }
+    },
+    "subtitle": "Answers with the app’s numbers, with a link to check them",
+    "open": "Open the chat",
+    "close": "Close the chat"
   },
   "goalStates": {
     "on_track": {
@@ -1064,7 +1067,8 @@
       "importCategorizeFallback": "Categories, second pass",
       "importWebSearch": "Web search",
       "chat": "Data chat",
-      "advice": "Saving suggestions"
+      "advice": "Saving suggestions",
+      "istatMapping": "ISTAT categories"
     },
     "outcomes": {
       "ok": "Succeeded",
@@ -1462,7 +1466,12 @@
       "defaultsApplied": "{n, plural, =0 {No category to complete.} one {# category completed.} other {# categories completed.}}",
       "saveMapping": "Save categories",
       "saved": "Saved.",
-      "failed": "Could not save"
+      "failed": "Could not save",
+      "suggest": "Suggest with AI",
+      "suggestHint": "Only category names are sent to the model, no movements. It suggests a category for those without one; suggestions are saved only with “Save categories”.",
+      "suggested": "{n, plural, =0 {No suggestion: the remaining categories stay out of the comparison.} one {# suggestion: check it and save.} other {# suggestions: check them and save.}}",
+      "nothingToSuggest": "Every category already has an ISTAT category.",
+      "aiBadge": "AI"
     },
     "divisions": {
       "d01": "Food and non-alcoholic beverages",
@@ -1541,5 +1550,23 @@
       "notConfigured": "AI not configured: the heaviest signals, unexplained",
       "other": "AI unavailable: the heaviest signals, unexplained"
     }
+  },
+  "projection": {
+    "title": "{year} at this pace",
+    "intro": "How much you will have saved by year end if income and expenses follow this year’s trend, and whether goals arrive in time.",
+    "notYet": "At least one closed month, or last year’s data, is needed for an estimate.",
+    "soFar": "Saved so far",
+    "yearEnd": "Expected at year end",
+    "flows": "income {income}, expenses {expense}",
+    "lastYear": "All of {year}",
+    "howSeasonal": "Estimate: the remaining months as the same months last year (year-end bonus and holidays included), adjusted for how this year is going. Traditional payments, like the dashboard.",
+    "howAverage": "Estimate: the remaining months as the average of the closed months, since last year is missing. Traditional payments, like the dashboard.",
+    "goalsTitle": "Will you reach your goals?",
+    "openGoals": "Go to goals",
+    "reach": "expected {reach}, deadline {deadline}",
+    "noReach": "arrival not estimable, deadline {deadline}",
+    "needed": "{required} a month needed, {expected} coming in",
+    "legendActual": "closed months",
+    "legendEstimate": "current month and estimates"
   }
 }

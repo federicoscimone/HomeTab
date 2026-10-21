@@ -43,8 +43,10 @@ would quote it with confidence.
 - **Categories → ISTAT divisions**: each category has a division, set from the page by an
   administrator; a subcategory without one follows its parent ("Utilities → Internet" is
   communication, not housing). Categories created by the seed come with defaults, and **Apply
-  default categories** fills them in on an existing installation. Categories left out are listed
-  with their amount and stay in the total.
+  default categories** fills them in on an existing installation. For categories of your own,
+  **Suggest with AI** sends only the category names (no movements) and fills the menus with its
+  proposals, to check and save; a choice already made is never overwritten. Categories left out
+  are listed with their amount and stay in the total.
 - **ISTAT reference**: region and number of members; where ISTAT does not publish a value (sample
   too small) the page falls back to the macro-area, then to Italy, and says so on that row.
 - **Housing without imputed rent.** ISTAT includes in housing the rent it estimates even for those
@@ -103,8 +105,10 @@ somiglianza potrebbe pescare la regione sbagliata, e il modello la citerebbe con
 - **Categorie → capitoli ISTAT**: ogni categoria ha un capitolo, scelto dalla pagina da un
   amministratore; una sottocategoria senza capitolo segue la madre («Utenze → Internet» è
   comunicazione, non casa). Le categorie create dal seed hanno già quello predefinito, e
-  **Applica i capitoli predefiniti** lo assegna su un'installazione esistente. Le categorie fuori
-  dal confronto sono elencate con il loro importo e restano nel totale.
+  **Applica i capitoli predefiniti** lo assegna su un'installazione esistente. Per le categorie
+  create da voi, **Proponi con l'IA** invia solo i nomi delle categorie (nessun movimento) e riempie
+  i menu con le sue proposte, da controllare e salvare; una scelta già fatta non si sovrascrive.
+  Le categorie fuori dal confronto sono elencate con il loro importo e restano nel totale.
 - **Riferimento ISTAT**: regione e numero di componenti; dove ISTAT non pubblica il valore
   (campione troppo piccolo) si ripiega sulla ripartizione, poi sull'Italia, e la riga lo dice.
 - **Casa senza affitti figurativi.** ISTAT mette nel capitolo casa l'affitto che stima anche per

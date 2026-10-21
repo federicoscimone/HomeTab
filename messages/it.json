@@ -46,7 +46,6 @@
     "movements": "Movimenti",
     "newMovement": "Nuovo movimento",
     "import": "Importa",
-    "chat": "Chiedi",
     "goals": "Obiettivi",
     "reports": "Report",
     "pivot": "Pivot Mensile",
@@ -777,7 +776,7 @@
     "previewWebSummary": "Partirebbero {requests, plural, one {# richiesta} other {# richieste}} a {model} con ricerca web, per {distinct} righe distinte: al massimo una ricerca per riga, costruita da questo testo. Gli esempi dallo storico non partono."
   },
   "chat": {
-    "title": "Chiedi ai tuoi dati",
+    "title": "Chiedi ai vostri dati",
     "intro": "Domande sulle vostre entrate, spese e obiettivi. I numeri li calcolano i report dell’app: l’assistente sceglie quali e li cita, con un link per verificarli.",
     "clear": "Nuova conversazione",
     "placeholder": "Es. quanto abbiamo speso al supermercato questo mese?",
@@ -786,10 +785,10 @@
     "cost": "costo {cost}",
     "footnote": "Le risposte usano solo i dati di questa app, in sola lettura. La conversazione resta in questa scheda del browser e non viene salvata.",
     "examples": {
-      "q1": "Quanto abbiamo speso in ristoranti quest’anno rispetto all’anno scorso?",
-      "q2": "Com’è andato il mese scorso?",
-      "q3": "Quali categorie sono cresciute di più quest’anno?",
-      "q4": "A che punto sono gli obiettivi di risparmio?"
+      "q1": "Quanto avremo risparmiato quest’anno continuando così?",
+      "q2": "Dove possiamo migliorare per risparmiare di più?",
+      "q3": "Riusciremo a raggiungere gli obiettivi?",
+      "q4": "Quanto abbiamo speso in ristoranti quest’anno rispetto all’anno scorso?"
     },
     "tools": {
       "riepilogo_mese": "riepilogo del mese",
@@ -798,7 +797,8 @@
       "cerca_movimenti": "ricerca movimenti",
       "stato_obiettivi": "obiettivi",
       "confronto_istat": "confronto con famiglie simili",
-      "segnali_risparmio": "segnali di risparmio"
+      "segnali_risparmio": "segnali di risparmio",
+      "proiezione_anno": "proiezione dell’anno"
     },
     "unavailable": {
       "demo": "Nella demo pubblica la chat è spenta: chiunque potrebbe consumare il credito.",
@@ -809,7 +809,10 @@
       "unavailable": "La chat non è disponibile in questo momento.",
       "tooManySteps": "La domanda ha richiesto troppi passaggi: prova a riformularla in modo più preciso.",
       "failed": "La risposta non è arrivata. Riprova."
-    }
+    },
+    "subtitle": "Risponde con i numeri dell’app, con il link per verificarli",
+    "open": "Apri la chat",
+    "close": "Chiudi la chat"
   },
   "goalStates": {
     "on_track": {
@@ -1064,7 +1067,8 @@
       "importCategorizeFallback": "Categorie, secondo passaggio",
       "importWebSearch": "Ricerca web",
       "chat": "Chat sui dati",
-      "advice": "Consigli di risparmio"
+      "advice": "Consigli di risparmio",
+      "istatMapping": "Capitoli ISTAT delle categorie"
     },
     "outcomes": {
       "ok": "Riuscita",
@@ -1462,7 +1466,12 @@
       "defaultsApplied": "{n, plural, =0 {Nessuna categoria da completare.} one {# categoria completata.} other {# categorie completate.}}",
       "saveMapping": "Salva capitoli",
       "saved": "Salvato.",
-      "failed": "Salvataggio non riuscito"
+      "failed": "Salvataggio non riuscito",
+      "suggest": "Proponi con l’IA",
+      "suggestHint": "Al modello partono solo i nomi delle categorie, nessun movimento. Propone un capitolo per quelle che non ne hanno; le proposte si salvano solo con «Salva capitoli».",
+      "suggested": "{n, plural, =0 {Nessuna proposta: le categorie rimaste sono fuori dal confronto.} one {# capitolo proposto: controllatelo e salvate.} other {# capitoli proposti: controllateli e salvate.}}",
+      "nothingToSuggest": "Tutte le categorie hanno già un capitolo.",
+      "aiBadge": "IA"
     },
     "divisions": {
       "d01": "Alimentari e bevande analcoliche",
@@ -1541,5 +1550,23 @@
       "notConfigured": "IA non configurata: i segnali più pesanti, senza spiegazione",
       "other": "IA non disponibile: i segnali più pesanti, senza spiegazione"
     }
+  },
+  "projection": {
+    "title": "Il {year} continuando così",
+    "intro": "Quanto avrete risparmiato a fine anno se entrate e uscite seguono l’andamento di quest’anno, e se gli obiettivi arrivano in tempo.",
+    "notYet": "Serve almeno un mese chiuso, o l’anno scorso, per una stima.",
+    "soFar": "Risparmiato finora",
+    "yearEnd": "Previsto a fine anno",
+    "flows": "entrate {income}, uscite {expense}",
+    "lastYear": "Tutto il {year}",
+    "howSeasonal": "Stima: i mesi che mancano come gli stessi mesi dell’anno scorso (tredicesima e vacanze comprese), corretti per come sta andando quest’anno. Pagamenti tradizionali, come la dashboard.",
+    "howAverage": "Stima: i mesi che mancano come la media dei mesi chiusi, perché manca l’anno scorso. Pagamenti tradizionali, come la dashboard.",
+    "goalsTitle": "Riuscirete a raggiungere gli obiettivi?",
+    "openGoals": "Vai agli obiettivi",
+    "reach": "arrivo previsto {reach}, scadenza {deadline}",
+    "noReach": "arrivo non stimabile, scadenza {deadline}",
+    "needed": "servirebbero {required} al mese, ne arrivano {expected}",
+    "legendActual": "mesi chiusi",
+    "legendEstimate": "mese in corso e stime"
   }
 }

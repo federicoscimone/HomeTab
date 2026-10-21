@@ -27,6 +27,7 @@ export default function IstatSettingsCard({ profile, categories, startOpen, onSa
   const [region, setRegion] = useState(profile.region ?? '');
   const [members, setMembers] = useState(profile.members ? String(profile.members) : '');
   const [edits, setEdits] = useState({}); // categoryId → codice o null
+  const [proposed, setProposed] = useState(new Set()); // categorie con il capitolo proposto dall'IA
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
   // Aperta o chiusa solo all'inizio: completare il profilo non deve richiuderla sotto il messaggio.
@@ -47,6 +48,7 @@ export default function IstatSettingsCard({ profile, categories, startOpen, onSa
       const data = await put(body);
       setMessage({ kind: 'success', text: typeof okText === 'function' ? okText(data) : okText });
       setEdits({});
+      setProposed(new Set());
       onSaved();
     } catch (err) {
       setMessage({ kind: 'error', text: err.message || t('settings.failed') });
@@ -54,6 +56,31 @@ export default function IstatSettingsCard({ profile, categories, startOpen, onSa
       setBusy(false);
     }
   };
+
+  /** Proposte dell'IA: riempiono i menu, da controllare; si salvano solo con «Salva capitoli». */
+  const suggest = async () => {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/impostazioni/confronto-istat/suggest', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || '');
+      const ids = Object.keys(data.proposals);
+      setEdits((x) => ({ ...x, ...data.proposals }));
+      setProposed(new Set(ids));
+      setMessage({
+        kind: ids.length ? 'info' : 'success',
+        text: data.toAssign === 0 ? t('settings.nothingToSuggest') : t('settings.suggested', { n: ids.length }),
+      });
+    } catch (err) {
+      setMessage({ kind: 'error', text: err.message || t('settings.failed') });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const aiBadge = (c) => (proposed.has(c._id) && c._id in edits
+    ? <span className="badge badge-sm badge-secondary badge-outline">{t('settings.aiBadge')}</span> : null);
 
   const select = (c, parentCode) => (
     <select
@@ -113,12 +140,12 @@ export default function IstatSettingsCard({ profile, categories, startOpen, onSa
           {tree.map((c) => (
             <li key={c._id} className="flex flex-col gap-1">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm font-medium">{c.name}</span>
+                <span className="text-sm font-medium flex items-center gap-2">{c.name}{aiBadge(c)}</span>
                 {select(c)}
               </div>
               {c.children.map((s) => (
                 <div key={s._id} className="flex flex-wrap items-center justify-between gap-2 pl-4">
-                  <span className="text-sm text-base-content/70">{s.name}</span>
+                  <span className="text-sm text-base-content/70 flex items-center gap-2">{s.name}{aiBadge(s)}</span>
                   {select(s, current(c))}
                 </div>
               ))}
@@ -126,6 +153,9 @@ export default function IstatSettingsCard({ profile, categories, startOpen, onSa
           ))}
         </ul>
         <div className="flex flex-wrap justify-end gap-2">
+          <button type="button" className="btn btn-outline btn-sm" disabled={busy} title={t('settings.suggestHint')} onClick={suggest}>
+            {t('settings.suggest')}
+          </button>
           <button
             type="button"
             className="btn btn-ghost btn-sm"

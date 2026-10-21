@@ -34,12 +34,7 @@ export default function AdviceCard() {
   const t = useTranslations('advice');
   const tIstat = useTranslations('istat');
   const canDo = useCan();
-  const { locale, fmtFull, fmtRound, fmtPct, fmtUsd, fmtDateTime, monthsLong } = useFormat();
-  // Il mese per esteso dentro una frase: «a febbraio 2028», non «a Feb 2028».
-  const monthText = (ym) => {
-    const name = monthsLong[Number(ym.slice(5, 7)) - 1];
-    return `${locale === 'it' ? name.toLowerCase() : name} ${ym.slice(0, 4)}`;
-  };
+  const { fmtFull, fmtRound, fmtPct, fmtUsd, fmtDateTime, fmtMonthText: monthText } = useFormat();
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);

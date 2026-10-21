@@ -8,6 +8,7 @@
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import Sidebar from '@/components/layout/Sidebar';
+import ChatLauncher from '@/components/chat/ChatLauncher';
 
 /**
  * Root layout for all authenticated dashboard pages.
@@ -68,6 +69,9 @@ export default function DashboardLayout({ children }) {
           {children}
         </main>
       </div>
+
+      {/* ── La chat, dal pulsante in basso a destra ──────────────────── */}
+      <ChatLauncher />
     </div>
   );
 }

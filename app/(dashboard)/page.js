@@ -11,6 +11,7 @@ import StatCard from '@/components/dashboard/StatCard';
 import CategoryPieChart from '@/components/dashboard/CategoryPieChart';
 import TrendChart from '@/components/dashboard/TrendChart';
 import AdviceCard from '@/components/dashboard/AdviceCard';
+import YearProjectionCard from '@/components/dashboard/YearProjectionCard';
 import PaymentGroupBar from '@/components/dashboard/PaymentGroupBar';
 import { useTranslations } from 'next-intl';
 import { useApiData } from '@/lib/hooks/useApiData';
@@ -276,6 +277,9 @@ export default function DashboardPage() {
           </div>
         </>
       )}
+
+      {/* ── L'anno continuando così, e gli obiettivi ──────────────────── */}
+      <YearProjectionCard />
 
       {/* ── Consigli di risparmio, solo su richiesta ─────────────────── */}
       <AdviceCard />
