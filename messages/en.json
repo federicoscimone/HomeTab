@@ -46,6 +46,7 @@
     "movements": "Transactions",
     "newMovement": "New transaction",
     "import": "Import",
+    "chat": "Ask",
     "goals": "Goals",
     "reports": "Reports",
     "pivot": "Monthly pivot",
@@ -588,7 +589,9 @@
       "manual": "Manual"
     },
     "completeCategories": "Complete the categories ({count})",
-    "categoriesApplied": "{count, plural, =0 {No category applied.} one {Category applied to # movement.} other {Categories applied to # movements.}}"
+    "categoriesApplied": "{count, plural, =0 {No category applied.} one {Category applied to # movement.} other {Categories applied to # movements.}}",
+    "sums": "outflows {expense} · inflows {income}",
+    "inAnalysisNote": "Only movements included in the analyses, as in the reports."
   },
   "incompleteReview": {
     "title": "Complete the categories",
@@ -771,6 +774,39 @@
     "hint": "Maybe: {name}",
     "hintTitle": "Uncertain suggestion ({pct}%): click to use it",
     "previewWebSummary": "{requests, plural, one {# request} other {# requests}} would go to {model} with web search, for {distinct} distinct rows: at most one search per row, built from this text. Examples from history are not sent."
+  },
+  "chat": {
+    "title": "Ask your data",
+    "intro": "Questions about your income, spending and goals. The numbers come from the app’s reports: the assistant picks which ones and quotes them, with a link to check them.",
+    "clear": "New conversation",
+    "placeholder": "E.g. how much did we spend at the supermarket this month?",
+    "send": "Ask",
+    "failed": "The answer did not arrive. Try again.",
+    "cost": "cost {cost}",
+    "footnote": "Answers use only this app’s data, read-only. The conversation stays in this browser tab and is not saved.",
+    "examples": {
+      "q1": "How much did we spend on restaurants this year compared with last year?",
+      "q2": "How did last month go?",
+      "q3": "Which categories grew the most this year?",
+      "q4": "How are the savings goals doing?"
+    },
+    "tools": {
+      "riepilogo_mese": "month summary",
+      "spese_per_categoria": "spending by category",
+      "confronta_periodi": "period comparison",
+      "cerca_movimenti": "movement search",
+      "stato_obiettivi": "goals"
+    },
+    "unavailable": {
+      "demo": "Chat is off in the public demo: anyone could use up the credit.",
+      "other": "Chat is not available: AI is not configured (Settings → AI)."
+    },
+    "errors": {
+      "budget": "This month’s spending cap is reached: chat resumes on the first of the month.",
+      "unavailable": "Chat is not available right now.",
+      "tooManySteps": "The question needed too many steps: try asking it more precisely.",
+      "failed": "The answer did not arrive. Try again."
+    }
   },
   "goalStates": {
     "on_track": {
@@ -1023,7 +1059,8 @@
       "importCategorize": "Import categories",
       "importTemplate": "Template suggestion",
       "importCategorizeFallback": "Categories, second pass",
-      "importWebSearch": "Web search"
+      "importWebSearch": "Web search",
+      "chat": "Data chat"
     },
     "outcomes": {
       "ok": "Succeeded",
@@ -1049,7 +1086,7 @@
     },
     "modelOff": "Off",
     "modelOption": "{model} · {input} / {output} per million tokens",
-    "effort": "Effort",
+    "effort": "Import effort",
     "efforts": {
       "low": "Low (cheapest)",
       "medium": "Medium",
@@ -1075,7 +1112,10 @@
     "fallbackHint": "Rows the first model leaves without a category are passed again to this more capable one. It works on few rows: it usually costs a few tenths of a cent.",
     "fallbackOff": "None",
     "webSearch": "Web search for unknown merchants",
-    "webSearchHint": "Adds the “Search the web” button for rows no other source recognises. It runs only on request, at most 15 rows at a time; about 1 cent per row with Haiku 5.5, 3 with Sonnet 5.5."
+    "webSearchHint": "Adds the “Search the web” button for rows no other source recognises. It runs only on request, at most 15 rows at a time; about 1 cent per row with Haiku 5.5, 3 with Sonnet 5.5.",
+    "chatModel": "Chat model",
+    "chatEffort": "Chat effort",
+    "chatHint": "The chat answers questions about your data through the app’s tools: a mid-range model is enough, because the code computes the numbers. A question usually costs one or two cents."
   },
   "users": {
     "title": "Users",

@@ -4,12 +4,29 @@ import { buildMovementFilter } from '../lib/utils/movementFilter.js';
 
 const filterOf = (query) => buildMovementFilter(new URLSearchParams(query));
 
+const A = '6ad892ced50ee2dd6fa5d781';
+const B = '6ad892ced50ee2dd6fa5d782';
+
 test('categoria e ricerca insieme: valgono entrambe', () => {
-  const f = filterOf('categoryIds=a,b&search=esselunga');
+  const f = filterOf(`categoryIds=${A},${B}&search=esselunga`);
   assert.equal(f.$or, undefined);
   assert.equal(f.$and.length, 2);
-  assert.deepEqual(f.$and[0].$or[0], { categoryId: { $in: ['a', 'b'] } });
+  assert.deepEqual(f.$and[0].$or[0].categoryId.$in.map(String), [A, B]);
   assert.ok(f.$and[1].$or[0].payee.test('ESSELUNGA SPA'));
+});
+
+test('id di categoria come ObjectId veri: aggregate() non converte le stringhe come find()', async () => {
+  const { default: mongoose } = await import('mongoose');
+  const f = filterOf(`categoryIds=${A},non-un-id`);
+  const ids = f.$and[0].$or[0].categoryId.$in;
+  assert.equal(ids.length, 1);
+  assert.ok(ids[0] instanceof mongoose.Types.ObjectId);
+});
+
+test('solo i movimenti nelle analisi, come nei report', () => {
+  assert.deepEqual(filterOf('inAnalysis=1').excludeFromAnalysis, { $ne: true });
+  // «solo esclusi» vince: le due richieste insieme non avrebbero senso.
+  assert.equal(filterOf('inAnalysis=1&excludeFromAnalysis=1').excludeFromAnalysis, true);
 });
 
 test('solo ricerca: caratteri speciali presi alla lettera', () => {

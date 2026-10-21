@@ -28,6 +28,11 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   Personal data is masked before sending, and a hard monthly cap (default $3) is enforced
   atomically; a typical month costs a few cents ([docs/ai.md](docs/ai.md)). Off in the public
   demo.
+- **Chat on your data** — optional, read-only: questions like "how much did we spend on
+  restaurants this year compared with last year?" are answered through tool calls to the same
+  functions as the reports, so the model never does the arithmetic, and every answer links to the
+  page that shows the same number. Measured at 30/30 correct on a ten-question set, one or two
+  cents per question ([docs/ai.md](docs/ai.md#chat-on-the-data)). Off in the public demo.
 - **Reports** — monthly dashboard, category × month pivot, year-over-year comparison by
   category, custom date ranges with a year-end projection. Movements, the pivot and the
   custom-range analysis export to Excel.
@@ -138,10 +143,6 @@ A few decisions worth a look in the code:
 
 ## Roadmap
 
-- AI-assisted import with Claude: template detection for a new bank, categorization of the rows
-  that no keyword matches, with a hard monthly spending cap
-- A read-only chat assistant that answers questions on your data using the same functions as the
-  reports
 - Comparison with ISTAT data on the spending of similar Italian households
 
 ## Security notes

@@ -8,6 +8,7 @@ import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useApiData } from '@/lib/hooks/useApiData';
 import { useFormat } from '@/lib/hooks/useFormat';
+import { isDate, oneOf, useInitialParams } from '@/lib/hooks/useInitialParams';
 import CategoryBarChart from '@/components/report/CategoryBarChart';
 
 /**
@@ -54,10 +55,17 @@ async function exportExcel(data, from, to, type, labels) {
  * category comparison chart, year-end projection, and weekly breakdown.
  */
 export default function AnalisiPage() {
-  const [from,    setFrom]    = useState(firstDayOfYear());
-  const [to,      setTo]      = useState(todayStr());
-  const [type,    setType]    = useState('expense');
-  const [paymentGroup, setPaymentGroup] = useState('traditional'); // traditional | alternative | all
+  // Valori iniziali anche dall'URL: i link della chat aprono l'analisi sullo stesso intervallo.
+  const initial = useInitialParams({
+    from: { fallback: firstDayOfYear(), valid: isDate },
+    to: { fallback: todayStr(), valid: isDate },
+    type: { fallback: 'expense', valid: oneOf('expense', 'income') },
+    paymentGroup: { fallback: 'traditional', valid: oneOf('traditional', 'alternative', 'all') },
+  });
+  const [from,    setFrom]    = useState(initial.from);
+  const [to,      setTo]      = useState(initial.to);
+  const [type,    setType]    = useState(initial.type);
+  const [paymentGroup, setPaymentGroup] = useState(initial.paymentGroup); // traditional | alternative | all
   const t = useTranslations('reports.analysis');
   const tCommon = useTranslations('common');
   const tGroups = useTranslations('paymentGroups');

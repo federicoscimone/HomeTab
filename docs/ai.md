@@ -3,8 +3,8 @@
 [Versione italiana](#import-assistito-dallia) più sotto.
 
 HomeTab can use a language model while importing a bank statement: to suggest a template for a
-bank it doesn't know yet and a category for the rows that no keyword rule recognises. Everything
-here is optional: without a key the AI features stay off and imports work exactly as before.
+bank it doesn't know yet and a category for the rows that no keyword rule recognises; and to
+answer questions about the data in a [chat](#chat-on-the-data). Everything here is optional: without a key the AI features stay off and imports work exactly as before.
 
 Models are reached through [LangChain](https://js.langchain.com), so the app is not tied to one
 vendor. Out of the box it uses Anthropic's Claude.
@@ -104,6 +104,41 @@ per bank: $0.0004 with Claude Haiku 5.5 on the test statement.
 Measured on 2026-10-20 with Claude Haiku 5.5 on a test statement of 18 rows: 5 recognised by
 keyword rules, 13 sent to the model, 12 categorized plausibly, in 7.7 seconds, for $0.0011.
 
+## Chat on the data
+
+The **Ask** page answers questions such as "how much did we spend on restaurants this year
+compared with last year?" or "how much is missing for the new car goal?". It is read-only and
+uses the same functions as the reports.
+
+**The model doesn't compute; it picks.** It has five tools (`lib/ai/agent/tools.js`): month
+summary, totals by category or subcategory with the year-over-year comparison, any two date
+ranges compared, movement search, savings goals. The code computes every number. Each result
+carries the amounts already formatted, which the model must quote verbatim, and the link to the
+app page that shows the same number with the same filters, so every answer can be checked with
+one click. The tools use the pages' defaults (traditional payments, meal vouchers excluded),
+otherwise the chat and the linked page would disagree.
+
+**Why tools and not RAG.** The questions are about numbers, and numbers come from aggregations,
+not from text similar to the question: retrieving "relevant" movements and asking the model to
+sum them is how a chat invents totals. Tool use keeps arithmetic in the database. External data
+(the ISTAT comparison on the roadmap) will be a versioned snapshot behind one more tool, not a
+live call. A vector index would earn its place only with a large body of free text, which
+HomeTab does not have.
+
+**The loop** (`lib/ai/agent/run.js`) is written by hand on LangChain, not a ready-made agent:
+every step goes through the spending reservation, at most 6 steps, and the instructions with the
+category list carry a cache breakpoint, so from the second step on they are read at 5% of the input price
+(with Sonnet 5.5).
+Answers stream in, and the page shows which tools are running. The conversation stays in the
+browser tab (the last 6 turns are sent back with each question): nothing is saved on the server.
+
+Default model: Claude Sonnet 5.5 with low effort, chosen from the same settings page. A question
+costs one or two cents.
+
+**Measured** with `node scripts/chat-eval.js` on the demo data: ten questions whose expected
+answers are read from the pages' own APIs (dashboard, reports, movements, goals), one of them off
+topic. On 2026-10-21 with Sonnet 5.5: 30 correct out of 30 over three runs, about $0.08 per run.
+
 ## 1. Get an API key with a spending limit
 
 1. On the [Claude Console](https://platform.claude.com) create a workspace for HomeTab and give
@@ -132,7 +167,7 @@ calls.
 - In the public demo the page is read-only: the demo account is an administrator with a public
   password.
 
-**Environment variables** (`AI_MODEL_IMPORT`, `AI_MONTHLY_BUDGET_USD`, `ANTHROPIC_API_KEY`) still
+**Environment variables** (`AI_MODEL_IMPORT`, `AI_MODEL_CHAT`, `AI_MONTHLY_BUDGET_USD`, `ANTHROPIC_API_KEY`) still
 work as a fallback: they apply until a value is saved from the page, which then takes
 precedence. Useful for an installation configured only from files.
 
@@ -195,6 +230,12 @@ sent or received.
 If the LangSmith tracing variables (`LANGSMITH_TRACING`, `LANGCHAIN_TRACING_V2`) were ever set,
 LangChain would also send a copy of the (masked) prompts to LangSmith: leave them unset.
 
+**In the chat** the model receives the question, the category tree, goal names and what the
+tools return: totals, category names and, from the movement search, at most 20 movements with
+date, amount and the same masked description and payee as the import. Tool results are handed
+to the model as data, and no tool can change anything, so a bank description written to look
+like an instruction cannot trigger an action.
+
 In the public demo (`DEMO_MODE=true`) the AI is always off: anyone could use up the credit.
 
 ---
@@ -203,7 +244,8 @@ In the public demo (`DEMO_MODE=true`) the AI is always off: anyone could use up 
 
 HomeTab può usare un modello linguistico durante l'import di un estratto conto: per proporre il
 template di una banca che non conosce ancora e una categoria per le righe che nessuna parola
-chiave riconosce. Tutto è facoltativo: senza chiave le funzioni IA restano spente e l'import
+chiave riconosce; e per rispondere alle domande sui dati in una [chat](#la-chat-sui-dati).
+Tutto è facoltativo: senza chiave le funzioni IA restano spente e l'import
 funziona esattamente come prima.
 
 I modelli passano da [LangChain](https://js.langchain.com), quindi l'app non è legata a un solo
@@ -309,6 +351,43 @@ Misurato il 20 ottobre 2026 con Claude Haiku 5.5 su un estratto conto di prova d
 riconosciute dalle regole, 13 inviate al modello, 12 categorizzate in modo sensato, in 7,7
 secondi, per 0,0011 $.
 
+## La chat sui dati
+
+La pagina **Chiedi** risponde a domande come «quanto abbiamo speso in ristoranti quest'anno
+rispetto all'anno scorso?» o «quanto manca per l'obiettivo dell'auto nuova?». È in sola lettura
+e usa le stesse funzioni dei report.
+
+**Il modello non calcola: sceglie.** Ha cinque strumenti (`lib/ai/agent/tools.js`): riepilogo
+del mese, totali per categoria o sottocategoria con il confronto sull'anno prima, confronto fra
+due intervalli qualsiasi, ricerca dei movimenti, obiettivi di risparmio. Ogni numero lo calcola
+il codice. Ogni risultato porta gli importi già formattati, che il modello deve citare così come
+sono, e il link alla pagina dell'app che mostra lo stesso numero con gli stessi filtri: ogni
+risposta si verifica con un clic. Gli strumenti usano i valori predefiniti delle pagine
+(pagamenti tradizionali, buoni pasto esclusi), altrimenti chat e pagina collegata non
+coinciderebbero.
+
+**Perché strumenti e non RAG.** Le domande riguardano numeri, e i numeri vengono da
+aggregazioni, non da testi simili alla domanda: recuperare i movimenti «pertinenti» e chiedere al
+modello di sommarli è il modo in cui una chat inventa i totali. Con gli strumenti l'aritmetica
+resta nel database. I dati esterni (il confronto ISTAT in programma) saranno un'istantanea
+versionata dietro un altro strumento, non una chiamata dal vivo. Un indice vettoriale avrebbe
+senso solo con una grande mole di testo libero, che HomeTab non ha.
+
+**Il ciclo** (`lib/ai/agent/run.js`) è scritto a mano su LangChain, non un agente pronto: ogni
+passo passa dalla prenotazione di spesa, al massimo 6 passi, e le istruzioni con l'elenco delle
+categorie hanno un punto di cache, così dal secondo passo si leggono al 5% del prezzo
+dell'input (con Sonnet 5.5). La risposta arriva
+in streaming e la pagina mostra quali strumenti sono in uso. La conversazione resta nella scheda
+del browser (gli ultimi 6 turni si rimandano a ogni domanda): sul server non si salva nulla.
+
+Modello predefinito: Claude Sonnet 5.5 con effort basso, scelto dalla stessa pagina delle
+impostazioni. Una domanda costa uno o due centesimi.
+
+**Misurata** con `node scripts/chat-eval.js` sui dati della demo: dieci domande le cui risposte
+attese si leggono dalle API delle pagine (dashboard, report, movimenti, obiettivi), una delle
+quali fuori tema. Il 21 ottobre 2026 con Sonnet 5.5: 30 corrette su 30 in tre passate, circa
+0,08 $ a passata.
+
 ## 1. Procurati una chiave API con un limite di spesa
 
 1. Nella [Claude Console](https://platform.claude.com) crea un workspace per HomeTab e dagli un
@@ -337,7 +416,7 @@ ultime chiamate.
 - Nella demo pubblica la pagina è in sola lettura: l'account demo è amministratore e ha la
   password pubblica.
 
-**Le variabili d'ambiente** (`AI_MODEL_IMPORT`, `AI_MONTHLY_BUDGET_USD`, `ANTHROPIC_API_KEY`)
+**Le variabili d'ambiente** (`AI_MODEL_IMPORT`, `AI_MODEL_CHAT`, `AI_MONTHLY_BUDGET_USD`, `ANTHROPIC_API_KEY`)
 restano come ripiego: valgono finché dalla pagina non si salva un valore, che da lì ha la
 precedenza. Servono a un'installazione configurata solo da file.
 
@@ -405,6 +484,12 @@ il testo inviato o ricevuto.
 Se un giorno fossero impostate le variabili di tracciamento di LangSmith (`LANGSMITH_TRACING`,
 `LANGCHAIN_TRACING_V2`), LangChain manderebbe una copia dei prompt (mascherati) anche a LangSmith:
 lasciale vuote.
+
+**Nella chat** il modello riceve la domanda, l'albero delle categorie, i nomi degli obiettivi e
+ciò che restituiscono gli strumenti: totali, nomi delle categorie e, dalla ricerca, al massimo
+20 movimenti con data, importo e la stessa causale ed esercente mascherati dell'import. I
+risultati degli strumenti arrivano al modello come dati, e nessuno strumento modifica nulla: una
+causale scritta per sembrare un'istruzione non può far scattare un'azione.
 
 Nella demo pubblica (`DEMO_MODE=true`) l'IA è sempre spenta: chiunque potrebbe consumare il
 credito.

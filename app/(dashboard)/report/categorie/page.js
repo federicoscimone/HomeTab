@@ -10,6 +10,7 @@ import MonthlyLineChart from '@/components/report/MonthlyLineChart';
 import CategoryBarChart from '@/components/report/CategoryBarChart';
 import { useTranslations } from 'next-intl';
 import { useFormat } from '@/lib/hooks/useFormat';
+import { intIn, oneOf, useInitialParams } from '@/lib/hooks/useInitialParams';
 
 /**
  * Per-category analysis page.
@@ -18,12 +19,20 @@ import { useFormat } from '@/lib/hooks/useFormat';
  */
 export default function CategoriePage() {
   const now = new Date();
-  const [year,     setYear]     = useState(now.getFullYear());
-  const [month,    setMonth]    = useState(now.getMonth() + 1);
-  const [mode,     setMode]     = useState('annual'); // 'annual' | 'monthly'
-  const [type,     setType]     = useState('expense');
-  const [paymentGroup, setPaymentGroup] = useState('traditional'); // traditional | alternative | all
-  const [compare,  setCompare]  = useState('period'); // 'period' | 'full', conta solo per un periodo in corso
+  // Valori iniziali anche dall'URL: i link della chat aprono il report con gli stessi filtri.
+  const initial = useInitialParams({
+    year: { fallback: now.getFullYear(), parse: Number, valid: intIn(2000, 2100) },
+    month: { fallback: null, parse: Number, valid: intIn(1, 12) },
+    type: { fallback: 'expense', valid: oneOf('expense', 'income') },
+    paymentGroup: { fallback: 'traditional', valid: oneOf('traditional', 'alternative', 'all') },
+    compare: { fallback: 'period', valid: oneOf('period', 'full') },
+  });
+  const [year,     setYear]     = useState(initial.year);
+  const [month,    setMonth]    = useState(initial.month ?? now.getMonth() + 1);
+  const [mode,     setMode]     = useState(initial.month ? 'monthly' : 'annual'); // 'annual' | 'monthly'
+  const [type,     setType]     = useState(initial.type);
+  const [paymentGroup, setPaymentGroup] = useState(initial.paymentGroup); // traditional | alternative | all
+  const [compare,  setCompare]  = useState(initial.compare); // 'period' | 'full', conta solo per un periodo in corso
   const t = useTranslations('reports.categories');
   const tCommon = useTranslations('common');
   const tGroups = useTranslations('paymentGroups');

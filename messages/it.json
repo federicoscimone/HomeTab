@@ -46,6 +46,7 @@
     "movements": "Movimenti",
     "newMovement": "Nuovo movimento",
     "import": "Importa",
+    "chat": "Chiedi",
     "goals": "Obiettivi",
     "reports": "Report",
     "pivot": "Pivot Mensile",
@@ -588,7 +589,9 @@
       "manual": "Manuale"
     },
     "completeCategories": "Completa le categorie ({count})",
-    "categoriesApplied": "{count, plural, =0 {Nessuna categoria applicata.} one {Categoria applicata a # movimento.} other {Categorie applicate a # movimenti.}}"
+    "categoriesApplied": "{count, plural, =0 {Nessuna categoria applicata.} one {Categoria applicata a # movimento.} other {Categorie applicate a # movimenti.}}",
+    "sums": "uscite {expense} · entrate {income}",
+    "inAnalysisNote": "Solo i movimenti che entrano nelle analisi, come nei report."
   },
   "incompleteReview": {
     "title": "Completa le categorie",
@@ -771,6 +774,39 @@
     "hint": "Forse: {name}",
     "hintTitle": "Suggerimento incerto ({pct}%): clicca per usarlo",
     "previewWebSummary": "Partirebbero {requests, plural, one {# richiesta} other {# richieste}} a {model} con ricerca web, per {distinct} righe distinte: al massimo una ricerca per riga, costruita da questo testo. Gli esempi dallo storico non partono."
+  },
+  "chat": {
+    "title": "Chiedi ai tuoi dati",
+    "intro": "Domande sulle vostre entrate, spese e obiettivi. I numeri li calcolano i report dell’app: l’assistente sceglie quali e li cita, con un link per verificarli.",
+    "clear": "Nuova conversazione",
+    "placeholder": "Es. quanto abbiamo speso al supermercato questo mese?",
+    "send": "Chiedi",
+    "failed": "La risposta non è arrivata. Riprova.",
+    "cost": "costo {cost}",
+    "footnote": "Le risposte usano solo i dati di questa app, in sola lettura. La conversazione resta in questa scheda del browser e non viene salvata.",
+    "examples": {
+      "q1": "Quanto abbiamo speso in ristoranti quest’anno rispetto all’anno scorso?",
+      "q2": "Com’è andato il mese scorso?",
+      "q3": "Quali categorie sono cresciute di più quest’anno?",
+      "q4": "A che punto sono gli obiettivi di risparmio?"
+    },
+    "tools": {
+      "riepilogo_mese": "riepilogo del mese",
+      "spese_per_categoria": "spese per categoria",
+      "confronta_periodi": "confronto fra periodi",
+      "cerca_movimenti": "ricerca movimenti",
+      "stato_obiettivi": "obiettivi"
+    },
+    "unavailable": {
+      "demo": "Nella demo pubblica la chat è spenta: chiunque potrebbe consumare il credito.",
+      "other": "La chat non è disponibile: l’IA non è configurata (Impostazioni → IA)."
+    },
+    "errors": {
+      "budget": "Tetto di spesa del mese raggiunto: la chat riprende il primo del mese.",
+      "unavailable": "La chat non è disponibile in questo momento.",
+      "tooManySteps": "La domanda ha richiesto troppi passaggi: prova a riformularla in modo più preciso.",
+      "failed": "La risposta non è arrivata. Riprova."
+    }
   },
   "goalStates": {
     "on_track": {
@@ -1023,7 +1059,8 @@
       "importCategorize": "Categorie nell’import",
       "importTemplate": "Proposta di template",
       "importCategorizeFallback": "Categorie, secondo passaggio",
-      "importWebSearch": "Ricerca web"
+      "importWebSearch": "Ricerca web",
+      "chat": "Chat sui dati"
     },
     "outcomes": {
       "ok": "Riuscita",
@@ -1049,7 +1086,7 @@
     },
     "modelOff": "Spenta",
     "modelOption": "{model} · {input} / {output} per milione di token",
-    "effort": "Effort",
+    "effort": "Effort per l’import",
     "efforts": {
       "low": "Basso (più economico)",
       "medium": "Medio",
@@ -1075,7 +1112,10 @@
     "fallbackHint": "Le righe che il primo modello lascia senza categoria vengono ripassate a questo, più capace. Lavora su poche righe: di solito costa qualche decimo di centesimo.",
     "fallbackOff": "Nessuno",
     "webSearch": "Ricerca web degli esercenti sconosciuti",
-    "webSearchHint": "Aggiunge il pulsante «Cerca sul web» per le righe che nessuna altra fonte riconosce. Parte solo su richiesta, al massimo 15 righe per volta; costa circa 1 centesimo a riga con Haiku 5.5, 3 con Sonnet 5.5."
+    "webSearchHint": "Aggiunge il pulsante «Cerca sul web» per le righe che nessuna altra fonte riconosce. Parte solo su richiesta, al massimo 15 righe per volta; costa circa 1 centesimo a riga con Haiku 5.5, 3 con Sonnet 5.5.",
+    "chatModel": "Modello della chat",
+    "chatEffort": "Effort della chat",
+    "chatHint": "La chat risponde alle domande sui dati con gli strumenti dell’app: un modello medio basta, perché i numeri li calcola il codice. Una domanda costa di solito uno o due centesimi."
   },
   "users": {
     "title": "Utenti",

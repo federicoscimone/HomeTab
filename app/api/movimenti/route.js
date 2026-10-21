@@ -29,7 +29,9 @@ export async function GET(req) {
 
   const filter = buildMovementFilter(searchParams);
 
-  const [expenses, total] = await Promise.all([
+  // I totali di tutti i movimenti filtrati, non solo della pagina: così la lista verifica un numero
+  // dei report o della chat.
+  const [expenses, total, sumsByType] = await Promise.all([
     Movement.find(filter)
       .populate('categoryId', 'name color')
       .populate('subCategory1Id', 'name')
@@ -39,10 +41,15 @@ export async function GET(req) {
       .limit(limit)
       .lean(),
     Movement.countDocuments(filter),
+    Movement.aggregate([{ $match: filter }, { $group: { _id: '$type', total: { $sum: '$amount' } } }]),
   ]);
+  const sums = {
+    expense: sumsByType.find((s) => s._id === 'expense')?.total ?? 0,
+    income: sumsByType.find((s) => s._id === 'income')?.total ?? 0,
+  };
 
   logger.info('GET /api/movimenti', { total, page, limit, userId: session.user?.id });
-  return NextResponse.json({ expenses, total, page, limit, pages: Math.ceil(total / limit) });
+  return NextResponse.json({ expenses, total, sums, page, limit, pages: Math.ceil(total / limit) });
 }
 
 export async function POST(req) {
