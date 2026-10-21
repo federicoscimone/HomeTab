@@ -4,7 +4,9 @@
 
 HomeTab can use a language model while importing a bank statement: to suggest a template for a
 bank it doesn't know yet and a category for the rows that no keyword rule recognises; and to
-answer questions about the data in a [chat](#chat-on-the-data). Everything here is optional: without a key the AI features stay off and imports work exactly as before.
+answer questions about the data in a [chat](#chat-on-the-data); and to explain [saving
+suggestions](#saving-suggestions-on-request) when asked. Everything here is optional: without a
+key the AI features stay off and imports work exactly as before.
 
 Models are reached through [LangChain](https://js.langchain.com), so the app is not tied to one
 vendor. Out of the box it uses Anthropic's Claude.
@@ -110,13 +112,14 @@ The **Ask** page answers questions such as "how much did we spend on restaurants
 compared with last year?" or "how much is missing for the new car goal?". It is read-only and
 uses the same functions as the reports.
 
-**The model doesn't compute; it picks.** It has six tools (`lib/ai/agent/tools.js`): month
-summary, totals by category or subcategory with the year-over-year comparison, any two date
-ranges compared, movement search, savings goals, comparison with similar households. The code
-computes every number. Each result carries the amounts already formatted, which the model must quote verbatim, and the link to the
-app page that shows the same number with the same filters, so every answer can be checked with
-one click. The tools use the pages' defaults (traditional payments, meal vouchers excluded),
-otherwise the chat and the linked page would disagree.
+**The model doesn't compute; it picks.** It has seven tools (`lib/ai/agent/tools.js`): month
+summary, totals by category or subcategory with the year-over-year comparison, any two date ranges
+compared, movement search, savings goals, comparison with similar households, saving signals. The
+code computes every number. Each result carries the amounts already formatted, which the model
+must quote verbatim, and the link to the app page that shows the same number with the same
+filters, so every answer can be checked with one click. The tools use the pages' defaults
+(traditional payments, meal vouchers excluded), otherwise the chat and the linked page would
+disagree.
 
 **Why tools and not RAG.** The questions are about numbers, and numbers come from aggregations,
 not from text similar to the question: retrieving "relevant" movements and asking the model to
@@ -127,10 +130,10 @@ HomeTab does not have.
 
 **The loop** (`lib/ai/agent/run.js`) is written by hand on LangChain, not a ready-made agent:
 every step goes through the spending reservation, at most 6 steps, and the instructions with the
-category list carry a cache breakpoint, so from the second step on they are read at 5% of the input price
-(with Sonnet 5.5).
-Answers stream in, and the page shows which tools are running. The conversation stays in the
-browser tab (the last 6 turns are sent back with each question): nothing is saved on the server.
+category list carry a cache breakpoint, so from the second step on they are read at 5% of the
+input price (with Sonnet 5.5). Answers stream in, and the page shows which tools are running. The
+conversation stays in the browser tab (the last 6 turns are sent back with each question): nothing
+is saved on the server.
 
 Default model: Claude Sonnet 5.5 with low effort, chosen from the same settings page. A question
 costs one or two cents.
@@ -139,6 +142,35 @@ costs one or two cents.
 answers are read from the pages' own APIs (dashboard, reports, movements, goals, similar
 households), one of them off topic. On 2026-10-21 with Sonnet 5.5, every answer was correct over
 four runs (three of the first ten questions, one of all eleven), about $0.10 per run.
+
+## Saving suggestions, on request
+
+The dashboard card **Saving suggestions** does nothing until someone presses **Give me
+suggestions**: no summary is generated or sent by itself. The chat answers "where could we save?"
+with the same signals, through the `segnali_risparmio` tool.
+
+**The code finds the signals** (`lib/utils/insights.js`), each with its amount and a link to the
+movements behind it:
+
+- *recurring*: the same amount to the same merchant every month (subscriptions, bills), with the
+  yearly cost; above 200 € a month they are rent and instalments, which a cancellation doesn't
+  cut, so they stay out;
+- *growth*: categories of the last 3 complete months above the same months a year before;
+- *anomaly*: the last complete month well above the average of the previous 6;
+- *istat*: categories above [similar households](istat.md), housing excluded.
+
+Each signal with a monthly amount also says how many months earlier it would bring the goal that
+gains most from it (behind-schedule goals first), with the app's own goal projections.
+
+**The model picks and explains** (`lib/ai/tasks/advice.js`): it receives at most 12 signals and
+returns at most 3, each with a title, why it matters and what to do. Amounts, links and the goal
+effect shown on the card come from the signal, not from the model's text; and every number the
+model writes must appear in the signal it chose, otherwise its text is dropped and the signal is
+shown without explanation. One call, about one cent with Sonnet 5.5. Without AI (in the demo,
+over the cap) the card shows the three heaviest signals, unexplained.
+
+**Useful / not useful** is saved per signal: "not useful" hides it for six months, and the
+judgements reach the model as preferences.
 
 ## 1. Get an API key with a spending limit
 
@@ -168,9 +200,9 @@ calls.
 - In the public demo the page is read-only: the demo account is an administrator with a public
   password.
 
-**Environment variables** (`AI_MODEL_IMPORT`, `AI_MODEL_CHAT`, `AI_MONTHLY_BUDGET_USD`, `ANTHROPIC_API_KEY`) still
-work as a fallback: they apply until a value is saved from the page, which then takes
-precedence. Useful for an installation configured only from files.
+**Environment variables** (`AI_MODEL_IMPORT`, `AI_MODEL_CHAT`, `AI_MONTHLY_BUDGET_USD`,
+`ANTHROPIC_API_KEY`) still work as a fallback: they apply until a value is saved from the page,
+which then takes precedence. Useful for an installation configured only from files.
 
 **Another provider** (OpenAI, a local model through Ollama…): install its LangChain package
 (`@langchain/openai`, `@langchain/ollama`) and add an entry to `lib/ai/providers.js`; its models
@@ -237,6 +269,9 @@ date, amount and the same masked description and payee as the import. Tool resul
 to the model as data, and no tool can change anything, so a bank description written to look
 like an instruction cannot trigger an action.
 
+**For saving suggestions** the model receives the signals: category names, amounts already
+written, the masked merchant of recurring expenses and the name of the goal they would help.
+
 In the public demo (`DEMO_MODE=true`) the AI is always off: anyone could use up the credit.
 
 ---
@@ -245,8 +280,9 @@ In the public demo (`DEMO_MODE=true`) the AI is always off: anyone could use up 
 
 HomeTab può usare un modello linguistico durante l'import di un estratto conto: per proporre il
 template di una banca che non conosce ancora e una categoria per le righe che nessuna parola
-chiave riconosce; e per rispondere alle domande sui dati in una [chat](#la-chat-sui-dati).
-Tutto è facoltativo: senza chiave le funzioni IA restano spente e l'import
+chiave riconosce; per rispondere alle domande sui dati in una [chat](#la-chat-sui-dati); e per
+spiegare i [consigli di risparmio](#consigli-di-risparmio-su-richiesta) quando li chiedete. Tutto è
+facoltativo: senza chiave le funzioni IA restano spente e l'import
 funziona esattamente come prima.
 
 I modelli passano da [LangChain](https://js.langchain.com), quindi l'app non è legata a un solo
@@ -283,11 +319,11 @@ Nella revisione di un import, **Suggerisci con l'IA** manda al modello le righe 
 una sola richiesta (le righe uguali una volta sola), insieme all'albero delle categorie, a venti
 esercenti recenti della famiglia e, **per ogni riga, fino a tre movimenti passati simili** con la
 loro categoria, trovati nello storico come sopra. Sono mascherati come tutto il resto, usando la
-riga originale intera: un bonifico salvato con il nome di una persona come esercente non parte. I suggerimenti con confidenza sotto
-il 60% vengono scartati. Ogni suggerimento è segnato «suggerita dall'IA» e sparisce appena la
-categoria si cambia a mano; le regole per parola chiave vincono sempre. Se manca l'esercente,
-viene ricavato dalla causale. Con l'IA spenta, a tetto raggiunto o in errore, l'import funziona
-esattamente come prima.
+riga originale intera: un bonifico salvato con il nome di una persona come esercente non parte. I
+suggerimenti con confidenza sotto il 60% vengono scartati. Ogni suggerimento è segnato «suggerita
+dall'IA» e sparisce appena la categoria si cambia a mano; le regole per parola chiave vincono
+sempre. Se manca l'esercente, viene ricavato dalla causale. Con l'IA spenta, a tetto raggiunto o
+in errore, l'import funziona esattamente come prima.
 
 Finché non premi il pulsante non parte nulla; **Vedi cosa viene inviato**, accanto, mostra la
 richiesta esattamente come partirebbe, senza inviarla, anche con l'IA spenta. I suggerimenti
@@ -358,19 +394,19 @@ La pagina **Chiedi** risponde a domande come «quanto abbiamo speso in ristorant
 rispetto all'anno scorso?» o «quanto manca per l'obiettivo dell'auto nuova?». È in sola lettura
 e usa le stesse funzioni dei report.
 
-**Il modello non calcola: sceglie.** Ha sei strumenti (`lib/ai/agent/tools.js`): riepilogo
-del mese, totali per categoria o sottocategoria con il confronto sull'anno prima, confronto fra
-due intervalli qualsiasi, ricerca dei movimenti, obiettivi di risparmio, confronto con le
-famiglie simili. Ogni numero lo calcola il codice. Ogni risultato porta gli importi già formattati, che il modello deve citare così come
-sono, e il link alla pagina dell'app che mostra lo stesso numero con gli stessi filtri: ogni
-risposta si verifica con un clic. Gli strumenti usano i valori predefiniti delle pagine
-(pagamenti tradizionali, buoni pasto esclusi), altrimenti chat e pagina collegata non
-coinciderebbero.
+**Il modello non calcola: sceglie.** Ha sette strumenti (`lib/ai/agent/tools.js`): riepilogo del
+mese, totali per categoria o sottocategoria con il confronto sull'anno prima, confronto fra due
+intervalli qualsiasi, ricerca dei movimenti, obiettivi di risparmio, confronto con le famiglie
+simili, segnali di risparmio. Ogni numero lo calcola il codice. Ogni risultato porta gli importi
+già formattati, che il modello deve citare così come sono, e il link alla pagina dell'app che
+mostra lo stesso numero con gli stessi filtri: ogni risposta si verifica con un clic. Gli
+strumenti usano i valori predefiniti delle pagine (pagamenti tradizionali, buoni pasto esclusi),
+altrimenti chat e pagina collegata non coinciderebbero.
 
-**Perché strumenti e non RAG.** Le domande riguardano numeri, e i numeri vengono da
-aggregazioni, non da testi simili alla domanda: recuperare i movimenti «pertinenti» e chiedere al
-modello di sommarli è il modo in cui una chat inventa i totali. Con gli strumenti l'aritmetica
-resta nel database. I dati esterni (il confronto ISTAT, [docs/istat.md](istat.md)) sono un'istantanea
+**Perché strumenti e non RAG.** Le domande riguardano numeri, e i numeri vengono da aggregazioni,
+non da testi simili alla domanda: recuperare i movimenti «pertinenti» e chiedere al modello di
+sommarli è il modo in cui una chat inventa i totali. Con gli strumenti l'aritmetica resta nel
+database. I dati esterni (il confronto ISTAT, [docs/istat.md](istat.md)) sono un'istantanea
 versionata dietro un altro strumento, non una chiamata dal vivo. Un indice vettoriale avrebbe
 senso solo con una grande mole di testo libero, che HomeTab non ha.
 
@@ -389,6 +425,35 @@ attese si leggono dalle API delle pagine (dashboard, report, movimenti, obiettiv
 simili), una delle quali fuori tema. Il 21 ottobre 2026 con Sonnet 5.5 tutte le risposte sono
 state giuste in quattro passate (tre sulle prime dieci domande, una su tutte e undici), circa
 0,10 $ a passata.
+
+## Consigli di risparmio, su richiesta
+
+La scheda **Consigli di risparmio** della dashboard non fa nulla finché qualcuno non preme **Dammi
+dei consigli**: nessun riepilogo si prepara o parte da solo. La chat risponde a «dove potremmo
+risparmiare?» con gli stessi segnali, con lo strumento `segnali_risparmio`.
+
+**I segnali li trova il codice** (`lib/utils/insights.js`), ciascuno con il suo importo e il link
+ai movimenti da cui viene:
+
+- *ricorrenti*: lo stesso importo allo stesso esercente ogni mese (abbonamenti, bollette), con il
+  costo annuo; oltre 200 € al mese sono affitti e rate, che una disdetta non taglia, quindi
+  restano fuori;
+- *in crescita*: categorie degli ultimi 3 mesi completi sopra gli stessi mesi dell'anno prima;
+- *mesi anomali*: l'ultimo mese completo molto sopra la media dei 6 precedenti;
+- *famiglie simili*: capitoli sopra la media delle [famiglie simili](istat.md), casa esclusa.
+
+Ogni segnale con un importo mensile dice anche di quanti mesi anticiperebbe l'obiettivo che ne
+guadagna di più (prima quelli in ritardo), con le proiezioni degli obiettivi dell'app.
+
+**Il modello sceglie e spiega** (`lib/ai/tasks/advice.js`): riceve al massimo 12 segnali e ne
+restituisce al massimo 3, ognuno con titolo, perché conta e cosa fare. Importi, link ed effetto
+sull'obiettivo mostrati nella scheda vengono dal segnale, non dal testo del modello; e ogni numero
+che il modello scrive deve comparire nel segnale scelto, altrimenti il suo testo si scarta e il
+segnale resta senza spiegazione. Una chiamata, circa un centesimo con Sonnet 5.5. Senza IA (nella
+demo, oltre il tetto) la scheda mostra i tre segnali più pesanti, senza spiegazione.
+
+**Utile / non utile** si salva per segnale: «non utile» lo nasconde per sei mesi, e i giudizi
+arrivano al modello come preferenze.
 
 ## 1. Procurati una chiave API con un limite di spesa
 
@@ -418,9 +483,9 @@ ultime chiamate.
 - Nella demo pubblica la pagina è in sola lettura: l'account demo è amministratore e ha la
   password pubblica.
 
-**Le variabili d'ambiente** (`AI_MODEL_IMPORT`, `AI_MODEL_CHAT`, `AI_MONTHLY_BUDGET_USD`, `ANTHROPIC_API_KEY`)
-restano come ripiego: valgono finché dalla pagina non si salva un valore, che da lì ha la
-precedenza. Servono a un'installazione configurata solo da file.
+**Le variabili d'ambiente** (`AI_MODEL_IMPORT`, `AI_MODEL_CHAT`, `AI_MONTHLY_BUDGET_USD`,
+`ANTHROPIC_API_KEY`) restano come ripiego: valgono finché dalla pagina non si salva un valore, che
+da lì ha la precedenza. Servono a un'installazione configurata solo da file.
 
 **Un altro fornitore** (OpenAI, un modello locale con Ollama…): installa il suo pacchetto
 LangChain (`@langchain/openai`, `@langchain/ollama`) e aggiungi una voce in
@@ -492,6 +557,9 @@ ciò che restituiscono gli strumenti: totali, nomi delle categorie e, dalla rice
 20 movimenti con data, importo e la stessa causale ed esercente mascherati dell'import. I
 risultati degli strumenti arrivano al modello come dati, e nessuno strumento modifica nulla: una
 causale scritta per sembrare un'istruzione non può far scattare un'azione.
+
+**Per i consigli di risparmio** il modello riceve i segnali: nomi delle categorie, importi già
+scritti, l'esercente mascherato delle spese ricorrenti e il nome dell'obiettivo che aiuterebbero.
 
 Nella demo pubblica (`DEMO_MODE=true`) l'IA è sempre spenta: chiunque potrebbe consumare il
 credito.

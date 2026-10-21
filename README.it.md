@@ -43,6 +43,10 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
   famiglie con lo stesso numero di componenti nella vostra regione (indagine 2025), da
   un'istantanea versionata dei dati SDMX di ISTAT; la casa è senza affitti figurativi
   ([docs/istat.md](docs/istat.md#confronto-con-le-famiglie-simili)).
+- **Consigli di risparmio, su richiesta**: il codice trova abbonamenti, categorie in crescita, mesi
+  anomali e scarti dalle famiglie simili, ognuno con il suo importo e i mesi che farebbe guadagnare
+  a un obiettivo; l'IA ne sceglie tre e li spiega, e se inventa un numero il suo testo si scarta
+  ([docs/ai.md](docs/ai.md#consigli-di-risparmio-su-richiesta)).
 - **Obiettivi di risparmio**: il risparmio di ogni mese chiuso si ripartisce tra gli obiettivi;
   per ciascuno si vedono la quota mensile che serve e la data prevista di arrivo.
 - **Verifica in due passaggi e Telegram**: facoltativa per ogni utente; dopo la password serve
@@ -152,8 +156,7 @@ Alcune scelte che vale la pena guardare nel codice:
 
 ## Roadmap
 
-- Consigli di risparmio: segnali calcolati dal codice (abbonamenti, categorie in crescita, scarti
-  dalle famiglie simili), ordinati e spiegati dall'IA
+- Regole imparate: parole chiave proposte dai suggerimenti dell'IA che la famiglia accetta
 
 ## Note di sicurezza
 
