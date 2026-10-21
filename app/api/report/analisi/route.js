@@ -13,14 +13,12 @@
 
 import { NextResponse } from 'next/server';
 import { serverTranslator } from '@/lib/i18n/server';
-import { sameDayPreviousYear, todayString } from '@/lib/utils/comparePeriods';
-import { projectYear } from '@/lib/utils/yearProjection';
 import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
-import Movement from '@/lib/models/Movement';
+import { rangeAnalysis } from '@/lib/services/reports';
 
 export async function GET(req) {
-  const { session, denied } = await requirePermission('data:read');
+  const { denied } = await requirePermission('data:read');
   if (denied) return denied;
 
   await connectDB();
@@ -30,92 +28,13 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const from = searchParams.get('from');
   const to   = searchParams.get('to');
-  const type = searchParams.get('type') || 'expense';
-  const paymentGroup = searchParams.get('paymentGroup') || '';
-
   if (!from || !to) {
     return NextResponse.json({ error: (await serverTranslator('errors'))('dateRangeRequired') }, { status: 400 });
   }
-
-  // Stesso periodo anno precedente. Con setFullYear il 29 febbraio diventava il 1° marzo,
-  // allargando il periodo di confronto di un giorno.
-  const prevFromStr = sameDayPreviousYear(from);
-  const prevToStr   = sameDayPreviousYear(to);
-
-  const baseFilter = { type, excludeFromAnalysis: { $ne: true } };
-  if (paymentGroup) baseFilter.paymentGroup = paymentGroup;
-
-  const [curExp, prevExp] = await Promise.all([
-    Movement.find({ ...baseFilter, date: { $gte: from, $lte: to } })
-      .populate('categoryId', 'name color').lean(),
-    Movement.find({ ...baseFilter, date: { $gte: prevFromStr, $lte: prevToStr } })
-      .populate('categoryId', 'name color').lean(),
-  ]);
-
-  const totalCur  = curExp .reduce((s,e) => s + e.amount, 0);
-  const totalPrev = prevExp.reduce((s,e) => s + e.amount, 0);
-
-  // Per categoria
-  const byCatCur  = groupByCategory(curExp, uncategorized);
-  const byCatPrev = groupByCategory(prevExp, uncategorized);
-  const allCatIds = new Set([...Object.keys(byCatCur), ...Object.keys(byCatPrev)]);
-
-  const byCategory = [...allCatIds].map(id => {
-    const cur  = byCatCur [id] || { name: uncategorized, color: '#94a3b8', amount: 0 };
-    const prev = byCatPrev[id] || { amount: 0 };
-    const delta = cur.amount - prev.amount;
-    const pct   = prev.amount > 0 ? (delta / prev.amount) * 100 : null;
-    return { id, name: cur.name, color: cur.color, cur: cur.amount, prev: prev.amount, delta, pct };
-  }).sort((a, b) => b.cur - a.cur);
-
-  // Proiezione a fine anno dell'anno in corso, indipendente dal periodo selezionato: speso
-  // finora più la media dei mesi chiusi per i giorni che mancano (vedi lib/utils/yearProjection).
-  const today   = todayString();
-  const yearExp = await Movement.find({ ...baseFilter, date: { $gte: `${today.slice(0, 4)}-01-01`, $lte: today } })
-    .select('date amount').lean();
-  const projection = { ...projectYear(yearExp, today), today };
-
-  // Andamento per settimana nel range selezionato
-  const weeklyMap = {};
-  for (const e of curExp) {
-    const d  = new Date(e.date);
-    const yw = getYearWeek(d);
-    weeklyMap[yw] = (weeklyMap[yw] || 0) + e.amount;
-  }
-  const weekly = Object.entries(weeklyMap)
-    .sort(([a],[b]) => a.localeCompare(b))
-    .map(([week, amount]) => ({ week, amount }));
-
-  return NextResponse.json({
-    from, to, type,
-    paymentGroup: paymentGroup || 'all',
-    prevFrom: prevFromStr, prevTo: prevToStr,
-    totalCur, totalPrev,
-    deltaAbs: totalCur - totalPrev,
-    deltaPct: totalPrev > 0 ? ((totalCur - totalPrev) / totalPrev) * 100 : null,
-    byCategory,
-    weekly,
-    projection,
-  });
-}
-
-function groupByCategory(expenses, uncategorized) {
-  const map = {};
-  for (const e of expenses) {
-    const id    = e.categoryId?._id?.toString() || 'uncategorized';
-    const name  = e.categoryId?.name  || uncategorized;
-    const color = e.categoryId?.color || '#94a3b8';
-    if (!map[id]) map[id] = { name, color, amount: 0 };
-    map[id].amount += e.amount;
-  }
-  return map;
-}
-
-function getYearWeek(date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2,'0')}`;
+  return NextResponse.json(await rangeAnalysis({
+    from, to,
+    type: searchParams.get('type') || 'expense',
+    paymentGroup: searchParams.get('paymentGroup') || '',
+    uncategorized,
+  }));
 }
