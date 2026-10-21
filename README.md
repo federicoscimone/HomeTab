@@ -39,6 +39,10 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
 - **Similar households** — your average monthly spending by category next to the ISTAT average
   for households with the same number of members in your region (2025 survey), from a versioned
   snapshot of ISTAT's SDMX data; housing excludes imputed rent ([docs/istat.md](docs/istat.md)).
+- **Saving suggestions, on request** — the code finds subscriptions, growing categories, unusual
+  months and gaps from similar households, each with its amount and the months it would gain on a
+  goal; the AI picks three and explains them, and any number it invents discards its text
+  ([docs/ai.md](docs/ai.md#saving-suggestions-on-request)).
 - **Savings goals** — the savings of each closed month are split among goals; every goal shows
   the monthly amount it needs and its estimated arrival date.
 - **Two-step verification and Telegram** — optional for each user: after the password, a
@@ -146,8 +150,7 @@ A few decisions worth a look in the code:
 
 ## Roadmap
 
-- Saving suggestions: signals computed by the code (subscriptions, growing categories, gaps from
-  similar households), ranked and explained by the AI
+- Learned rules: keywords proposed from the AI suggestions the family accepts
 
 ## Security notes
 

@@ -797,7 +797,8 @@
       "confronta_periodi": "period comparison",
       "cerca_movimenti": "movement search",
       "stato_obiettivi": "goals",
-      "confronto_istat": "similar households"
+      "confronto_istat": "similar households",
+      "segnali_risparmio": "saving signals"
     },
     "unavailable": {
       "demo": "Chat is off in the public demo: anyone could use up the credit.",
@@ -1062,7 +1063,8 @@
       "importTemplate": "Template suggestion",
       "importCategorizeFallback": "Categories, second pass",
       "importWebSearch": "Web search",
-      "chat": "Data chat"
+      "chat": "Data chat",
+      "advice": "Saving suggestions"
     },
     "outcomes": {
       "ok": "Succeeded",
@@ -1503,6 +1505,41 @@
       "ITE": "Centre",
       "ITFG": "South and islands",
       "IT": "Italy"
+    }
+  },
+  "advice": {
+    "title": "Saving suggestions",
+    "intro": "On request: the code looks for subscriptions, growing categories, unusual months and categories above similar households; the AI picks the three most useful and explains them.",
+    "ask": "Give me suggestions",
+    "again": "Regenerate",
+    "failed": "Could not prepare the suggestions",
+    "none": "No saving signal in your recent data: nothing to point out.",
+    "headline": {
+      "recurring": "{merchant}: {monthly} every month, about {annual} a year",
+      "growth": "{category}: {recent} a month in the last 3 months, against {previous} a year ago ({pct})",
+      "anomaly": "{category} in {month}: {amount}, against an average of {average} a month",
+      "istat": "{chapter}: {yours} a month, against {istat} for similar households ({pct})"
+    },
+    "action": "What to do:",
+    "potential": "Possible saving: up to {amount} a year",
+    "potentialOnce": "Above average, one-off: {amount}",
+    "goalEarlier": "Setting aside {saving} a month, “{goal}” would arrive {months, plural, one {# month} other {# months}} earlier, in {reach}.",
+    "goalReach": "Setting aside {saving} a month, “{goal}” would arrive in {reach}.",
+    "openMovements": "See the movements",
+    "openComparison": "See the comparison",
+    "useful": "Useful",
+    "notUseful": "Not useful",
+    "thanks": "Thanks, we’ll take it into account.",
+    "hidden": "Hidden for six months.",
+    "generatedAt": "Prepared on {at}",
+    "signalsFound": "{n, plural, one {# signal found} other {# signals found}}",
+    "cost": "cost {cost}",
+    "noAi": {
+      "demo": "no AI in the demo: the heaviest signals, unexplained",
+      "budget": "AI cap reached: the heaviest signals, unexplained",
+      "off": "AI off: the heaviest signals, unexplained",
+      "notConfigured": "AI not configured: the heaviest signals, unexplained",
+      "other": "AI unavailable: the heaviest signals, unexplained"
     }
   }
 }

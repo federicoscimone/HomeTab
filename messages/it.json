@@ -797,7 +797,8 @@
       "confronta_periodi": "confronto fra periodi",
       "cerca_movimenti": "ricerca movimenti",
       "stato_obiettivi": "obiettivi",
-      "confronto_istat": "confronto con famiglie simili"
+      "confronto_istat": "confronto con famiglie simili",
+      "segnali_risparmio": "segnali di risparmio"
     },
     "unavailable": {
       "demo": "Nella demo pubblica la chat è spenta: chiunque potrebbe consumare il credito.",
@@ -1062,7 +1063,8 @@
       "importTemplate": "Proposta di template",
       "importCategorizeFallback": "Categorie, secondo passaggio",
       "importWebSearch": "Ricerca web",
-      "chat": "Chat sui dati"
+      "chat": "Chat sui dati",
+      "advice": "Consigli di risparmio"
     },
     "outcomes": {
       "ok": "Riuscita",
@@ -1503,6 +1505,41 @@
       "ITE": "Centro",
       "ITFG": "Mezzogiorno",
       "IT": "Italia"
+    }
+  },
+  "advice": {
+    "title": "Consigli di risparmio",
+    "intro": "Su richiesta: il codice cerca abbonamenti, categorie in crescita, mesi anomali e capitoli sopra le famiglie simili; l’IA sceglie i tre più utili e li spiega.",
+    "ask": "Dammi dei consigli",
+    "again": "Rigenera",
+    "failed": "Impossibile preparare i consigli",
+    "none": "Nessun segnale di risparmio nei vostri dati recenti: niente da segnalare.",
+    "headline": {
+      "recurring": "{merchant}: {monthly} ogni mese, circa {annual} all’anno",
+      "growth": "{category}: {recent} al mese negli ultimi 3 mesi, contro {previous} un anno fa ({pct})",
+      "anomaly": "{category} a {month}: {amount}, contro una media di {average} al mese",
+      "istat": "{chapter}: {yours} al mese, contro {istat} delle famiglie simili ({pct})"
+    },
+    "action": "Cosa fare:",
+    "potential": "Risparmio possibile: fino a {amount} all’anno",
+    "potentialOnce": "Oltre la media, una tantum: {amount}",
+    "goalEarlier": "Mettendo da parte {saving} al mese, «{goal}» arriverebbe {months, plural, one {# mese} other {# mesi}} prima, a {reach}.",
+    "goalReach": "Mettendo da parte {saving} al mese, «{goal}» arriverebbe a {reach}.",
+    "openMovements": "Vedi i movimenti",
+    "openComparison": "Vedi il confronto",
+    "useful": "Utile",
+    "notUseful": "Non utile",
+    "thanks": "Grazie, ne terremo conto.",
+    "hidden": "Nascosto per sei mesi.",
+    "generatedAt": "Preparati il {at}",
+    "signalsFound": "{n, plural, one {# segnale trovato} other {# segnali trovati}}",
+    "cost": "costo {cost}",
+    "noAi": {
+      "demo": "senza IA nella demo: i segnali più pesanti, senza spiegazione",
+      "budget": "tetto IA raggiunto: i segnali più pesanti, senza spiegazione",
+      "off": "IA spenta: i segnali più pesanti, senza spiegazione",
+      "notConfigured": "IA non configurata: i segnali più pesanti, senza spiegazione",
+      "other": "IA non disponibile: i segnali più pesanti, senza spiegazione"
     }
   }
 }
