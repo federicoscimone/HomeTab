@@ -1,10 +1,10 @@
 /**
- * Misura la chat sui dati: fa dieci domande a un'istanza in esecuzione e controlla che ogni
+ * Misura la chat sui dati: fa undici domande a un'istanza in esecuzione e controlla che ogni
  * risposta contenga i numeri giusti. I valori attesi non li calcola lo script: li legge dalle API
- * delle pagine (dashboard, report, movimenti, obiettivi), cioè dai numeri che l'utente vedrebbe
- * aprendo il link della risposta. Una risposta è corretta se contiene tutti gli importi attesi,
- * formattati come nell'app; la domanda fuori tema è corretta se non usa strumenti e non cita
- * importi.
+ * delle pagine (dashboard, report, movimenti, obiettivi, famiglie simili), cioè dai numeri che
+ * l'utente vedrebbe aprendo il link della risposta. Una risposta è corretta se contiene tutti gli
+ * importi attesi, formattati come nell'app; la domanda fuori tema è corretta se non usa strumenti
+ * e non cita importi.
  *
  * Pensato per i dati della demo, ma le domande sono relative alla data di oggi: funziona con
  * qualunque database che abbia movimenti nell'anno in corso e in quello precedente.
@@ -165,6 +165,13 @@ const CASES = [
     expect: async () => {
       const g = (await api('/api/obiettivi')).goals.find((x) => x.name === 'Auto nuova');
       return [money(g.projection.remaining), money(g.projection.requiredMonthly)];
+    },
+  },
+  {
+    q: 'Spendiamo più o meno delle famiglie simili alla nostra?',
+    expect: async () => {
+      const r = await api('/api/report/istat');
+      return [money(r.total.yours), money(r.total.istat)];
     },
   },
   {

@@ -64,7 +64,8 @@
     "userMenu": "Menu utente",
     "myAccount": "Il mio account",
     "signOut": "Disconnetti",
-    "openMenu": "Apri menu"
+    "openMenu": "Apri menu",
+    "similarHouseholds": "Famiglie simili"
   },
   "roles": {
     "viewer": {
@@ -795,7 +796,8 @@
       "spese_per_categoria": "spese per categoria",
       "confronta_periodi": "confronto fra periodi",
       "cerca_movimenti": "ricerca movimenti",
-      "stato_obiettivi": "obiettivi"
+      "stato_obiettivi": "obiettivi",
+      "confronto_istat": "confronto con famiglie simili"
     },
     "unavailable": {
       "demo": "Nella demo pubblica la chat è spenta: chiunque potrebbe consumare il credito.",
@@ -1409,5 +1411,98 @@
     "invalidLink": "Il link non è valido o è scaduto. Generane uno nuovo dalla pagina Account di HomeTab.",
     "linked": "Fatto, {name}: questa chat è collegata al tuo account HomeTab. Qui riceverai i codici di accesso e di recupero.",
     "chatTaken": "Questa chat è già collegata a un altro account HomeTab: scollegala da quell'account prima di usarla qui."
+  },
+  "istat": {
+    "title": "Famiglie simili",
+    "intro": "Le vostre spese medie mensili accanto a quelle delle famiglie con lo stesso numero di componenti nella vostra regione, dall’indagine ISTAT sulle spese delle famiglie.",
+    "subtitle": "Dal {from} al {to} ({months, plural, one {# mese} other {# mesi}}), accanto alla media ISTAT {year} per le famiglie di {members} in {region}. Importi al mese.",
+    "membersCount": "{n, plural, one {# componente} other {# componenti}}",
+    "membersMany": "5 o più componenti",
+    "anyMembers": "qualsiasi numero di componenti",
+    "loadFailed": "Impossibile caricare il confronto",
+    "profileMissing": "Indicate regione e numero di componenti qui sotto: finché mancano, il confronto è con la media italiana di tutte le famiglie.",
+    "profileMissingViewer": "Il profilo della famiglia non è completo: finché un amministratore non indica regione e componenti, il confronto è con la media italiana.",
+    "cols": {
+      "chapter": "Capitolo",
+      "yours": "Voi",
+      "istat": "ISTAT",
+      "diff": "Differenza"
+    },
+    "total": "Totale",
+    "estimated": "stima",
+    "fromArea": "dato riferito a: {area}",
+    "notCompared": "Non confrontate",
+    "notComparedHint": "Spese in categorie senza capitolo ISTAT o senza categoria: restano fuori dalle righe ma sono nel totale.",
+    "perMonth": "{name}: {amount} al mese",
+    "uncategorized": "Senza categoria",
+    "noData": "Nessuna uscita registrata nei mesi completi.",
+    "notes": {
+      "title": "Come leggere il confronto",
+      "average": "La media ISTAT comprende anche le famiglie che in un capitolo non spendono nulla (l’istruzione per chi non ha figli che studiano): una cifra molto diversa non è per forza un’anomalia.",
+      "housing": "Casa: la media ISTAT mescola chi paga un affitto e chi vive in casa propria, quindi una famiglia in affitto risulta quasi sempre sopra. Sono tolti gli affitti figurativi, cioè l’affitto che ISTAT stima anche per chi vive in casa propria; per le singole regioni ISTAT non li pubblica, quindi si tolgono in proporzione alla ripartizione: è una stima. Le rate del mutuo non sono spesa per ISTAT: se le registrate qui, il confronto le conta in più.",
+      "yours": "Le vostre cifre sono le uscite dei mesi completi divise per il numero di mesi, con tutti i metodi di pagamento (anche i buoni pasto) e senza i movimenti esclusi dalle analisi.",
+      "total": "Il vostro totale comprende anche le spese non confrontate; quello ISTAT è senza affitti figurativi.",
+      "source": "Fonte: Istat, Indagine sulle spese delle famiglie, anno {year} (licenza CC BY 4.0). I dati sono salvati nell’app e si aggiornano una volta l’anno."
+    },
+    "settings": {
+      "title": "Impostazioni del confronto",
+      "region": "Regione",
+      "members": "Componenti",
+      "choose": "Scegli…",
+      "saveProfile": "Salva profilo",
+      "mapping": "Capitoli delle categorie",
+      "mappingIntro": "Ogni categoria conta nel capitolo ISTAT indicato. Una sottocategoria senza capitolo segue la madre; una categoria fuori dal confronto resta solo nel totale.",
+      "none": "Fuori dal confronto",
+      "inherit": "Come la madre ({chapter})",
+      "inheritNone": "Come la madre (fuori dal confronto)",
+      "applyDefaults": "Applica i capitoli predefiniti",
+      "applyDefaultsHint": "Assegna il capitolo alle categorie con i nomi di quelle iniziali che non ne hanno ancora uno. Le altre non cambiano.",
+      "defaultsApplied": "{n, plural, =0 {Nessuna categoria da completare.} one {# categoria completata.} other {# categorie completate.}}",
+      "saveMapping": "Salva capitoli",
+      "saved": "Salvato.",
+      "failed": "Salvataggio non riuscito"
+    },
+    "divisions": {
+      "d01": "Alimentari e bevande analcoliche",
+      "d02": "Alcolici e tabacchi",
+      "d03": "Abbigliamento e calzature",
+      "d04": "Casa, acqua, elettricità e gas",
+      "d05": "Mobili, articoli e servizi per la casa",
+      "d06": "Salute",
+      "d07": "Trasporti",
+      "d08": "Informazione e comunicazione",
+      "d09": "Ricreazione, sport e cultura",
+      "d10": "Istruzione",
+      "d11": "Ristoranti e alloggio",
+      "d12": "Assicurazioni e servizi finanziari",
+      "d13": "Cura della persona e altre spese"
+    },
+    "regions": {
+      "ITC1": "Piemonte",
+      "ITC2": "Valle d’Aosta",
+      "ITC3": "Liguria",
+      "ITC4": "Lombardia",
+      "ITD1": "Provincia di Bolzano",
+      "ITD2": "Provincia di Trento",
+      "ITD3": "Veneto",
+      "ITD4": "Friuli-Venezia Giulia",
+      "ITD5": "Emilia-Romagna",
+      "ITE1": "Toscana",
+      "ITE2": "Umbria",
+      "ITE3": "Marche",
+      "ITE4": "Lazio",
+      "ITF1": "Abruzzo",
+      "ITF2": "Molise",
+      "ITF3": "Campania",
+      "ITF4": "Puglia",
+      "ITF5": "Basilicata",
+      "ITF6": "Calabria",
+      "ITG1": "Sicilia",
+      "ITG2": "Sardegna",
+      "ITCD": "Nord",
+      "ITE": "Centro",
+      "ITFG": "Mezzogiorno",
+      "IT": "Italia"
+    }
   }
 }

@@ -90,6 +90,7 @@ const NAV_ITEMS = [
       { href: '/report',           label: 'pivot' },
       { href: '/report/categorie', label: 'byCategory' },
       { href: '/report/analisi',   label: 'analysis' },
+      { href: '/report/famiglie-simili', label: 'similarHouseholds' },
     ],
   },
   {

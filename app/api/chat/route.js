@@ -56,6 +56,8 @@ export async function POST(req) {
 
   const locale = await requestLocale();
   const uncategorized = (await serverTranslator('reports'))('uncategorized');
+  const tIstat = await serverTranslator('istat');
+  const labels = { division: (code) => tIstat(`divisions.d${code}`), area: (code) => tIstat(`regions.${code}`) };
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -63,7 +65,7 @@ export async function POST(req) {
       const emit = (event) => controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
       try {
         const result = await runAgent({
-          question, history: validHistory(body.history), locale, uncategorized, userId: session.user.id, emit,
+          question, history: validHistory(body.history), locale, uncategorized, labels, userId: session.user.id, emit,
         });
         logger.info('POST /api/chat', {
           steps: result.steps, tools: result.tools, costMicro: result.costMicro, model: result.model,

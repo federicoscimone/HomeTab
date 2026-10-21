@@ -64,7 +64,8 @@
     "userMenu": "User menu",
     "myAccount": "My account",
     "signOut": "Sign out",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "similarHouseholds": "Similar households"
   },
   "roles": {
     "viewer": {
@@ -795,7 +796,8 @@
       "spese_per_categoria": "spending by category",
       "confronta_periodi": "period comparison",
       "cerca_movimenti": "movement search",
-      "stato_obiettivi": "goals"
+      "stato_obiettivi": "goals",
+      "confronto_istat": "similar households"
     },
     "unavailable": {
       "demo": "Chat is off in the public demo: anyone could use up the credit.",
@@ -1409,5 +1411,98 @@
     "invalidLink": "The link is invalid or has expired. Create a new one from the Account page in HomeTab.",
     "linked": "Done, {name}: this chat is now linked to your HomeTab account. Sign-in and recovery codes will arrive here.",
     "chatTaken": "This chat is already linked to another HomeTab account: disconnect it there before using it here."
+  },
+  "istat": {
+    "title": "Similar households",
+    "intro": "Your average monthly spending next to that of households with the same number of members in your region, from ISTAT’s household budget survey.",
+    "subtitle": "From {from} to {to} ({months, plural, one {# month} other {# months}}), next to the ISTAT {year} average for households of {members} in {region}. Amounts per month.",
+    "membersCount": "{n, plural, one {# member} other {# members}}",
+    "membersMany": "5 or more members",
+    "anyMembers": "any size",
+    "loadFailed": "Could not load the comparison",
+    "profileMissing": "Set your region and number of members below: until then the comparison is with the Italian average of all households.",
+    "profileMissingViewer": "The household profile is incomplete: until an administrator sets region and members, the comparison is with the Italian average.",
+    "cols": {
+      "chapter": "Category",
+      "yours": "You",
+      "istat": "ISTAT",
+      "diff": "Difference"
+    },
+    "total": "Total",
+    "estimated": "estimate",
+    "fromArea": "figure for: {area}",
+    "notCompared": "Not compared",
+    "notComparedHint": "Spending in categories without an ISTAT category, or uncategorized: left out of the rows but included in the total.",
+    "perMonth": "{name}: {amount} a month",
+    "uncategorized": "Uncategorized",
+    "noData": "No expenses recorded in the complete months.",
+    "notes": {
+      "title": "How to read the comparison",
+      "average": "The ISTAT average includes households that spend nothing in a category (education, for those without children in school): a very different figure is not necessarily an anomaly.",
+      "housing": "Housing: the ISTAT average mixes those who pay rent and those living in their own home, so a renting household almost always comes out above it. Imputed rent is removed, that is the rent ISTAT estimates even for those living in their own home; ISTAT does not publish it for single regions, so it is removed in proportion to the macro-area: it is an estimate. Mortgage payments are not spending for ISTAT: if you record them here, the comparison counts them on top.",
+      "yours": "Your figures are the expenses of the complete months divided by the number of months, with every payment method (meal vouchers too) and without the movements excluded from analysis.",
+      "total": "Your total also includes the spending not compared; the ISTAT one excludes imputed rent.",
+      "source": "Source: Istat, household budget survey, year {year} (CC BY 4.0 licence). The data are saved in the app and updated once a year."
+    },
+    "settings": {
+      "title": "Comparison settings",
+      "region": "Region",
+      "members": "Members",
+      "choose": "Choose…",
+      "saveProfile": "Save profile",
+      "mapping": "ISTAT categories",
+      "mappingIntro": "Each category counts in the ISTAT category shown. A subcategory without one follows its parent; a category left out only counts in the total.",
+      "none": "Not compared",
+      "inherit": "As parent ({chapter})",
+      "inheritNone": "As parent (not compared)",
+      "applyDefaults": "Apply default categories",
+      "applyDefaultsHint": "Assigns the ISTAT category to categories named like the initial ones that don’t have one yet. Others don’t change.",
+      "defaultsApplied": "{n, plural, =0 {No category to complete.} one {# category completed.} other {# categories completed.}}",
+      "saveMapping": "Save categories",
+      "saved": "Saved.",
+      "failed": "Could not save"
+    },
+    "divisions": {
+      "d01": "Food and non-alcoholic beverages",
+      "d02": "Alcohol and tobacco",
+      "d03": "Clothing and footwear",
+      "d04": "Housing, water, electricity and gas",
+      "d05": "Furnishings and household services",
+      "d06": "Health",
+      "d07": "Transport",
+      "d08": "Information and communication",
+      "d09": "Recreation, sport and culture",
+      "d10": "Education",
+      "d11": "Restaurants and accommodation",
+      "d12": "Insurance and financial services",
+      "d13": "Personal care and other spending"
+    },
+    "regions": {
+      "ITC1": "Piedmont",
+      "ITC2": "Aosta Valley",
+      "ITC3": "Liguria",
+      "ITC4": "Lombardy",
+      "ITD1": "Province of Bolzano",
+      "ITD2": "Province of Trento",
+      "ITD3": "Veneto",
+      "ITD4": "Friuli-Venezia Giulia",
+      "ITD5": "Emilia-Romagna",
+      "ITE1": "Tuscany",
+      "ITE2": "Umbria",
+      "ITE3": "Marche",
+      "ITE4": "Lazio",
+      "ITF1": "Abruzzo",
+      "ITF2": "Molise",
+      "ITF3": "Campania",
+      "ITF4": "Apulia",
+      "ITF5": "Basilicata",
+      "ITF6": "Calabria",
+      "ITG1": "Sicily",
+      "ITG2": "Sardinia",
+      "ITCD": "North",
+      "ITE": "Centre",
+      "ITFG": "South and islands",
+      "IT": "Italy"
+    }
   }
 }
