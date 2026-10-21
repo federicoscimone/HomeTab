@@ -108,18 +108,20 @@ keyword rules, 13 sent to the model, 12 categorized plausibly, in 7.7 seconds, f
 
 ## Chat on the data
 
-The **Ask** page answers questions such as "how much did we spend on restaurants this year
-compared with last year?" or "how much is missing for the new car goal?". It is read-only and
-uses the same functions as the reports.
+The chat opens from the pixel robot at the bottom right of every page and answers questions such
+as "how much will we have saved this year at this pace?", "where can we improve to save more?",
+"will we reach our goals?" or "how much did we spend on restaurants compared with last year?". It
+is read-only and uses the same functions as the reports. The panel lives in the layout: opening
+a verification link changes the page underneath and the conversation stays.
 
-**The model doesn't compute; it picks.** It has seven tools (`lib/ai/agent/tools.js`): month
+**The model doesn't compute; it picks.** It has eight tools (`lib/ai/agent/tools.js`): month
 summary, totals by category or subcategory with the year-over-year comparison, any two date ranges
-compared, movement search, savings goals, comparison with similar households, saving signals. The
-code computes every number. Each result carries the amounts already formatted, which the model
-must quote verbatim, and the link to the app page that shows the same number with the same
-filters, so every answer can be checked with one click. The tools use the pages' defaults
-(traditional payments, meal vouchers excluded), otherwise the chat and the linked page would
-disagree.
+compared, movement search, savings goals, comparison with similar households, saving signals,
+year-end projection. The code computes every number. Each result carries the amounts already
+formatted, which the model must quote verbatim, and the link to the app page that shows the same
+number with the same filters, so every answer can be checked with one click. The tools use the
+pages' defaults (traditional payments, meal vouchers excluded), otherwise the chat and the linked
+page would disagree.
 
 **Why tools and not RAG.** The questions are about numbers, and numbers come from aggregations,
 not from text similar to the question: retrieving "relevant" movements and asking the model to
@@ -138,10 +140,11 @@ is saved on the server.
 Default model: Claude Sonnet 5.5 with low effort, chosen from the same settings page. A question
 costs one or two cents.
 
-**Measured** with `node scripts/chat-eval.js` on the demo data: eleven questions whose expected
+**Measured** with `node scripts/chat-eval.js` on the demo data: thirteen questions whose expected
 answers are read from the pages' own APIs (dashboard, reports, movements, goals, similar
-households), one of them off topic. On 2026-10-21 with Sonnet 5.5, every answer was correct over
-four runs (three of the first ten questions, one of all eleven), about $0.10 per run.
+households, year projection), one of them off topic. On 2026-10-21 with Sonnet 5.5 every answer
+was correct over five runs as the set grew (three of the first ten questions, one of eleven, one
+of all thirteen), about $0.12 per run.
 
 ## Saving suggestions, on request
 
@@ -390,18 +393,20 @@ secondi, per 0,0011 $.
 
 ## La chat sui dati
 
-La pagina **Chiedi** risponde a domande come «quanto abbiamo speso in ristoranti quest'anno
-rispetto all'anno scorso?» o «quanto manca per l'obiettivo dell'auto nuova?». È in sola lettura
-e usa le stesse funzioni dei report.
+La chat si apre dal robottino in basso a destra su ogni pagina e risponde a domande come «quanto
+avremo risparmiato quest'anno continuando così?», «dove possiamo migliorare per risparmiare di
+più?», «riusciremo a raggiungere gli obiettivi?» o «quanto abbiamo speso in ristoranti rispetto
+all'anno scorso?». È in sola lettura e usa le stesse funzioni dei report. Il pannello vive nel
+layout: aprendo un link di verifica la pagina cambia sotto e la conversazione resta.
 
-**Il modello non calcola: sceglie.** Ha sette strumenti (`lib/ai/agent/tools.js`): riepilogo del
+**Il modello non calcola: sceglie.** Ha otto strumenti (`lib/ai/agent/tools.js`): riepilogo del
 mese, totali per categoria o sottocategoria con il confronto sull'anno prima, confronto fra due
 intervalli qualsiasi, ricerca dei movimenti, obiettivi di risparmio, confronto con le famiglie
-simili, segnali di risparmio. Ogni numero lo calcola il codice. Ogni risultato porta gli importi
-già formattati, che il modello deve citare così come sono, e il link alla pagina dell'app che
-mostra lo stesso numero con gli stessi filtri: ogni risposta si verifica con un clic. Gli
-strumenti usano i valori predefiniti delle pagine (pagamenti tradizionali, buoni pasto esclusi),
-altrimenti chat e pagina collegata non coinciderebbero.
+simili, segnali di risparmio, proiezione di fine anno. Ogni numero lo calcola il codice. Ogni
+risultato porta gli importi già formattati, che il modello deve citare così come sono, e il link
+alla pagina dell'app che mostra lo stesso numero con gli stessi filtri: ogni risposta si verifica
+con un clic. Gli strumenti usano i valori predefiniti delle pagine (pagamenti tradizionali, buoni
+pasto esclusi), altrimenti chat e pagina collegata non coinciderebbero.
 
 **Perché strumenti e non RAG.** Le domande riguardano numeri, e i numeri vengono da aggregazioni,
 non da testi simili alla domanda: recuperare i movimenti «pertinenti» e chiedere al modello di
@@ -420,11 +425,11 @@ del browser (gli ultimi 6 turni si rimandano a ogni domanda): sul server non si 
 Modello predefinito: Claude Sonnet 5.5 con effort basso, scelto dalla stessa pagina delle
 impostazioni. Una domanda costa uno o due centesimi.
 
-**Misurata** con `node scripts/chat-eval.js` sui dati della demo: undici domande le cui risposte
+**Misurata** con `node scripts/chat-eval.js` sui dati della demo: tredici domande le cui risposte
 attese si leggono dalle API delle pagine (dashboard, report, movimenti, obiettivi, famiglie
-simili), una delle quali fuori tema. Il 21 ottobre 2026 con Sonnet 5.5 tutte le risposte sono
-state giuste in quattro passate (tre sulle prime dieci domande, una su tutte e undici), circa
-0,10 $ a passata.
+simili, proiezione), una delle quali fuori tema. Il 21 ottobre 2026 con Sonnet 5.5 tutte le
+risposte sono state giuste in cinque passate, man mano che il set cresceva (tre sulle prime dieci
+domande, una su undici, una su tutte e tredici), circa 0,12 $ a passata.
 
 ## Consigli di risparmio, su richiesta
 

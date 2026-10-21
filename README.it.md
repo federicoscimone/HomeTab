@@ -34,11 +34,16 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
   dell'app. I dati personali vengono mascherati prima dell'invio e un tetto mensile rigido
   (3 $ di default) è garantito da una prenotazione atomica; un mese tipico costa pochi centesimi
   ([docs/ai.md](docs/ai.md#import-assistito-dallia)). Spento nella demo pubblica.
-- **Chat sui dati**: facoltativa, in sola lettura. Domande come «quanto abbiamo speso in
-  ristoranti quest'anno rispetto all'anno scorso?» ricevono risposta chiamando le stesse funzioni
-  dei report, quindi il modello non fa mai i conti, e ogni risposta porta il link alla pagina che
-  mostra lo stesso numero. Tutte le risposte giuste in quattro passate di un set di undici
-  domande, uno o due centesimi a domanda ([docs/ai.md](docs/ai.md#la-chat-sui-dati)). Spenta nella demo pubblica.
+- **Chat sui dati**: facoltativa, in sola lettura, dal robottino in basso a destra. Domande come
+  «quanto avremo risparmiato quest'anno continuando così?» o «riusciremo a raggiungere gli
+  obiettivi?» ricevono risposta chiamando le stesse funzioni dei report, quindi il modello non fa
+  mai i conti, e ogni risposta porta il link alla pagina che mostra lo stesso numero. Tutte le
+  risposte giuste su un set di tredici domande, uno o due centesimi a domanda
+  ([docs/ai.md](docs/ai.md#la-chat-sui-dati)). Spenta nella demo pubblica.
+- **L'anno continuando così**: nella dashboard, senza IA, il risparmio finora e quello previsto a
+  fine anno (i mesi che mancano come gli stessi mesi dell'anno scorso, corretti per l'andamento di
+  quest'anno, così la tredicesima conta) contro l'anno scorso, e se ogni obiettivo arriva entro la
+  scadenza.
 - **Famiglie simili**: le vostre spese medie mensili per capitolo accanto alla media ISTAT delle
   famiglie con lo stesso numero di componenti nella vostra regione (indagine 2025), da
   un'istantanea versionata dei dati SDMX di ISTAT; la casa è senza affitti figurativi

@@ -28,11 +28,15 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   Personal data is masked before sending, and a hard monthly cap (default $3) is enforced
   atomically; a typical month costs a few cents ([docs/ai.md](docs/ai.md)). Off in the public
   demo.
-- **Chat on your data** — optional, read-only: questions like "how much did we spend on
-  restaurants this year compared with last year?" are answered through tool calls to the same
-  functions as the reports, so the model never does the arithmetic, and every answer links to the
-  page that shows the same number. Every answer correct over four runs of an eleven-question set,
-  one or two cents per question ([docs/ai.md](docs/ai.md#chat-on-the-data)). Off in the public demo.
+- **Chat on your data** — optional, read-only, from the pixel robot at the bottom right: "how much
+  will we have saved this year at this pace?", "will we reach our goals?" are answered through
+  tool calls to the same functions as the reports, so the model never does the arithmetic, and
+  every answer links to the page that shows the same number. Every answer correct on a
+  thirteen-question set, one or two cents per question
+  ([docs/ai.md](docs/ai.md#chat-on-the-data)). Off in the public demo.
+- **The year at this pace** — on the dashboard, without AI: savings so far, expected at year end
+  (remaining months like the same months last year, adjusted for this year's trend, so the
+  December bonus counts) against last year, and whether each goal arrives by its deadline.
 - **Reports** — monthly dashboard, category × month pivot, year-over-year comparison by
   category, custom date ranges with a year-end projection. Movements, the pivot and the
   custom-range analysis export to Excel.

@@ -90,3 +90,26 @@ test('istantanea: ogni capitolo ha un valore per la Lombardia con tre componenti
   const housing = snapshot.values.ITC4.N3['04'];
   assert.ok(r['04'].value > housing * 0.3 && r['04'].value < housing * 0.6, String(r['04'].value));
 });
+
+test('capitoli proposti dall\'IA: solo per chi non ne ha, e le figlie uguali alla madre ereditano', async () => {
+  const { buildMappingRequest, readMapping } = await import('../lib/ai/tasks/coicopMapping.js');
+  const cats = [
+    { _id: 'p', name: 'Palestra e sport', level: 1, parentId: null, coicop: null },
+    { _id: 'p1', name: 'Abbonamento', level: 2, parentId: 'p', coicop: null },
+    { _id: 'p2', name: 'Fisioterapia', level: 2, parentId: 'p', coicop: null },
+    { _id: 's', name: 'Spesa', level: 1, parentId: null, coicop: '01' },
+  ];
+  const { codes, toAssign, prompt } = buildMappingRequest(cats);
+  assert.equal(toAssign, 3);
+  assert.ok(prompt.includes('"assign": true'));
+  const proposals = readMapping({
+    assignments: [
+      { code: 'c1.1', division: '09' }, // come la madre: eredita
+      { code: 'c1.2', division: '06' },
+      { code: 'c1', division: '09' },
+      { code: 'c2', division: '11' }, // già assegnata a mano: non si tocca
+      { code: 'c9', division: '01' }, // inesistente
+    ],
+  }, codes);
+  assert.deepEqual(proposals, { p: '09', p2: '06' });
+});
