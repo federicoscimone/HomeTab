@@ -2,14 +2,20 @@
 
 [English](README.md) · **Italiano**
 
-Un'applicazione web da installare in proprio per tenere traccia delle spese di una famiglia e
-capirle: import degli estratti conto con un template per ogni banca, categorizzazione
-automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ruoli diversi.
+Un'applicazione web da installare in proprio per tenere traccia dei soldi di una famiglia e
+pianificarli: import degli estratti conto con un template per ogni banca e categorizzazione
+automatica, report, obiettivi di risparmio e progetti di famiglia, scadenze e budget mensili, e
+un assistente IA facoltativo che risponde con i numeri dell'app.
 
 È fatta con Next.js 16 (App Router), MongoDB e NextAuth. Parte con un solo
 `docker compose up` e, al primo avvio, contiene già 24 mesi di dati demo realistici.
 
-![Dashboard](docs/images/dashboard.png)
+![La dashboard: budget, scadenze, l'anno continuando così e i consigli di risparmio su richiesta](docs/images/dashboard-tour.gif)
+
+| Chiedi ai vostri dati | E se…? |
+| --- | --- |
+| ![La chat risponde a «riusciremo a raggiungere gli obiettivi?» con i numeri dell'app e i link per verificarli](docs/images/chat.gif) | ![Il simulatore: rata dell'auto, taglio ai ristoranti e part-time, con l'effetto su risparmio e obiettivi](docs/images/simulatore.gif) |
+| La chat, dal robottino in basso a destra, risponde chiamando i report: ogni numero viene dal codice e porta il link alla pagina che lo mostra. | Provate una decisione prima di prenderla: l'effetto sul risparmio di fine anno e sull'arrivo di ogni obiettivo, senza IA. |
 
 ## Funzionalità
 

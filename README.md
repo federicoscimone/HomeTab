@@ -2,14 +2,19 @@
 
 **English** · [Italiano](README.it.md)
 
-A self-hosted web app to track and understand a family's spending: bank statement import with
-per-bank templates, automatic categorization, monthly and yearly reports, savings goals and
-multiple users with roles.
+A self-hosted web app to track and plan a family's money: bank statement import with per-bank
+templates and automatic categorization, reports, savings goals and family projects, deadlines and
+monthly budgets, and an optional AI assistant that answers from the app's own numbers.
 
 Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
 `docker compose up`, and starts with 24 months of realistic demo data.
 
-![Dashboard](docs/images/dashboard.png)
+![The dashboard: budgets, deadlines, the year at this pace and saving suggestions on request](docs/images/dashboard-tour.gif)
+
+| Ask your data | What if…? |
+| --- | --- |
+| ![The chat answers "will we reach our goals?" with the app's numbers and links to check them](docs/images/chat.gif) | ![The simulator: a car loan, a cut to restaurants and a part-time job, and their effect on savings and goals](docs/images/simulatore.gif) |
+| The chat, from the robot at the bottom right, answers with tool calls to the reports: every number comes from the code and links to the page that shows it. | Try a decision before taking it: the effect on year-end savings and on when each goal arrives, with no AI. |
 
 ## Features
 
