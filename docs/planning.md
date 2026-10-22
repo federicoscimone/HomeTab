@@ -65,6 +65,23 @@ A savings goal can become a **project**: a renovation, a wedding, a move, a trip
 The chat sees the project too: "how is the Japan trip going?" answers with items, spending and
 what is left to do.
 
+## Deductible expenses (730)
+
+**Deductible expenses** (under Reports) prepares the Italian tax return: the year's expenses by
+deductible type (medical, veterinary, education, nursery, children's sport, mortgage interest,
+insurance), the list of movements and a CSV for whoever fills in the return.
+
+- Categories are linked to a type from the page; seed categories have defaults (Health → medical,
+  Pets → Vet → veterinary, Study → Courses → education) and a subcategory follows its parent. A
+  single movement can be excluded (private lessons under "Courses") and put back.
+- **Traceable payment.** Since 2020, 19% deductions need a traceable payment, except medicines,
+  medical devices and services from public facilities or facilities accredited with the national
+  health service ([Agenzia delle Entrate](https://www.agenziaentrate.gov.it/portale/le-spese-sanitarie-e-i-mezzi-di-ausilio)).
+  Cash medical expenses are therefore marked "to check", other cash expenses are left out of the
+  total.
+- The app **does not compute the deduction**: rates, thresholds and limits change every year and
+  depend on income, and it doesn't know whose name is on each receipt (`lib/utils/deductions.js`).
+
 ---
 
 # Strumenti di pianificazione
@@ -134,3 +151,21 @@ trasloco, un viaggio. Nella pagina dell'obiettivo:
 
 Anche la chat vede il progetto: «come va il viaggio in Giappone?» risponde con le voci, lo speso e
 quello che resta da fare.
+
+## Spese detraibili (730)
+
+**Spese detraibili** (sotto Report) prepara il 730: le spese dell'anno per tipo detraibile
+(sanitarie, veterinarie, istruzione, asilo nido, sport dei figli, interessi del mutuo,
+assicurazioni), l'elenco dei movimenti e un CSV per chi compila la dichiarazione.
+
+- Le categorie si collegano a un tipo dalla pagina; quelle del seed hanno i predefiniti (Salute →
+  sanitarie, Animali → Veterinario → veterinarie, Studio → Corsi → istruzione) e una
+  sottocategoria segue la madre. Un singolo movimento si esclude (le lezioni private sotto
+  «Corsi») e si rimette.
+- **Pagamento tracciabile.** Dal 2020 le detrazioni al 19% richiedono un pagamento tracciabile,
+  tranne per medicinali, dispositivi medici e prestazioni di strutture pubbliche o accreditate al
+  SSN ([Agenzia delle Entrate](https://www.agenziaentrate.gov.it/portale/le-spese-sanitarie-e-i-mezzi-di-ausilio)).
+  Le spese sanitarie in contanti sono quindi «da verificare», le altre in contanti restano fuori
+  dal totale.
+- L'app **non calcola la detrazione**: percentuali, franchigie e limiti cambiano ogni anno e
+  dipendono dal reddito, e non sa a chi è intestata ogni ricevuta (`lib/utils/deductions.js`).
