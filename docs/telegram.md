@@ -51,7 +51,11 @@ COMPOSE_PROFILES=telegram docker compose up -d --build
 
 (or put `COMPOSE_PROFILES=telegram` in `.env`). It uses
 [long polling (`getUpdates`)](https://core.telegram.org/bots/api#getupdates), so it works behind
-NAT, and stores the update offset in MongoDB, so a restart does not reprocess old messages.
+NAT, and stores the update offset in MongoDB, so a restart does not reprocess old messages. The
+process doesn't answer by itself: it hands every update to the app at `/api/telegram/webhook`,
+authenticated with a token derived from `NEXTAUTH_SECRET` (the compose passes it already), so
+the logic is the same as with the webhook. If the app is down the update stays queued on
+Telegram and is delivered later.
 
 **One bot per installation.** Linked chats live in each installation's database, and Telegram
 doesn't allow a webhook and polling on the same bot. Two installations (say, production on Vercel
@@ -69,6 +73,24 @@ the linked chat, besides the usual email link.
 
 The linked chat also receives the reminders of the payment deadlines, if a daily cron calls
 `/api/cron/promemoria` ([docs/planning.md](planning.md)).
+
+## 5. Record expenses from the chat
+
+From a linked chat, users who can create movements record them without opening the app:
+
+- **One line of text**: `12,50 pizza`, `ieri 40 benzina contanti`, `2 pizze 18`, `+1500
+  stipendio` for income. Amount, date ("ieri", "altro ieri"), payment method ("contanti",
+  "bancomat", "carta", "buoni pasto"…; debit card otherwise) and description are read without AI
+  (`lib/utils/quickEntry.js`); with several numbers the one with a currency sign or decimals
+  wins, otherwise the largest. The category comes from the import chain: keywords, merchant
+  history, then the AI if it is on. The movement is saved at once, with an **Undo** button valid
+  for a day.
+- **A photo of a receipt**: the model (the import model, Claude Haiku 5.5 by default) reads
+  merchant, date, total and payment method; the movement waits for **Record** or **Cancel**.
+  The photo is not stored. About $0.0002 per receipt.
+
+Every movement created from Telegram is marked with source `telegram` and written to the audit
+log; a button tapped twice records once.
 
 ## How it is protected
 
@@ -149,7 +171,10 @@ COMPOSE_PROFILES=telegram docker compose up -d --build
 (oppure metti `COMPOSE_PROFILES=telegram` nel `.env`). Usa il
 [long polling (`getUpdates`)](https://core.telegram.org/bots/api#getupdates), quindi funziona
 anche dietro NAT, e salva su MongoDB l'offset degli aggiornamenti, così un riavvio non
-rielabora i vecchi messaggi.
+rielabora i vecchi messaggi. Il
+processo non risponde da sé: consegna ogni update all'app su `/api/telegram/webhook`, con un
+token ricavato da `NEXTAUTH_SECRET` (il compose glielo passa già), così la logica è la stessa
+del webhook. Se l'app è giù l'update resta in coda su Telegram e arriva dopo.
 
 **Un bot per installazione.** Le chat collegate stanno nel database di ogni installazione, e
 Telegram non ammette webhook e polling sullo stesso bot. Due installazioni (per esempio la
@@ -169,6 +194,24 @@ codice alla chat collegata, oltre al consueto link via email.
 
 La chat collegata riceve anche i promemoria delle scadenze di pagamento, se un cron giornaliero
 chiama `/api/cron/promemoria` ([docs/planning.md](planning.md#scadenze-e-accantonamenti)).
+
+## 5. Registra le spese dalla chat
+
+Da una chat collegata, chi può creare movimenti li registra senza aprire l'app:
+
+- **Una riga di testo**: `12,50 pizza`, `ieri 40 benzina contanti`, `2 pizze 18`, `+1500
+  stipendio` per un'entrata. Importo, data («ieri», «altro ieri»), metodo di pagamento
+  («contanti», «bancomat», «carta», «buoni pasto»…; altrimenti carta di debito) e descrizione si
+  leggono senza IA (`lib/utils/quickEntry.js`); con più numeri vince quello con la valuta o i
+  decimali, altrimenti il più grande. La categoria la trova la catena dell'import: parole chiave,
+  storico degli esercenti, poi l'IA se è attiva. Il movimento si salva subito, con un pulsante
+  **Annulla** valido per un giorno.
+- **La foto di uno scontrino**: il modello (quello dell'import, di serie Claude Haiku 5.5) legge
+  esercente, data, totale e metodo di pagamento; il movimento aspetta **Registra** o **Annulla**.
+  La foto non si salva. Circa 0,0002 $ a scontrino.
+
+Ogni movimento creato da Telegram ha origine `telegram` e finisce nel registro delle operazioni;
+un pulsante toccato due volte registra una volta sola.
 
 ## Come è protetta
 

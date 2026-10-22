@@ -51,6 +51,9 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   to set aside for the non-monthly ones; recurring payments are found in your movements and
   proposed, payments are recognised, and Telegram reminds you before the due date
   ([docs/planning.md](docs/planning.md)).
+- **Record from Telegram** — "12,50 pizza" in the bot's chat records an expense, categorized by
+  the import chain, with an Undo button; a receipt photo is read by the AI and waits for
+  confirmation ([docs/telegram.md](docs/telegram.md)).
 - **Savings goals** — the savings of each closed month are split among goals; every goal shows
   the monthly amount it needs and its estimated arrival date.
 - **Two-step verification and Telegram** — optional for each user: after the password, a

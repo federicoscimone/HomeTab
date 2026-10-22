@@ -1,35 +1,40 @@
 /**
- * @fileoverview Processo del bot Telegram: completa il collegamento delle chat agli utenti.
+ * @fileoverview Processo del bot Telegram in modalità polling: riceve gli update e li consegna
+ * all'app.
  *
- * Avvio: `node workers/telegram.js`, con MONGODB_URI, TELEGRAM_BOT_TOKEN e TELEGRAM_BOT_USERNAME (nel compose è il servizio `telegram`, sotto il profilo
- * omonimo). Il server è dietro NAT e non riceve webhook, quindi il bot chiede lui i messaggi a
- * Telegram con getUpdates (long polling). Inviare i codici invece lo fa l'app: è una chiamata
- * in uscita. Uno solo di questi processi per bot: Telegram rifiuta due getUpdates in parallelo.
+ * Avvio: `node workers/telegram.js`, con MONGODB_URI, TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME
+ * e NEXTAUTH_SECRET (nel compose è il servizio `telegram`, sotto il profilo omonimo). Il server è
+ * dietro NAT e non riceve webhook, quindi il bot chiede lui i messaggi a Telegram con getUpdates
+ * (long polling). Uno solo di questi processi per bot: Telegram rifiuta due getUpdates in parallelo.
  *
- * La logica delle risposte è in lib/telegramBot.js, condivisa con il webhook: questo processo
- * serve dove l'app non è raggiungibile da internet; altrove si usa il webhook.
+ * Le risposte le dà l'app: ogni update va a POST /api/telegram/webhook, con il token ricavato dal
+ * segreto del server (relayToken). Così la logica è una sola, con webhook o con polling, e può
+ * usare l'IA e tutto il resto dell'app, che in questo processo non c'è. Se l'app non risponde,
+ * l'update resta in coda su Telegram e si riprova: niente messaggi persi durante un riavvio.
  */
 
-import { readFileSync } from 'fs';
 import mongoose from 'mongoose';
 import BotState from '../lib/models/BotState.js';
 import { botUsername, telegramCall, telegramConfigured } from '../lib/notify/telegram.js';
-import { handleUpdate, webhookMode } from '../lib/telegramBot.js';
-import { isLocale, DEFAULT_LOCALE } from '../lib/i18n/locale.js';
+import { ALLOWED_UPDATES, relayToken, webhookMode } from '../lib/telegramBot.js';
 
 const POLL_SECONDS = 30;
+const APP_URL = (process.env.TELEGRAM_RELAY_URL || 'http://app:3000').replace(/\/+$/, '');
 
-/** Testi del bot dai messaggi dell'app: niente next-intl qui, quindi un'interpolazione minima. */
-const MESSAGES = Object.fromEntries(['it', 'en'].map((locale) => [
-  locale,
-  JSON.parse(readFileSync(new URL(`../messages/${locale}.json`, import.meta.url), 'utf8')).telegramBot,
-]));
-const text = (locale, key, vars = {}) =>
-  MESSAGES[isLocale(locale) ? locale : DEFAULT_LOCALE][key].replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? '');
+/** Consegna un update all'app; lancia un errore se l'app non l'ha accettato. */
+async function relay(update, signal) {
+  const res = await fetch(`${APP_URL}/api/telegram/webhook`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-HomeTab-Relay': relayToken() },
+    body: JSON.stringify(update),
+    signal,
+  });
+  if (!res.ok) throw new Error(`l'app ha risposto ${res.status}`);
+}
 
 async function run() {
-  if (!telegramConfigured()) {
-    console.error('[telegram] TELEGRAM_BOT_TOKEN e TELEGRAM_BOT_USERNAME sono obbligatori');
+  if (!telegramConfigured() || !relayToken()) {
+    console.error('[telegram] TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME e NEXTAUTH_SECRET sono obbligatori');
     process.exit(1);
   }
   if (webhookMode()) {
@@ -56,21 +61,19 @@ async function run() {
       const state = await BotState.findById(stateId).lean();
       const updates = await telegramCall(
         'getUpdates',
-        { offset: state?.offset ?? 0, timeout: POLL_SECONDS, allowed_updates: ['message'] },
+        { offset: state?.offset ?? 0, timeout: POLL_SECONDS, allowed_updates: ALLOWED_UPDATES },
         { signal: controller.signal },
       );
       for (const update of updates) {
-        try {
-          await handleUpdate(update, text);
-        } catch (err) {
-          console.error('[telegram] messaggio non elaborato:', err.message);
-        }
-        // L'offset avanza anche se un messaggio fallisce: rielaborarlo all'infinito bloccherebbe il bot.
+        // L'offset avanza solo dopo la consegna: se l'app è giù, l'update si riprova al giro dopo.
+        // Un update che l'app ha ricevuto ma non è riuscita a elaborare risponde comunque 200
+        // (vedi la rotta), quindi non blocca il bot.
+        await relay(update, controller.signal);
         await BotState.updateOne({ _id: stateId }, { offset: update.update_id + 1 }, { upsert: true });
       }
     } catch (err) {
       if (stopping) break;
-      console.error('[telegram] getUpdates non riuscito, nuovo tentativo tra 5 s:', err.message);
+      console.error('[telegram] ricezione o consegna non riuscita, nuovo tentativo tra 5 s:', err.message);
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
