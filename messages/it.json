@@ -65,7 +65,8 @@
     "signOut": "Disconnetti",
     "openMenu": "Apri menu",
     "similarHouseholds": "Famiglie simili",
-    "deadlines": "Scadenze"
+    "deadlines": "Scadenze",
+    "simulator": "E se…?"
   },
   "roles": {
     "viewer": {
@@ -801,7 +802,8 @@
       "confronto_istat": "confronto con famiglie simili",
       "segnali_risparmio": "segnali di risparmio",
       "proiezione_anno": "proiezione dell’anno",
-      "scadenze": "scadenze"
+      "scadenze": "scadenze",
+      "simula_scenario": "simulazione «e se»"
     },
     "unavailable": {
       "demo": "Nella demo pubblica la chat è spenta: chiunque potrebbe consumare il credito.",
@@ -1592,7 +1594,8 @@
     "noReach": "arrivo non stimabile, scadenza {deadline}",
     "needed": "servirebbero {required} al mese, ne arrivano {expected}",
     "legendActual": "mesi chiusi",
-    "legendEstimate": "mese in corso e stime"
+    "legendEstimate": "mese in corso e stime",
+    "tryScenario": "Prova un’ipotesi"
   },
   "deadlines": {
     "title": "Scadenze",
@@ -1668,5 +1671,57 @@
       "reminderDue": "📅 {title}: scade oggi. {amount}",
       "reminderOverdue": "⚠️ {title}: era da pagare il {date}. Se l’avete pagata, segnatela nell’app. {amount}"
     }
+  },
+  "simulator": {
+    "title": "E se…?",
+    "intro": "Provate una decisione prima di prenderla: una rata, un taglio, entrate che cambiano. Vedete l’effetto sul risparmio e sugli obiettivi, partendo dal vostro risparmio medio di {avg} al mese. Senza IA: sono conti.",
+    "presets": "Esempi:",
+    "presetCar": "Rata auto 300 € × 48",
+    "presetCut": "{category} −30%",
+    "presetPartTime": "Part-time: −600 € al mese da gennaio",
+    "presetOneOff": "Spesa straordinaria 1.500 € a dicembre",
+    "types": {
+      "installment": "Rata",
+      "category": "Categoria",
+      "income": "Entrate",
+      "oneOff": "Una tantum"
+    },
+    "add": "+ {type}",
+    "remove": "Togli",
+    "incomplete": "Completate i campi per vedere l’effetto.",
+    "failed": "Calcolo non riuscito",
+    "fields": {
+      "category": "Categoria",
+      "choose": "Scegli…",
+      "categoryOption": "{name} ({avg} al mese)",
+      "mode": "Come",
+      "percent": "in %",
+      "amountMonth": "€ al mese",
+      "value": {
+        "percent": "Variazione (%)",
+        "amount": "Variazione (€ al mese)",
+        "installment": "Rata (€ al mese)",
+        "income": "Entrate in più (€ al mese, − per meno)",
+        "oneOff": "Importo (€)"
+      },
+      "from": "Da",
+      "when": "Quando",
+      "months": "Per mesi",
+      "forever": "sempre",
+      "isIncome": "È un’entrata"
+    },
+    "results": {
+      "yearEnd": "Risparmio a fine anno",
+      "next12": "Risparmio nei prossimi 12 mesi",
+      "diff": "differenza: {amount}",
+      "goal": "Obiettivo",
+      "deadline": "Scadenza",
+      "before": "Arrivo oggi",
+      "after": "Arrivo con l’ipotesi",
+      "never": "oltre 10 anni",
+      "shiftLater": "{n, plural, one {# mese} other {# mesi}} dopo",
+      "shiftEarlier": "{n, plural, one {# mese} other {# mesi}} prima"
+    },
+    "how": "I mesi che restano quest’anno seguono la proiezione della dashboard; dopo, il risparmio medio. Ogni obiettivo riceve la sua percentuale del risparmio di ogni mese, come nella pagina Obiettivi: un mese in negativo non toglie niente a quanto già messo da parte."
   }
 }

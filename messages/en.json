@@ -65,7 +65,8 @@
     "signOut": "Sign out",
     "openMenu": "Open menu",
     "similarHouseholds": "Similar households",
-    "deadlines": "Deadlines"
+    "deadlines": "Deadlines",
+    "simulator": "What if…?"
   },
   "roles": {
     "viewer": {
@@ -801,7 +802,8 @@
       "confronto_istat": "similar households",
       "segnali_risparmio": "saving signals",
       "proiezione_anno": "year projection",
-      "scadenze": "deadlines"
+      "scadenze": "deadlines",
+      "simula_scenario": "what-if simulation"
     },
     "unavailable": {
       "demo": "Chat is off in the public demo: anyone could use up the credit.",
@@ -1592,7 +1594,8 @@
     "noReach": "arrival not estimable, deadline {deadline}",
     "needed": "{required} a month needed, {expected} coming in",
     "legendActual": "closed months",
-    "legendEstimate": "current month and estimates"
+    "legendEstimate": "current month and estimates",
+    "tryScenario": "Try a what-if"
   },
   "deadlines": {
     "title": "Deadlines",
@@ -1668,5 +1671,57 @@
       "reminderDue": "📅 {title}: due today. {amount}",
       "reminderOverdue": "⚠️ {title}: was due on {date}. If you paid it, mark it in the app. {amount}"
     }
+  },
+  "simulator": {
+    "title": "What if…?",
+    "intro": "Try a decision before making it: an instalment, a cut, income that changes. See the effect on savings and goals, starting from your average savings of {avg} a month. No AI: it’s arithmetic.",
+    "presets": "Examples:",
+    "presetCar": "Car instalment 300 € × 48",
+    "presetCut": "{category} −30%",
+    "presetPartTime": "Part-time: −600 € a month from January",
+    "presetOneOff": "One-off expense 1,500 € in December",
+    "types": {
+      "installment": "Instalment",
+      "category": "Category",
+      "income": "Income",
+      "oneOff": "One-off"
+    },
+    "add": "+ {type}",
+    "remove": "Remove",
+    "incomplete": "Fill in the fields to see the effect.",
+    "failed": "Calculation failed",
+    "fields": {
+      "category": "Category",
+      "choose": "Choose…",
+      "categoryOption": "{name} ({avg} a month)",
+      "mode": "How",
+      "percent": "in %",
+      "amountMonth": "€ a month",
+      "value": {
+        "percent": "Change (%)",
+        "amount": "Change (€ a month)",
+        "installment": "Instalment (€ a month)",
+        "income": "Extra income (€ a month, − for less)",
+        "oneOff": "Amount (€)"
+      },
+      "from": "From",
+      "when": "When",
+      "months": "For months",
+      "forever": "always",
+      "isIncome": "It’s income"
+    },
+    "results": {
+      "yearEnd": "Savings at year end",
+      "next12": "Savings in the next 12 months",
+      "diff": "difference: {amount}",
+      "goal": "Goal",
+      "deadline": "Deadline",
+      "before": "Arrival today",
+      "after": "Arrival with the change",
+      "never": "beyond 10 years",
+      "shiftLater": "{n, plural, one {# month} other {# months}} later",
+      "shiftEarlier": "{n, plural, one {# month} other {# months}} earlier"
+    },
+    "how": "The months left this year follow the dashboard projection; after that, average savings. Each goal receives its share of every month’s savings, as on the Goals page: a negative month takes nothing away from what was already set aside."
   }
 }
