@@ -108,7 +108,7 @@ keyword rules, 13 sent to the model, 12 categorized plausibly, in 7.7 seconds, f
 
 ## Chat on the data
 
-The chat opens from the pixel robot at the bottom right of every page and answers questions such
+The chat opens from the pixel owl at the bottom right of every page and answers questions such
 as "how much will we have saved this year at this pace?", "where can we improve to save more?",
 "will we reach our goals?" or "how much did we spend on restaurants compared with last year?". It
 is read-only and uses the same functions as the reports. The panel lives in the layout: opening
@@ -398,7 +398,7 @@ secondi, per 0,0011 $.
 
 ## La chat sui dati
 
-La chat si apre dal robottino in basso a destra su ogni pagina e risponde a domande come «quanto
+La chat si apre dal gufo in basso a destra su ogni pagina e risponde a domande come «quanto
 avremo risparmiato quest'anno continuando così?», «dove possiamo migliorare per risparmiare di
 più?», «riusciremo a raggiungere gli obiettivi?» o «quanto abbiamo speso in ristoranti rispetto
 all'anno scorso?». È in sola lettura e usa le stesse funzioni dei report. Il pannello vive nel

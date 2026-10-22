@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import ChatPanel from '@/components/chat/ChatPanel';
-import PixelBot from '@/components/chat/PixelBot';
+import PixelOwl from '@/components/chat/PixelOwl';
 
 /** Sotto questa larghezza il pannello copre tutta la pagina. */
 const FULL_SCREEN_BELOW = 640;
 
 /**
- * Il pulsante della chat, in basso a destra su ogni pagina. Il pannello vive nel layout: aprendo
+ * Il pulsante della chat, in basso a destra su ogni pagina: il gufo dell'assistente. Il pannello vive nel layout: aprendo
  * un link di verifica la pagina cambia sotto e la conversazione resta lì. Finché resta chiuso non
  * parte nessuna richiesta, nemmeno quella che controlla se la chat è disponibile.
  */
@@ -48,7 +48,7 @@ export default function ChatLauncher() {
         title={t('open')}
         className={`fixed z-40 bottom-4 right-4 btn btn-circle btn-lg bg-base-100 border-base-300 shadow-lg hover:-translate-y-0.5 transition-transform ${open ? 'max-sm:hidden' : ''}`}
       >
-        <PixelBot size={34} />
+        <PixelOwl size={34} />
       </button>
     </>
   );
