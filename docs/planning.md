@@ -51,6 +51,20 @@ savings; goals receive their share of every month's savings exactly as on the Go
 (`lib/utils/scenario.js`). The dashboard projection links to it, and the chat answers "what if
 we buy the car in instalments?" with the `simula_scenario` tool.
 
+## Family projects
+
+A savings goal can become a **project**: a renovation, a wedding, a move, a trip. On the goal page:
+
+- **Items** with a budget and, when you have one, the quote received. What is spent per item
+  comes from the expenses linked to the goal, with the item chosen in the movement form; linked
+  expenses without an item are shown apart. An item over budget is highlighted with a warning at
+  the top, a quote above budget is flagged before you spend (`lib/utils/project.js`).
+- **To do**, with optional due dates: anyone who can edit movements ticks and adds them; items and
+  budgets need the goals permission.
+
+The chat sees the project too: "how is the Japan trip going?" answers with items, spending and
+what is left to do.
+
 ---
 
 # Strumenti di pianificazione
@@ -105,3 +119,18 @@ risparmio medio; gli obiettivi ricevono la loro percentuale del risparmio di ogn
 pagina Obiettivi, così il «prima» è quello che l'app mostra già e la differenza è solo l'effetto
 dell'ipotesi (`lib/utils/scenario.js`). La proiezione della dashboard ci porta, e la chat risponde
 a «e se compriamo l'auto a rate?» con lo strumento `simula_scenario`.
+
+## Progetti di famiglia
+
+Un obiettivo di risparmio può diventare un **progetto**: una ristrutturazione, un matrimonio, un
+trasloco, un viaggio. Nella pagina dell'obiettivo:
+
+- **Voci** con un budget e, quando c'è, il preventivo ricevuto. Lo speso per voce viene dalle
+  spese collegate all'obiettivo, con la voce scelta nel modulo del movimento; le spese collegate
+  senza voce sono mostrate a parte. Una voce che sfora è evidenziata con un avviso in testa, un
+  preventivo sopra il budget è segnalato prima di spendere (`lib/utils/project.js`).
+- **Cose da fare**, con una data se serve: le spunta e le aggiunge chiunque possa modificare i
+  movimenti; voci e budget richiedono i permessi degli obiettivi.
+
+Anche la chat vede il progetto: «come va il viaggio in Giappone?» risponde con le voci, lo speso e
+quello che resta da fare.

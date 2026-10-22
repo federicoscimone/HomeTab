@@ -21,6 +21,7 @@ const EMPTY_FORM = {
   subCategory2Id: '',
   excludeFromAnalysis: false,
   goalId: '',
+  goalItemId: '',
 };
 
 /** Parte tra parentesi di un'etichetta, es. "(opzionale)". */
@@ -43,6 +44,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
     subCategory1Id: initial.subCategory1Id?._id || initial.subCategory1Id || '',
     subCategory2Id: initial.subCategory2Id?._id || initial.subCategory2Id || '',
     goalId: initial.goalId?._id || initial.goalId || '',
+    goalItemId: initial.goalItemId || '',
     amount: initial.amount?.toString() || '',
   } : { ...EMPTY_FORM, date: todayString() }));
 
@@ -72,6 +74,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
   const canLinkGoal = form.type === 'expense' && getPaymentGroup(form.paymentMethod) === 'traditional';
   // Gli obiettivi chiusi restano visibili solo se il movimento è già collegato a uno di loro.
   const goalOptions = goals.filter((g) => g.status === 'active' || g.id === form.goalId);
+  const goalItems = goals.find((g) => g.id === form.goalId)?.items ?? [];
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
@@ -97,6 +100,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       subCategory1Id: form.subCategory1Id || null,
       subCategory2Id: form.subCategory2Id || null,
       goalId: canLinkGoal ? form.goalId || null : null,
+      goalItemId: canLinkGoal && form.goalId ? form.goalItemId || null : null,
     };
 
     try {
@@ -331,7 +335,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
           <select
             className="select select-bordered"
             value={form.goalId}
-            onChange={(e) => set('goalId', e.target.value)}
+            onChange={(e) => setForm((f) => ({ ...f, goalId: e.target.value, goalItemId: '' }))}
           >
             <option value="">{t('noGoal')}</option>
             {goalOptions.map((g) => (
@@ -340,6 +344,17 @@ export default function MovementForm({ initial = null, expenseId = null }) {
           </select>
           {/* Fuori da .label: DaisyUI 5 la rende nowrap e la frase uscirebbe dal form. */}
           <p className="text-xs text-base-content/50 mt-1">{t('goalHint')}</p>
+        </label>
+      )}
+
+      {/* Voce del progetto, se l'obiettivo scelto ne ha */}
+      {canLinkGoal && goalItems.length > 0 && (
+        <label className="form-control">
+          <div className="label"><span className="label-text">{t('goalItem')}</span></div>
+          <select className="select select-bordered" value={form.goalItemId} onChange={(e) => set('goalItemId', e.target.value)}>
+            <option value="">{t('noGoalItem')}</option>
+            {goalItems.map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
+          </select>
         </label>
       )}
 

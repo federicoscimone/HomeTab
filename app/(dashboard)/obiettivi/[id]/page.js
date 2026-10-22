@@ -13,6 +13,7 @@ import GoalStateBadge, { GOAL_STATE_CLASSES } from '@/components/obiettivi/GoalS
 import GoalFormModal from '@/components/obiettivi/GoalFormModal';
 import { useFormat } from '@/lib/hooks/useFormat';
 import useCan from '@/lib/auth/useCan';
+import ProjectSection from '@/components/obiettivi/ProjectSection';
 
 /** @param {string} d - YYYY-MM-DD */
 const formatDate = (d) => d.split('-').reverse().join('/');
@@ -80,7 +81,9 @@ export default function ObiettivoPage({ params }) {
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
   const [modal, setModal] = useState(null); // 'edit' | 'complete' | 'cancel' | 'delete'
-  const canManage = useCan()('goals:manage');
+  const can = useCan();
+  const canManage = can('goals:manage');
+  const canEditTasks = can('movements:edit');
   const t = useTranslations('goalDetail');
   const tGoals = useTranslations('goals');
   const tStates = useTranslations('goalStates');
@@ -302,6 +305,11 @@ export default function ObiettivoPage({ params }) {
               )}
             </div>
           </div>
+
+          {/* ── Progetto: voci di budget e cose da fare ───────────────── */}
+          {data.project && (
+            <ProjectSection goalId={id} project={data.project} canManage={canManage} canEdit={canEditTasks} onSaved={load} />
+          )}
 
           {/* ── Spese collegate ──────────────────────────────────────── */}
           <div className="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">

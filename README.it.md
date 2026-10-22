@@ -63,6 +63,9 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
   entrate che cambiano, una spesa straordinaria) e vedete l'effetto sul risparmio di fine anno e
   sull'arrivo di ogni obiettivo, con le stesse regole della pagina Obiettivi
   ([docs/planning.md](docs/planning.md#e-se)).
+- **Progetti di famiglia**: un obiettivo si divide in voci con budget e preventivo, lo speso si
+  segue per voce con le spese collegate, un avviso quando una voce sfora, e una lista di cose da
+  fare con le date ([docs/planning.md](docs/planning.md#progetti-di-famiglia)).
 - **Obiettivi di risparmio**: il risparmio di ogni mese chiuso si ripartisce tra gli obiettivi;
   per ciascuno si vedono la quota mensile che serve e la data prevista di arrivo.
 - **Verifica in due passaggi e Telegram**: facoltativa per ogni utente; dopo la password serve

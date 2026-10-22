@@ -655,7 +655,9 @@
     "exclude": "Exclude from analysis",
     "excludeHint": "This transaction won't count in the dashboard or the reports (e.g. selling a house or a car)",
     "saveChanges": "Save changes",
-    "add": "Add transaction"
+    "add": "Add transaction",
+    "goalItem": "Project item",
+    "noGoalItem": "No item"
   },
   "mapping": {
     "title": "New keyword → category mapping",
@@ -1723,5 +1725,36 @@
       "shiftEarlier": "{n, plural, one {# month} other {# months}} earlier"
     },
     "how": "The months left this year follow the dashboard projection; after that, average savings. Each goal receives its share of every month’s savings, as on the Goals page: a negative month takes nothing away from what was already set aside."
+  },
+  "project": {
+    "title": "Project",
+    "intro": "Split the goal into items: how much you want to spend on each, the quote you received and how much you already spent through linked expenses.",
+    "editItems": "Edit items",
+    "addItems": "Add items",
+    "overAlert": "{n, plural, one {One item is over budget.} other {# items are over budget.}}",
+    "cols": {
+      "item": "Item",
+      "budget": "Budget",
+      "quote": "Quote",
+      "spent": "Spent",
+      "remaining": "Left"
+    },
+    "remove": "Remove",
+    "addRow": "+ Item",
+    "cancel": "Cancel",
+    "save": "Save items",
+    "failed": "Could not save",
+    "itemsHint": "Spent comes from the expenses linked to this goal with the item chosen in the movement.",
+    "noItems": "No items: a simple purchase doesn’t need them.",
+    "quoteOver": "quote over budget",
+    "unassigned": "No item",
+    "total": "Total",
+    "tasksTitle": "To do",
+    "tasksCount": "{done} of {total} done",
+    "tasksOverdue": "{n} overdue",
+    "noTasks": "Nothing to do.",
+    "taskPlaceholder": "E.g. ask for a second quote",
+    "taskDue": "By",
+    "addTask": "Add"
   }
 }
