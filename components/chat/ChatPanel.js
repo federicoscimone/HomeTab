@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useApiData } from '@/lib/hooks/useApiData';
 import { useFormat } from '@/lib/hooks/useFormat';
 import Answer from '@/components/chat/Answer';
-import PixelBot from '@/components/chat/PixelBot';
+import PixelOwl from '@/components/chat/PixelOwl';
 
 /** Lo storico vive solo in questa scheda del browser: niente conversazioni salvate sul server. */
 const STORAGE_KEY = 'hometab-chat';
@@ -113,7 +113,7 @@ export default function ChatPanel({ onClose, onLinkClick }) {
   return (
     <div className="flex flex-col h-full">
       <header className="flex items-center gap-3 px-4 py-3 border-b border-base-300">
-        <PixelBot size={28} />
+        <PixelOwl size={28} />
         <div className="flex-1 min-w-0">
           <p className="font-semibold leading-tight">{t('title')}</p>
           <p className="text-xs text-base-content/60 truncate">{t('subtitle')}</p>

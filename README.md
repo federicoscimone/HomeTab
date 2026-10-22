@@ -14,7 +14,7 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
 | Ask your data | What if…? |
 | --- | --- |
 | ![The chat answers "will we reach our goals?" with the app's numbers and links to check them](docs/images/chat.gif) | ![The simulator: a car loan, a cut to restaurants and a part-time job, and their effect on savings and goals](docs/images/simulatore.gif) |
-| The chat, from the robot at the bottom right, answers with tool calls to the reports: every number comes from the code and links to the page that shows it. | Try a decision before taking it: the effect on year-end savings and on when each goal arrives, with no AI. |
+| The chat, from the owl at the bottom right, answers with tool calls to the reports: every number comes from the code and links to the page that shows it. | Try a decision before taking it: the effect on year-end savings and on when each goal arrives, with no AI. |
 
 ## Features
 
@@ -33,7 +33,7 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   Personal data is masked before sending, and a hard monthly cap (default $3) is enforced
   atomically; a typical month costs a few cents ([docs/ai.md](docs/ai.md)). Off in the public
   demo.
-- **Chat on your data** — optional, read-only, from the pixel robot at the bottom right: "how much
+- **Chat on your data** — optional, read-only, from the pixel owl at the bottom right: "how much
   will we have saved this year at this pace?", "will we reach our goals?" are answered through
   tool calls to the same functions as the reports, so the model never does the arithmetic, and
   every answer links to the page that shows the same number. Every answer correct on a

@@ -15,7 +15,7 @@ un assistente IA facoltativo che risponde con i numeri dell'app.
 | Chiedi ai vostri dati | E se…? |
 | --- | --- |
 | ![La chat risponde a «riusciremo a raggiungere gli obiettivi?» con i numeri dell'app e i link per verificarli](docs/images/chat.gif) | ![Il simulatore: rata dell'auto, taglio ai ristoranti e part-time, con l'effetto su risparmio e obiettivi](docs/images/simulatore.gif) |
-| La chat, dal robottino in basso a destra, risponde chiamando i report: ogni numero viene dal codice e porta il link alla pagina che lo mostra. | Provate una decisione prima di prenderla: l'effetto sul risparmio di fine anno e sull'arrivo di ogni obiettivo, senza IA. |
+| La chat, dal gufo in basso a destra, risponde chiamando i report: ogni numero viene dal codice e porta il link alla pagina che lo mostra. | Provate una decisione prima di prenderla: l'effetto sul risparmio di fine anno e sull'arrivo di ogni obiettivo, senza IA. |
 
 ## Funzionalità
 
@@ -40,7 +40,7 @@ un assistente IA facoltativo che risponde con i numeri dell'app.
   dell'app. I dati personali vengono mascherati prima dell'invio e un tetto mensile rigido
   (3 $ di default) è garantito da una prenotazione atomica; un mese tipico costa pochi centesimi
   ([docs/ai.md](docs/ai.md#import-assistito-dallia)). Spento nella demo pubblica.
-- **Chat sui dati**: facoltativa, in sola lettura, dal robottino in basso a destra. Domande come
+- **Chat sui dati**: facoltativa, in sola lettura, dal gufo in basso a destra. Domande come
   «quanto avremo risparmiato quest'anno continuando così?» o «riusciremo a raggiungere gli
   obiettivi?» ricevono risposta chiamando le stesse funzioni dei report, quindi il modello non fa
   mai i conti, e ogni risposta porta il link alla pagina che mostra lo stesso numero. Tutte le
