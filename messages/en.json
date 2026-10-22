@@ -267,7 +267,8 @@
     "notAReceipt": "It doesn’t look like a receipt, or the total isn’t readable: try a sharper photo.",
     "aiBudget": "This month’s AI spending cap has been reached.",
     "invalidCustomModel": "Invalid model: provider, name and prices per million tokens (between $0 and $1,000) are required.",
-    "invalidOllamaUrl": "Invalid Ollama address: it must be an http or https address, such as http://192.168.1.20:11434."
+    "invalidOllamaUrl": "Invalid Ollama address: it must be an http or https address, such as http://192.168.1.20:11434.",
+    "priceCheckExpired": "This price check is gone or already applied: run “Update prices” again."
   },
   "auth": {
     "email": "Email",
@@ -1084,7 +1085,8 @@
       "chat": "Data chat",
       "advice": "Saving suggestions",
       "istatMapping": "ISTAT categories",
-      "receiptScan": "Receipt reading"
+      "receiptScan": "Receipt reading",
+      "priceUpdate": "Price update"
     },
     "outcomes": {
       "ok": "Succeeded",
@@ -1170,7 +1172,37 @@
     "customRemoved": "Model removed.",
     "customRemove": "Remove",
     "customPrice": "{input} / {output} per million tokens",
-    "customHint": "With the same name as a model in the list, the price entered here replaces the one in the code."
+    "customHint": "With the same name as a model in the list, the price entered here replaces the one in the code.",
+    "pricesTitle": "Model prices",
+    "pricesChecked": "Last checked on the official pages: {date}",
+    "pricesNever": "Never checked: the prices verified in the code on 22 October 2026 apply.",
+    "pricesCheck": "Update prices",
+    "pricesChecking": "Reading the providers’ pages…",
+    "pricesNeedAi": "An active import model is needed: it is the one that reads the pages.",
+    "pricesIntro": "The button downloads the official pricing pages of Anthropic, OpenAI, Google and Mistral and has the import model read them (about one cent). A price counts only if the sentence it was read from is really on the page and contains those numbers; then you see old and new and decide whether to apply. The spending cap is computed from these prices.",
+    "pricesNoChanges": "No changes: {n, plural, one {# model checked} other {# models checked}} on the official pages.",
+    "pricesChanges": "{n, plural, one {# price has changed} other {# prices have changed}}: check them and apply.",
+    "pricesUpcoming": "from {date}: {price}",
+    "pricesApply": "Apply",
+    "pricesDiscard": "Discard",
+    "pricesApplied": "Prices updated and recorded in the history.",
+    "pricesFailed": "Update failed",
+    "pricesRejected": "Not found or not verifiable on the pages (current prices stay): {models}",
+    "pricesErrors": "Pages not reachable or not read: {providers}",
+    "pricesCost": "Reading cost {cost}",
+    "pricePair": "{input} / {output}",
+    "priceCols": {
+      "model": "Model",
+      "now": "Now (input / output per MTok)",
+      "new": "On the page"
+    },
+    "historyTitle": "Price history",
+    "historyEmpty": "Still empty: it fills up with every changed price, read from the pages or entered by hand.",
+    "priceSources": {
+      "table": "starting price",
+      "page": "official page",
+      "manual": "entered by hand"
+    }
   },
   "users": {
     "title": "Users",

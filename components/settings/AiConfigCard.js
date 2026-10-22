@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useFormat } from '@/lib/hooks/useFormat';
 import { CustomModels, OllamaSettings, ProviderKeys } from '@/components/settings/AiProviders';
+import AiPrices from '@/components/settings/AiPrices';
 
 /** Corpo JSON della risposta; in caso di errore, il messaggio del server. */
 async function jsonOrThrow(res) {
@@ -228,6 +229,12 @@ export default function AiConfigCard({ data, onSaved }) {
         <ProviderKeys data={data} disabled={disabled} save={save} setMessage={setMessage} />
         <OllamaSettings data={data} disabled={disabled} save={save} setMessage={setMessage} />
         <CustomModels data={data} disabled={disabled} save={save} />
+        <AiPrices
+          data={data}
+          disabled={disabled}
+          // Dopo l'aggiornamento i menu devono mostrare i prezzi nuovi: si rilegge la vista.
+          onApplied={async () => onSaved(await jsonOrThrow(await fetch('/api/ai/settings', { cache: 'no-store' })))}
+        />
       </div>
     </div>
   );

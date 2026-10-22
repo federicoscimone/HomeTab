@@ -267,7 +267,8 @@
     "notAReceipt": "Non sembra uno scontrino, o il totale non si legge: riprovate con una foto più nitida.",
     "aiBudget": "Il tetto di spesa per l’IA di questo mese è raggiunto.",
     "invalidCustomModel": "Modello non valido: servono fornitore, nome e prezzi per milione di token (fra 0 e 1.000 $).",
-    "invalidOllamaUrl": "Indirizzo di Ollama non valido: serve un indirizzo http o https, come http://192.168.1.20:11434."
+    "invalidOllamaUrl": "Indirizzo di Ollama non valido: serve un indirizzo http o https, come http://192.168.1.20:11434.",
+    "priceCheckExpired": "Questo controllo dei prezzi non c’è più o è già stato applicato: rilancia «Aggiorna i prezzi»."
   },
   "auth": {
     "email": "Email",
@@ -1084,7 +1085,8 @@
       "chat": "Chat sui dati",
       "advice": "Consigli di risparmio",
       "istatMapping": "Capitoli ISTAT delle categorie",
-      "receiptScan": "Lettura degli scontrini"
+      "receiptScan": "Lettura degli scontrini",
+      "priceUpdate": "Aggiornamento dei prezzi"
     },
     "outcomes": {
       "ok": "Riuscita",
@@ -1170,7 +1172,37 @@
     "customRemoved": "Modello tolto.",
     "customRemove": "Togli",
     "customPrice": "{input} / {output} per milione di token",
-    "customHint": "Con lo stesso nome di un modello dell’elenco, il prezzo inserito qui prende il posto di quello del codice."
+    "customHint": "Con lo stesso nome di un modello dell’elenco, il prezzo inserito qui prende il posto di quello del codice.",
+    "pricesTitle": "Prezzi dei modelli",
+    "pricesChecked": "Ultimo controllo sulle pagine ufficiali: {date}",
+    "pricesNever": "Mai controllati: valgono i prezzi verificati con il codice il 22 ottobre 2026.",
+    "pricesCheck": "Aggiorna i prezzi",
+    "pricesChecking": "Leggo le pagine dei fornitori…",
+    "pricesNeedAi": "Serve un modello per l’import attivo: è lui a leggere le pagine.",
+    "pricesIntro": "Il pulsante scarica le pagine ufficiali dei prezzi di Anthropic, OpenAI, Google e Mistral e le fa leggere al modello dell’import (circa un centesimo). Ogni prezzo vale solo se la frase da cui è stato letto è davvero sulla pagina e contiene quei numeri; poi vedete vecchio e nuovo e decidete voi se applicare. Il tetto di spesa si calcola su questi prezzi.",
+    "pricesNoChanges": "Nessun cambiamento: {n, plural, one {# modello verificato} other {# modelli verificati}} sulle pagine ufficiali.",
+    "pricesChanges": "{n, plural, one {# prezzo è cambiato} other {# prezzi sono cambiati}}: controllate e applicate.",
+    "pricesUpcoming": "dal {date}: {price}",
+    "pricesApply": "Applica",
+    "pricesDiscard": "Lascia stare",
+    "pricesApplied": "Prezzi aggiornati e registrati nello storico.",
+    "pricesFailed": "Aggiornamento non riuscito",
+    "pricesRejected": "Non trovati o non verificabili sulle pagine (restano i prezzi attuali): {models}",
+    "pricesErrors": "Pagine non raggiungibili o non lette: {providers}",
+    "pricesCost": "Lettura costata {cost}",
+    "pricePair": "{input} / {output}",
+    "priceCols": {
+      "model": "Modello",
+      "now": "Ora (ingresso / uscita per MTok)",
+      "new": "Sulla pagina"
+    },
+    "historyTitle": "Storico dei prezzi",
+    "historyEmpty": "Ancora vuoto: si riempie a ogni prezzo cambiato, letto dalle pagine o scritto a mano.",
+    "priceSources": {
+      "table": "prezzo di partenza",
+      "page": "pagina ufficiale",
+      "manual": "inserito a mano"
+    }
   },
   "users": {
     "title": "Utenti",

@@ -1,0 +1,90 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  htmlToText, mistralModelPages, numbersIn, relevantText, verifyExtraction, MAX_TEXT_CHARS,
+} from '../lib/ai/tasks/priceUpdate.js';
+import { currentRates, PRICES, refreshedPrice } from '../lib/ai/pricing.js';
+import { priceFor } from '../lib/ai/settings.js';
+
+const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-12, `${actual} ≠ ${expected}`);
+
+test('pagine: testo visibile, senza script; indice di Mistral solo con i modelli di chat attuali', () => {
+  const html = '<html><script>var p = "$9.99";</script><style>.x{}</style><td>Haiku&nbsp;5.5</td><td>$0.10 &amp; $0.50</td></html>';
+  assert.equal(htmlToText(html), 'Haiku 5.5 $0.10 & $0.50');
+  const index = '<a href=\\"/models/mistral-large-4-0\\"> <a href=\\"/models/ocr-4-1\\"> <a href="/models/mistral-small-4-0-26-03">'
+    + '<a href="/models/mistral-embed-23-12"> <a href="/models/ministral-3-8b-25-12"> <h2>Deprecated</h2> <a href="/models/mistral-medium-3-25-05">';
+  assert.deepEqual(mistralModelPages(index, 'https://docs.mistral.ai'), [
+    'https://docs.mistral.ai/models/mistral-large-4-0',
+    'https://docs.mistral.ai/models/mistral-small-4-0-26-03',
+    'https://docs.mistral.ai/models/ministral-3-8b-25-12',
+  ]);
+});
+
+test('testo da mandare: intero se è corto, altrimenti i pezzi intorno ai modelli', () => {
+  assert.equal(relevantText('corto Haiku 5.5 $1', ['claude-haiku-5-5']), 'corto Haiku 5.5 $1');
+  const filler = 'x '.repeat(MAX_TEXT_CHARS);
+  const long = `${filler} Claude Haiku 5.5 costa $0.10 ${filler} Gemini 3.8 Flash $0.75 ${filler}`;
+  const cut = relevantText(long, ['claude-haiku-5-5', 'gemini-3.8-flash'], { before: 10, after: 40 });
+  assert.ok(cut.includes('Claude Haiku 5.5 costa $0.10'));
+  assert.ok(cut.includes('Gemini 3.8 Flash $0.75'));
+  assert.ok(cut.length < 200);
+  assert.equal(relevantText(long, ['gpt-6-luna']), '');
+});
+
+test('numeri: decimali col punto o la virgola, migliaia con la virgola', () => {
+  assert.deepEqual(numbersIn('$0.10 / MTok up to 100,000 tokens, poi 0,15'), [0.1, 100000, 0.15]);
+});
+
+test('verifica: passa solo ciò che sta nella pagina, con quei numeri', () => {
+  const page = 'gpt-6-luna $0.10 $0.50 $0.01 gpt-6.1-sol $2.00 $10.00 $0.10. Gemini 4 Argon $2.00 through November 30, 2026. $4.00 starting December 1, 2026. Output $10.00, then $20.00';
+  const ids = ['gpt-6-luna', 'gpt-6.1-sol', 'gemini-4-argon', 'mistral-small-2603'];
+  const none = { cacheRead: null, upcomingFrom: null, upcomingInput: null, upcomingOutput: null, upcomingCacheRead: null };
+  const res = verifyExtraction({
+    models: [
+      { ...none, id: 'gpt-6-luna', found: true, input: 0.1, output: 0.5, cacheRead: 0.01, quote: 'gpt-6-luna  $0.10 $0.50\n$0.01' },
+      // Citazione inventata: non è nella pagina.
+      { ...none, id: 'gpt-6.1-sol', found: true, input: 0.2, output: 1, quote: 'gpt-6.1-sol $0.20 $1.00' },
+      { ...none, id: 'gemini-4-argon', found: true, input: 2, output: 10, quote: 'Gemini 4 Argon $2.00 through November 30, 2026. $4.00 starting December 1, 2026. Output $10.00, then $20.00', upcomingFrom: '2026-12-01', upcomingInput: 4, upcomingOutput: 20 },
+      // Un modello che non era stato chiesto non entra.
+      { ...none, id: 'gpt-9', found: true, input: 0.1, output: 0.5, quote: 'gpt-6-luna $0.10 $0.50' },
+    ],
+  }, ids, page);
+  assert.deepEqual(res[0], { id: 'gpt-6-luna', input: 0.1, output: 0.5, cacheRead: 0.01, quote: 'gpt-6-luna $0.10 $0.50 $0.01', upcoming: null });
+  assert.equal(res[1].rejected, 'unverified');
+  assert.deepEqual(res[2].upcoming, { from: '2026-12-01', input: 4, output: 20, cacheRead: null });
+  assert.equal(res[3].rejected, 'notFound');
+  assert.equal(res.length, 4);
+
+  // La citazione c'è, ma il prezzo riportato no: scartato.
+  const wrong = verifyExtraction({ models: [{ ...none, id: 'gpt-6-luna', found: true, input: 0.05, output: 0.5, quote: 'gpt-6-luna $0.10 $0.50' }] }, ['gpt-6-luna'], page);
+  assert.equal(wrong[0].rejected, 'unverified');
+  // Prezzi fuori scala: scartati anche se scritti nella citazione.
+  const absurd = verifyExtraction({ models: [{ ...none, id: 'gpt-6-luna', found: true, input: 2026, output: 0.5, quote: 'November 30, 2026. $4.00' }] }, ['gpt-6-luna'], `${page} November 30, 2026. $4.00`);
+  assert.equal(absurd[0].rejected, 'unverified');
+});
+
+test('prezzi letti dalla pagina: sostituiscono la tabella, con i rapporti di cache e i rincari giusti', () => {
+  const haiku = refreshedPrice(PRICES['claude-haiku-5-5'], { input: 0.2, output: 1, cacheRead: null, updatedAt: '2026-11-01' });
+  near(haiku.cacheWrite, 0.25);
+  near(haiku.cacheRead, 0.02);
+  assert.equal(haiku.effort, true);
+  assert.equal(haiku.longContext.above, 100_000);
+
+  // Senza rincari letti valgono quelli della tabella successivi all'aggiornamento.
+  const argon = refreshedPrice(PRICES['gemini-4-argon'], { input: 2, output: 10, cacheRead: 0.1, updatedAt: '2026-11-01' });
+  assert.equal(currentRates(argon, new Date('2026-12-05')).input, 4);
+  const argonLater = refreshedPrice(PRICES['gemini-4-argon'], { input: 5, output: 25, cacheRead: 0.25, updatedAt: '2026-12-10' });
+  assert.equal(currentRates(argonLater, new Date('2026-12-15')).input, 5);
+  // I rincari letti dalla pagina prendono il posto di quelli della tabella.
+  const argonRead = refreshedPrice(PRICES['gemini-4-argon'], { input: 2, output: 10, cacheRead: 0.1, updatedAt: '2026-11-01', changes: [{ from: '2027-02-01', input: 3, output: 15, cacheRead: null }] });
+  assert.equal(currentRates(argonRead, new Date('2026-12-05')).input, 2);
+  near(currentRates(argonRead, new Date('2027-02-02')).cacheRead, 0.15);
+
+  // In priceFor: modello aggiunto a mano, poi aggiornamento dalla pagina, poi tabella.
+  const parsed = { spec: 'openai:gpt-6-luna', provider: 'openai', name: 'gpt-6-luna' };
+  assert.equal(priceFor(parsed, { priceOverrides: [{ spec: 'openai:gpt-6-luna', input: 0.12, output: 0.6, cacheRead: null, updatedAt: new Date() }] }).input, 0.12);
+  assert.equal(priceFor(parsed, {
+    customModels: [{ spec: 'openai:gpt-6-luna', input: 0.3, output: 1, cacheRead: null }],
+    priceOverrides: [{ spec: 'openai:gpt-6-luna', input: 0.12, output: 0.6, cacheRead: null, updatedAt: new Date() }],
+  }).input, 0.3);
+});
