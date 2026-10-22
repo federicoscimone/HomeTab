@@ -57,7 +57,12 @@ export async function POST(req) {
   const locale = await requestLocale();
   const uncategorized = (await serverTranslator('reports'))('uncategorized');
   const tIstat = await serverTranslator('istat');
-  const labels = { division: (code) => tIstat(`divisions.d${code}`), area: (code) => tIstat(`regions.${code}`) };
+  const tDed = await serverTranslator('deductions');
+  const labels = {
+    division: (code) => tIstat(`divisions.d${code}`),
+    area: (code) => tIstat(`regions.${code}`),
+    deduction: (type) => tDed(`types.${type}`),
+  };
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({

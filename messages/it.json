@@ -66,7 +66,8 @@
     "openMenu": "Apri menu",
     "similarHouseholds": "Famiglie simili",
     "deadlines": "Scadenze",
-    "simulator": "E se…?"
+    "simulator": "E se…?",
+    "deductions": "Spese detraibili"
   },
   "roles": {
     "viewer": {
@@ -805,7 +806,8 @@
       "segnali_risparmio": "segnali di risparmio",
       "proiezione_anno": "proiezione dell’anno",
       "scadenze": "scadenze",
-      "simula_scenario": "simulazione «e se»"
+      "simula_scenario": "simulazione «e se»",
+      "spese_detraibili": "spese detraibili"
     },
     "unavailable": {
       "demo": "Nella demo pubblica la chat è spenta: chiunque potrebbe consumare il credito.",
@@ -1756,5 +1758,62 @@
     "taskPlaceholder": "Es. chiedere un secondo preventivo",
     "taskDue": "Entro il",
     "addTask": "Aggiungi"
+  },
+  "deductions": {
+    "title": "Spese detraibili",
+    "intro": "Per il 730: le spese dell’anno che si possono detrarre, divise per tipo, con il controllo sul pagamento e l’elenco da tenere pronto. Si sceglie l’anno delle spese (il 730 del 2027 riguarda il 2026).",
+    "year": "Anno",
+    "download": "Scarica CSV",
+    "noMapping": "Nessuna categoria è collegata a un tipo di spesa detraibile: fatelo qui sotto, in «Categorie detraibili».",
+    "none": "Nessuna spesa detraibile nel {year}.",
+    "count": "{n, plural, one {# spesa} other {# spese}}",
+    "toCheck": "di cui {amount} in contanti, da verificare",
+    "excludedCash": "{amount} in contanti, esclusi",
+    "types": {
+      "health": "Spese sanitarie",
+      "vet": "Spese veterinarie",
+      "education": "Istruzione",
+      "childcare": "Asilo nido",
+      "sport_kids": "Sport dei figli",
+      "mortgage": "Interessi del mutuo",
+      "insurance": "Assicurazioni vita e infortuni",
+      "other": "Altre spese detraibili"
+    },
+    "status": {
+      "ok": "tracciabile",
+      "check": "da verificare",
+      "cash": "contanti: esclusa"
+    },
+    "statusHint": {
+      "ok": "Pagata con un mezzo tracciabile.",
+      "check": "In contanti: detraibile solo per farmaci, dispositivi medici o prestazioni di strutture pubbliche o accreditate.",
+      "cash": "In contanti: per le detrazioni al 19% serve un pagamento tracciabile."
+    },
+    "exclude": "Non detraibile",
+    "restore": "Rimetti",
+    "excludedTitle": "Escluse a mano ({n})",
+    "notes": {
+      "traceability": "Dal 2020 le detrazioni al 19% richiedono un pagamento tracciabile (carta, bancomat, bonifico…), tranne per medicinali, dispositivi medici e prestazioni di strutture pubbliche o accreditate al SSN: per questo le spese sanitarie in contanti sono «da verificare» e le altre restano fuori dal totale.",
+      "notAdvice": "L’app non calcola la detrazione: percentuali, franchigie e limiti cambiano ogni anno e dipendono dal reddito. Non sa nemmeno a chi è intestata ogni ricevuta. Portate i totali e il CSV a chi compila il 730, con le ricevute."
+    },
+    "csv": {
+      "date": "Data",
+      "text": "Descrizione",
+      "category": "Categoria",
+      "type": "Tipo",
+      "method": "Pagamento",
+      "amount": "Importo",
+      "status": "Stato"
+    },
+    "mappingTitle": "Categorie detraibili",
+    "mappingIntro": "Ogni categoria può essere collegata a un tipo di spesa detraibile; una sottocategoria senza tipo segue la madre. Un singolo movimento si esclude dall’elenco qui sopra (per esempio, lezioni private sotto «Corsi»).",
+    "notDeductible": "Non detraibile",
+    "inherit": "Come la madre ({type})",
+    "inheritNone": "Come la madre (non detraibile)",
+    "applyDefaults": "Applica i tipi predefiniti",
+    "defaultsApplied": "{n, plural, =0 {Nessuna categoria da completare.} one {# categoria completata.} other {# categorie completate.}}",
+    "save": "Salva",
+    "saved": "Salvato.",
+    "failed": "Salvataggio non riuscito"
   }
 }

@@ -66,7 +66,8 @@
     "openMenu": "Open menu",
     "similarHouseholds": "Similar households",
     "deadlines": "Deadlines",
-    "simulator": "What if…?"
+    "simulator": "What if…?",
+    "deductions": "Deductible expenses"
   },
   "roles": {
     "viewer": {
@@ -805,7 +806,8 @@
       "segnali_risparmio": "saving signals",
       "proiezione_anno": "year projection",
       "scadenze": "deadlines",
-      "simula_scenario": "what-if simulation"
+      "simula_scenario": "what-if simulation",
+      "spese_detraibili": "deductible expenses"
     },
     "unavailable": {
       "demo": "Chat is off in the public demo: anyone could use up the credit.",
@@ -1756,5 +1758,62 @@
     "taskPlaceholder": "E.g. ask for a second quote",
     "taskDue": "By",
     "addTask": "Add"
+  },
+  "deductions": {
+    "title": "Deductible expenses",
+    "intro": "For the Italian tax return (730): the year’s expenses that can be deducted, by type, with the payment check and the list to keep ready. Choose the year of the expenses (the 2027 return covers 2026).",
+    "year": "Year",
+    "download": "Download CSV",
+    "noMapping": "No category is linked to a deductible type: do it below, under “Deductible categories”.",
+    "none": "No deductible expenses in {year}.",
+    "count": "{n, plural, one {# expense} other {# expenses}}",
+    "toCheck": "of which {amount} in cash, to check",
+    "excludedCash": "{amount} in cash, excluded",
+    "types": {
+      "health": "Medical expenses",
+      "vet": "Veterinary expenses",
+      "education": "Education",
+      "childcare": "Nursery",
+      "sport_kids": "Children’s sport",
+      "mortgage": "Mortgage interest",
+      "insurance": "Life and accident insurance",
+      "other": "Other deductible expenses"
+    },
+    "status": {
+      "ok": "traceable",
+      "check": "to check",
+      "cash": "cash: excluded"
+    },
+    "statusHint": {
+      "ok": "Paid with a traceable method.",
+      "check": "Cash: deductible only for medicines, medical devices or services from public or accredited facilities.",
+      "cash": "Cash: 19% deductions require a traceable payment."
+    },
+    "exclude": "Not deductible",
+    "restore": "Restore",
+    "excludedTitle": "Excluded by hand ({n})",
+    "notes": {
+      "traceability": "Since 2020, 19% deductions require a traceable payment (card, bank transfer…), except medicines, medical devices and services from public facilities or facilities accredited with the national health service: that is why cash medical expenses are “to check” and other cash expenses stay out of the total.",
+      "notAdvice": "The app does not compute the deduction: rates, thresholds and limits change every year and depend on income. Nor does it know whose name is on each receipt. Bring the totals and the CSV to whoever prepares the return, with the receipts."
+    },
+    "csv": {
+      "date": "Date",
+      "text": "Description",
+      "category": "Category",
+      "type": "Type",
+      "method": "Payment",
+      "amount": "Amount",
+      "status": "Status"
+    },
+    "mappingTitle": "Deductible categories",
+    "mappingIntro": "Each category can be linked to a deductible type; a subcategory without one follows its parent. A single movement is excluded from the list above (for example, private lessons under “Courses”).",
+    "notDeductible": "Not deductible",
+    "inherit": "As parent ({type})",
+    "inheritNone": "As parent (not deductible)",
+    "applyDefaults": "Apply default types",
+    "defaultsApplied": "{n, plural, =0 {No category to complete.} one {# category completed.} other {# categories completed.}}",
+    "save": "Save",
+    "saved": "Saved.",
+    "failed": "Could not save"
   }
 }
