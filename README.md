@@ -56,9 +56,10 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   to set aside for the non-monthly ones; recurring payments are found in your movements and
   proposed, payments are recognised, and Telegram reminds you before the due date
   ([docs/planning.md](docs/planning.md)).
-- **Record from Telegram** — "12,50 pizza" in the bot's chat records an expense, categorized by
-  the import chain, with an Undo button; a receipt photo is read by the AI and waits for
-  confirmation ([docs/telegram.md](docs/telegram.md)).
+- **Quick entry** — on the New movement page, one line ("12,50 pizza", "ieri 40 benzina
+  contanti") or a receipt photo (uploaded or taken with the phone) fills in the form, category
+  included, to check and save. The same works from the Telegram bot, with an Undo button
+  ([docs/telegram.md](docs/telegram.md)).
 - **What if…?** — try a decision before taking it: an instalment, a category cut, income that
   changes, a one-off expense; the effect on year-end savings and on when each goal arrives, with
   the same rules as the goals page ([docs/planning.md](docs/planning.md#what-if)).

@@ -62,9 +62,10 @@ un assistente IA facoltativo che risponde con i numeri dell'app.
   accantonare ogni mese per quelle non mensili; le spese che si ripetono vengono trovate fra i
   movimenti e proposte, i pagamenti riconosciuti, e Telegram avvisa prima della scadenza
   ([docs/planning.md](docs/planning.md#strumenti-di-pianificazione)).
-- **Registrazione da Telegram**: «12,50 pizza» nella chat del bot registra una spesa,
-  categorizzata dalla catena dell'import, con un pulsante Annulla; la foto di uno scontrino la
-  legge l'IA e aspetta la conferma ([docs/telegram.md](docs/telegram.md#telegram-e-verifica-in-due-passaggi)).
+- **Registrazione rapida**: nella pagina Nuovo movimento una riga («12,50 pizza», «ieri 40
+  benzina contanti») o la foto di uno scontrino (caricata o scattata col telefono) riempiono il
+  modulo, categoria compresa, da controllare e salvare. Lo stesso funziona dal bot Telegram, con
+  un pulsante Annulla ([docs/telegram.md](docs/telegram.md#telegram-e-verifica-in-due-passaggi)).
 - **E se…?**: provate una decisione prima di prenderla (una rata, un taglio a una categoria,
   entrate che cambiano, una spesa straordinaria) e vedete l'effetto sul risparmio di fine anno e
   sull'arrivo di ogni obiettivo, con le stesse regole della pagina Obiettivi

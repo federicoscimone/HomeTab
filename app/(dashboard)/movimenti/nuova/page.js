@@ -1,9 +1,15 @@
+'use client';
+
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import MovementForm from '@/components/movimenti/MovementForm';
+import QuickFill from '@/components/movimenti/QuickFill';
 import Link from 'next/link';
 
 export default function NuovaSpesaPage() {
   const t = useTranslations('movements');
+  // Una bozza da testo o scontrino rimonta il modulo già compilato: si controlla e si salva.
+  const [draft, setDraft] = useState({ key: 0, values: null });
   return (
     <div>
       <div className="flex items-center gap-2 mb-6">
@@ -14,7 +20,8 @@ export default function NuovaSpesaPage() {
         </Link>
         <h1 className="text-2xl font-bold">{t('newTitle')}</h1>
       </div>
-      <MovementForm />
+      <QuickFill onDraft={(values) => setDraft((d) => ({ key: d.key + 1, values }))} />
+      <MovementForm key={draft.key} initial={draft.values} />
     </div>
   );
 }
