@@ -57,7 +57,8 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   proposed, payments are recognised, and Telegram reminds you before the due date
   ([docs/planning.md](docs/planning.md)).
 - **Quick entry** — on the New movement page, one line ("12,50 pizza", "ieri 40 benzina
-  contanti") or a receipt photo (uploaded or taken with the phone) fills in the form, category
+  contanti") or a receipt photo (taken with the phone or the webcam, chosen from the gallery or a
+  folder, or dragged onto the page) fills in the form, category
   included, to check and save. The same works from the Telegram bot, with an Undo button
   ([docs/telegram.md](docs/telegram.md)).
 - **What if…?** — try a decision before taking it: an instalment, a category cut, income that

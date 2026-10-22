@@ -63,8 +63,8 @@ un assistente IA facoltativo che risponde con i numeri dell'app.
   movimenti e proposte, i pagamenti riconosciuti, e Telegram avvisa prima della scadenza
   ([docs/planning.md](docs/planning.md#strumenti-di-pianificazione)).
 - **Registrazione rapida**: nella pagina Nuovo movimento una riga («12,50 pizza», «ieri 40
-  benzina contanti») o la foto di uno scontrino (caricata o scattata col telefono) riempiono il
-  modulo, categoria compresa, da controllare e salvare. Lo stesso funziona dal bot Telegram, con
+  benzina contanti») o la foto di uno scontrino (scattata con il telefono o la webcam, scelta dalla galleria o da
+  una cartella, o trascinata sulla pagina) riempiono il modulo, categoria compresa, da controllare e salvare. Lo stesso funziona dal bot Telegram, con
   un pulsante Annulla ([docs/telegram.md](docs/telegram.md#telegram-e-verifica-in-due-passaggi)).
 - **E se…?**: provate una decisione prima di prenderla (una rata, un taglio a una categoria,
   entrate che cambiano, una spesa straordinaria) e vedete l'effetto sul risparmio di fine anno e

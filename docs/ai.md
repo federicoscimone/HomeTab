@@ -275,7 +275,10 @@ like an instruction cannot trigger an action.
 **Quick entry** (New movement page or Telegram): a receipt photo goes to the model as it is,
 reduced to 2,000 px by the browser (merchant, items and total are what it is for; the photo is
 not stored), and a line the local chain can't categorize goes to the categorization step with
-the same masking as the import ([docs/telegram.md](telegram.md)).
+the same masking as the import ([docs/telegram.md](telegram.md)). The photo can be taken
+(phone camera, or the webcam on a computer, which browsers allow only over HTTPS: on plain HTTP
+the button explains it), chosen from the gallery or a folder, or dragged onto the card; all
+three paths go through the same reduction.
 
 **For saving suggestions** the model receives the signals: category names, amounts already
 written, the masked merchant of recurring expenses and the name of the goal they would help.
@@ -572,7 +575,10 @@ causale scritta per sembrare un'istruzione non può far scattare un'azione.
 verso il modello così com'è, ridotta a 2.000 px dal browser (esercente, voci e totale sono ciò che
 serve; la foto non si salva), e una riga che la catena locale non sa categorizzare passa dalla
 categorizzazione con lo stesso mascheramento dell'import
-([docs/telegram.md](telegram.md#5-registra-le-spese-dalla-chat)).
+([docs/telegram.md](telegram.md#5-registra-le-spese-dalla-chat)). La foto si può scattare
+(fotocamera del telefono, o webcam sul computer, che i browser concedono solo su HTTPS: su HTTP
+semplice il pulsante lo spiega), scegliere dalla galleria o da una cartella, o trascinare sulla
+scheda; le tre strade passano dalla stessa riduzione.
 
 **Per i consigli di risparmio** il modello riceve i segnali: nomi delle categorie, importi già
 scritti, l'esercente mascherato delle spese ricorrenti e il nome dell'obiettivo che aiuterebbero.
