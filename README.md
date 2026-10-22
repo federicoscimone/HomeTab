@@ -57,6 +57,9 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
 - **What if…?** — try a decision before taking it: an instalment, a category cut, income that
   changes, a one-off expense; the effect on year-end savings and on when each goal arrives, with
   the same rules as the goals page ([docs/planning.md](docs/planning.md#what-if)).
+- **Family projects** — a goal can be split into items with budget and quote, spending tracked
+  per item through linked expenses, a warning when an item goes over, and a to-do list with dates
+  ([docs/planning.md](docs/planning.md#family-projects)).
 - **Savings goals** — the savings of each closed month are split among goals; every goal shows
   the monthly amount it needs and its estimated arrival date.
 - **Two-step verification and Telegram** — optional for each user: after the password, a

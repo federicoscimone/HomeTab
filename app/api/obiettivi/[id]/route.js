@@ -1,6 +1,7 @@
 /**
  * @fileoverview API route — /api/obiettivi/[id]
- * GET    — dettaglio di un obiettivo: serie mensile, proiezione e spese collegate.
+ * GET    — dettaglio di un obiettivo: serie mensile, proiezione, spese collegate e progetto (voci e
+ *          cose da fare, vedi /api/obiettivi/[id]/progetto).
  * PATCH  — modifica dei campi ({ name, targetAmount, deadline, initialAmount }) oppure cambio di
  *          stato ({ action: 'complete' | 'cancel' | 'reopen', transferTo? }).
  * DELETE — solo per un obiettivo creato nel mese in corso e senza spese collegate, cioè per
@@ -15,7 +16,8 @@ import Goal from '@/lib/models/Goal';
 import AllocationPlan from '@/lib/models/AllocationPlan';
 import Movement from '@/lib/models/Movement';
 import { getGoalsOverview, parseGoalFields } from '@/lib/services/goals';
-import { monthOf } from '@/lib/utils/goalMath';
+import { dayOf, monthOf } from '@/lib/utils/goalMath';
+import { projectBreakdown, tasksSummary } from '@/lib/utils/project';
 import { logApiError } from '@/lib/logger';
 import { writeAudit } from '@/lib/utils/audit';
 import { serverTranslator } from '@/lib/i18n/server';
@@ -37,14 +39,25 @@ export async function GET(req, { params }) {
     const goal = overview.goals.find((g) => g.id === id);
     if (!goal) return notFound();
 
-    const linkedMovements = await Movement.find({ goalId: id })
-      .select('date amount payee description paymentMethod paymentGroup type excludeFromAnalysis')
-      .sort({ date: -1 })
-      .lean();
+    const [linkedMovements, doc] = await Promise.all([
+      Movement.find({ goalId: id })
+        .select('date amount payee description paymentMethod paymentGroup type excludeFromAnalysis goalItemId')
+        .sort({ date: -1 })
+        .lean(),
+      Goal.findById(id).select('items tasks').lean(),
+    ]);
+    const items = doc?.items ?? [];
+    const tasks = (doc?.tasks ?? []).map((task) => ({ ...task, id: String(task._id) }));
 
     return NextResponse.json({
       goal,
       linkedMovements,
+      // Il progetto: voci con budget, preventivo e speso, e le cose da fare.
+      project: {
+        ...projectBreakdown(items, linkedMovements.filter((m) => m.type === 'expense')),
+        tasks,
+        tasksSummary: tasksSummary(tasks, dayOf(new Date())),
+      },
       currentMonth: overview.currentMonth,
       avgSavings: overview.avgSavings,
       avgMonths: overview.avgMonths,

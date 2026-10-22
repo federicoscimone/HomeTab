@@ -655,7 +655,9 @@
     "exclude": "Escludi dalle analisi",
     "excludeHint": "Questo movimento non verrà conteggiato nel dashboard e nei report (es. vendita casa, auto)",
     "saveChanges": "Salva modifiche",
-    "add": "Aggiungi movimento"
+    "add": "Aggiungi movimento",
+    "goalItem": "Voce del progetto",
+    "noGoalItem": "Nessuna voce"
   },
   "mapping": {
     "title": "Nuovo mapping keyword → categoria",
@@ -1723,5 +1725,36 @@
       "shiftEarlier": "{n, plural, one {# mese} other {# mesi}} prima"
     },
     "how": "I mesi che restano quest’anno seguono la proiezione della dashboard; dopo, il risparmio medio. Ogni obiettivo riceve la sua percentuale del risparmio di ogni mese, come nella pagina Obiettivi: un mese in negativo non toglie niente a quanto già messo da parte."
+  },
+  "project": {
+    "title": "Progetto",
+    "intro": "Dividete l’obiettivo in voci: quanto volete spendere per ognuna, il preventivo ricevuto e quanto avete già speso con le spese collegate.",
+    "editItems": "Modifica voci",
+    "addItems": "Aggiungi voci",
+    "overAlert": "{n, plural, one {Una voce ha superato il budget.} other {# voci hanno superato il budget.}}",
+    "cols": {
+      "item": "Voce",
+      "budget": "Budget",
+      "quote": "Preventivo",
+      "spent": "Speso",
+      "remaining": "Resta"
+    },
+    "remove": "Togli",
+    "addRow": "+ Voce",
+    "cancel": "Annulla",
+    "save": "Salva voci",
+    "failed": "Salvataggio non riuscito",
+    "itemsHint": "Lo speso viene dalle spese collegate a questo obiettivo con la voce scelta nel movimento.",
+    "noItems": "Nessuna voce: per un acquisto semplice non servono.",
+    "quoteOver": "preventivo sopra il budget",
+    "unassigned": "Senza voce",
+    "total": "Totale",
+    "tasksTitle": "Cose da fare",
+    "tasksCount": "{done} su {total} fatte",
+    "tasksOverdue": "{n, plural, one {# in ritardo} other {# in ritardo}}",
+    "noTasks": "Nessuna cosa da fare.",
+    "taskPlaceholder": "Es. chiedere un secondo preventivo",
+    "taskDue": "Entro il",
+    "addTask": "Aggiungi"
   }
 }
