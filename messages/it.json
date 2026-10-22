@@ -1617,7 +1617,7 @@
     "overdueTitle": "Scadute",
     "overdueHint": "Passate senza essere segnate pagate né trovate fra i movimenti.",
     "suggestTitle": "Spese che si ripetono",
-    "suggestIntro": "Trovate fra i vostri movimenti: stesso esercente e importo simile ogni 2, 3, 6 o 12 mesi. Aggiungetele per ricevere il promemoria e vedere la quota da accantonare.",
+    "suggestIntro": "Trovate fra i vostri movimenti: stesso esercente a intervalli regolari (ogni mese, due, tre, sei mesi o un anno). Aggiungetele per ricevere il promemoria e, per quelle non mensili, vedere la quota da accantonare.",
     "suggestLine": "{amount} {every}, prossima il {date} (vista {times} volte)",
     "suggestAdd": "Aggiungi",
     "suggestIgnore": "Ignora",
@@ -1677,6 +1677,17 @@
       "reminderBefore": "📅 {title}: scade il {date}, tra {days} giorni. {amount}",
       "reminderDue": "📅 {title}: scade oggi. {amount}",
       "reminderOverdue": "⚠️ {title}: era da pagare il {date}. Se l’avete pagata, segnatela nell’app. {amount}"
+    },
+    "suggestLineVariable": "importo variabile, circa {amount} {every}, prossima il {date} (vista {times} volte)",
+    "analyzed": "Analizzati {n, plural, one {# movimento} other {# movimenti}} dal {from}: {found, plural, =0 {nessuna spesa ricorrente nuova} one {# spesa ricorrente nuova} other {# spese ricorrenti nuove}}.",
+    "analyzedNone": "Nessuna uscita da analizzare: le spese ricorrenti si trovano dai movimenti importati o inseriti.",
+    "nearTitle": "Quasi riconosciute ({n})",
+    "nearIntro": "Spese che tornano più volte ma non abbastanza regolari per proporle. Se una è davvero una scadenza, aggiungetela a mano con «Nuova scadenza».",
+    "nearReason": {
+      "irregular": "vista {n} volte, a intervalli irregolari",
+      "ended": "vista {n} volte, ma non più di recente",
+      "yearlyUnconfirmed": "vista {n} volte a un anno di distanza: con due pagamenti soli serve un bonifico, un addebito o una causale da bolletta",
+      "amounts": "vista {n} volte, con importi troppo diversi"
     }
   },
   "simulator": {

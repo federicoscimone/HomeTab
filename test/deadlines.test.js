@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  addMonthsToDate, advance, detectPeriodic, findPayment, monthlyReserve, reminderStage, upcoming,
+  addMonthsToDate, advance, analyzePeriodic, detectPeriodic, findPayment, monthlyReserve, reminderStage, upcoming,
 } from '../lib/utils/deadlines.js';
 
 const TODAY = '2026-10-22';
@@ -48,14 +48,14 @@ test('prossime scadenze in ordine, comprese quelle passate non pagate', () => {
 
 const mov = (date, amount, payee, paymentMethod = 'bank_transfer') => ({ date, amount, payee, description: '', categoryId: 'c', paymentMethod });
 
-test('spese periodiche: assicurazione annuale e TARI trimestrale, non la spesa mensile', () => {
+test('spese periodiche: assicurazione annuale e TARI trimestrale, non la spesa di tutti i giorni', () => {
   const rows = [
     mov('2024-11-03', 610, 'UNIPOL ASSICURAZIONI'), mov('2025-11-05', 640, 'UNIPOL ASSICURAZIONI'),
     mov('2026-01-15', 80, 'COMUNE TARI'), mov('2026-04-16', 80, 'COMUNE TARI'), mov('2026-07-15', 82, 'COMUNE TARI'),
-    mov('2026-08-01', 50, 'ESSELUNGA'), mov('2026-09-01', 55, 'ESSELUNGA'), mov('2026-10-01', 52, 'ESSELUNGA'),
     mov('2023-05-01', 300, 'VECCHIO'), mov('2024-05-02', 300, 'VECCHIO'), // finita: niente nel 2025
-    mov('2024-12-15', 75, 'PASTICCERIA', 'credit_card'), mov('2025-12-15', 75, 'PASTICCERIA', 'credit_card'), // con carta, due volte sole
   ];
+  // Il supermercato ogni settimana: più volte al mese, non è una scadenza.
+  for (const m of ['08', '09', '10']) for (const d of ['01', '08', '15', '22']) rows.push(mov(`2026-${m}-${d}`, 60 + Number(d), 'ESSELUNGA', 'debit_card'));
   const found = detectPeriodic(rows, TODAY);
   assert.deepEqual(found.map((f) => [f.match, f.everyMonths, f.nextDate, f.amount]), [
     ['COMUNE TARI', 3, '2026-10-15', 82],
@@ -63,9 +63,68 @@ test('spese periodiche: assicurazione annuale e TARI trimestrale, non la spesa m
   ]);
 });
 
+test('bollette: mensili e bimestrali, con importi che cambiano con le stagioni', () => {
+  const rows = [
+    ...['2026-02-05', '2026-04-06', '2026-06-05', '2026-08-04', '2026-10-05'].map((d, i) => mov(d, [140, 95, 60, 55, 110][i], 'ENEL ENERGIA', 'debit_card')),
+    ...['2026-06-10', '2026-07-10', '2026-08-11', '2026-09-10', '2026-10-10'].map((d) => mov(d, 29.9, 'VODAFONE', 'credit_card')),
+  ];
+  const found = analyzePeriodic(rows, TODAY).found;
+  const enel = found.find((f) => f.match === 'ENEL ENERGIA');
+  assert.deepEqual([enel.everyMonths, enel.variable, enel.amount, enel.nextDate], [2, true, 60, '2026-12-05']);
+  const vodafone = found.find((f) => f.match === 'VODAFONE');
+  assert.deepEqual([vodafone.everyMonths, vodafone.variable], [1, false]);
+});
+
+test('un pagamento mancante nei dati non rompe la serie', () => {
+  const rows = ['2026-04-10', '2026-05-10', '2026-07-10', '2026-08-10', '2026-09-10', '2026-10-10'].map((d) => mov(d, 9.99, 'SPOTIFY', 'credit_card'));
+  assert.equal(detectPeriodic(rows, TODAY)[0].everyMonths, 1);
+});
+
+test('annuali viste due volte: con carta servono parole da bolletta, altrimenti è un «quasi»', () => {
+  const panettone = [mov('2024-12-15', 75, 'PASTICCERIA', 'credit_card'), mov('2025-12-15', 75, 'PASTICCERIA', 'credit_card')];
+  const r = analyzePeriodic(panettone, TODAY);
+  assert.deepEqual(r.found, []);
+  assert.deepEqual(r.nearMisses, [{ title: 'PASTICCERIA', occurrences: 2, reason: 'yearlyUnconfirmed' }]);
+  const polizza = [mov('2024-12-01', 300, 'ASSICURAZIONE CASA GENERALI', 'credit_card'), mov('2025-12-02', 310, 'ASSICURAZIONE CASA GENERALI', 'credit_card')];
+  assert.equal(detectPeriodic(polizza, TODAY)[0].everyMonths, 12);
+});
+
+test('luce e gas dallo stesso esercente nello stesso mese: due serie per fascia d\'importo', () => {
+  const rows = [];
+  for (const m of ['06', '07', '08', '09', '10']) {
+    rows.push(mov(`2026-${m}-05`, 80, 'A2A ENERGIA', 'bank_transfer'));
+    rows.push(mov(`2026-${m}-06`, 30, 'A2A ENERGIA', 'bank_transfer'));
+  }
+  // Le cifre non contano nel nome dell'esercente (sono spesso riferimenti): la chiave è «ENERGIA».
+  const found = detectPeriodic(rows, TODAY);
+  assert.deepEqual(found.map((f) => [f.match, f.amount]).sort((a, b) => a[1] - b[1]), [['ENERGIA', 30], ['ENERGIA', 80]]);
+});
+
+test('un esercente con un nome di sigle e cifre («A2A») resta riconoscibile', () => {
+  const rows = ['2026-06-06', '2026-07-06', '2026-08-06', '2026-09-07', '2026-10-06'].map((d) => mov(d, 30, 'A2A', 'bank_transfer'));
+  assert.deepEqual(detectPeriodic(rows, TODAY).map((f) => [f.match, f.everyMonths]), [['A2A', 1]]);
+});
+
+test('i «quasi» sono spese programmate, non abitudini a importi casuali', () => {
+  const rows = ['2026-01-03', '2026-02-20', '2026-05-01', '2026-09-25'].map((d, i) => mov(d, [12, 31, 9, 22][i], 'PIZZERIA DA GINO', 'cash'));
+  // Più volte al mese, a caso: nemmeno le fasce d'importo la rendono un «quasi».
+  for (const d of ['2026-03-02', '2026-03-09', '2026-07-04', '2026-07-18']) rows.push(mov(d, 15, 'PIZZERIA DA GINO', 'cash'));
+  assert.deepEqual(analyzePeriodic(rows, TODAY).nearMisses, []);
+});
+
+test('quasi riconosciute: intervalli irregolari e spese finite, con il motivo', () => {
+  const rows = [
+    ...['2026-01-03', '2026-02-20', '2026-05-01', '2026-09-25'].map((d) => mov(d, 45, 'PALESTRA FIT', 'debit_card')),
+    ...['2025-01-10', '2025-02-10', '2025-03-10', '2025-04-10'].map((d) => mov(d, 12, 'VECCHIO ABBONAMENTO', 'credit_card')),
+  ];
+  const misses = analyzePeriodic(rows, TODAY).nearMisses;
+  assert.deepEqual(misses.map((x) => [x.title, x.reason]).sort(), [['PALESTRA FIT', 'irregular'], ['VECCHIO ABBONAMENTO', 'ended']]);
+});
+
 test('pagamento riconosciuto: stesse parole, importo vicino, vicino alla scadenza', () => {
   const d = { title: 'Assicurazione auto', match: 'UNIPOL', amount: 640, nextDate: '2026-11-05' };
   const rows = [mov('2026-10-20', 655, 'UNIPOL SAI'), mov('2026-10-21', 20, 'UNIPOL SAI'), mov('2025-11-05', 640, 'UNIPOL')];
   assert.equal(findPayment(d, rows, TODAY).date, '2026-10-20');
   assert.equal(findPayment({ ...d, match: 'GENERALI' }, rows, TODAY), null);
+  assert.equal(findPayment({ title: 'Gas', match: 'A2A', amount: 30, nextDate: '2026-11-06' }, [mov('2026-10-20', 31, 'A2A')], TODAY).amount, 31);
 });

@@ -1,7 +1,8 @@
 /**
  * @fileoverview API route — /api/scadenze/proposte
- * GET — spese che si ripetono ogni 2-12 mesi (bollo, assicurazioni, TARI…) e non sono ancora una
- * scadenza: la pagina le propone, e si aggiungono con un clic. Nessuna IA: vedi detectPeriodic().
+ * GET — spese che si ripetono a intervalli regolari (bollette, abbonamenti, bollo, polizze, TARI…)
+ * e non sono ancora una scadenza, quelle quasi riconosciute con il motivo, e cosa è stato
+ * analizzato. Nessuna IA: vedi analyzePeriodic().
  * POST { ignore: "<chiave>" } — «Ignora»: quella proposta non torna più.
  */
 
@@ -15,7 +16,7 @@ export async function GET() {
   const { denied } = await requirePermission('data:read');
   if (denied) return denied;
   await connectDB();
-  return NextResponse.json({ suggestions: await suggestDeadlines() });
+  return NextResponse.json(await suggestDeadlines());
 }
 
 export async function POST(req) {

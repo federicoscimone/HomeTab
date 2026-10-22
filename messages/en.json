@@ -1617,7 +1617,7 @@
     "overdueTitle": "Overdue",
     "overdueHint": "Passed without being marked paid or found among the movements.",
     "suggestTitle": "Recurring expenses",
-    "suggestIntro": "Found in your movements: same merchant and similar amount every 2, 3, 6 or 12 months. Add them to get reminders and see what to set aside.",
+    "suggestIntro": "Found in your movements: same merchant at regular intervals (every month, two, three, six months or a year). Add them to get reminders and, for non-monthly ones, see what to set aside.",
     "suggestLine": "{amount} {every}, next on {date} (seen {times} times)",
     "suggestAdd": "Add",
     "suggestIgnore": "Ignore",
@@ -1677,6 +1677,17 @@
       "reminderBefore": "📅 {title}: due on {date}, in {days} days. {amount}",
       "reminderDue": "📅 {title}: due today. {amount}",
       "reminderOverdue": "⚠️ {title}: was due on {date}. If you paid it, mark it in the app. {amount}"
+    },
+    "suggestLineVariable": "variable amount, about {amount} {every}, next on {date} (seen {times} times)",
+    "analyzed": "Analysed {n, plural, one {# movement} other {# movements}} since {from}: {found, plural, =0 {no new recurring expense} one {# new recurring expense} other {# new recurring expenses}}.",
+    "analyzedNone": "No expenses to analyse: recurring expenses are found from imported or entered movements.",
+    "nearTitle": "Almost recognised ({n})",
+    "nearIntro": "Expenses that come back several times but not regularly enough to suggest. If one really is a deadline, add it by hand with “New deadline”.",
+    "nearReason": {
+      "irregular": "seen {n} times, at irregular intervals",
+      "ended": "seen {n} times, but not recently",
+      "yearlyUnconfirmed": "seen {n} times a year apart: with only two payments it needs a bank transfer, a direct debit or a bill-like description",
+      "amounts": "seen {n} times, with amounts too different"
     }
   },
   "simulator": {
