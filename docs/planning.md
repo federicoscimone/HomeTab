@@ -12,11 +12,18 @@ much, and how often it repeats. For anything not monthly the page shows the **mo
 the amount divided by the months between payments (600 € a year is 50 € a month), so a yearly
 expense doesn't land all at once. The dashboard shows the next 30 days and the total set-aside.
 
-- **Recurring expenses found in your movements.** The page proposes expenses with the same
-  merchant and a similar amount every 2, 3, 6 or 12 months (`detectPeriodic` in
-  `lib/utils/deadlines.js`, no AI). Bank transfers and direct debits count after two payments;
-  card and cash need three, otherwise the Christmas cake or the August beach would look like
-  yearly deadlines. **Add** opens the form already filled in; **Ignore** is remembered.
+- **Recurring expenses found in your movements** (`analyzePeriodic` in `lib/utils/deadlines.js`,
+  no AI, run when the page opens). Movements of the last 25 months are grouped by merchant; a
+  series is at most one payment a month (the weekly supermarket is not a bill; two contracts with
+  the same supplier in one month, power and gas, are split by amount). The cadence comes from
+  the typical interval (1, 2, 3, 4, 6 or 12 months) and at least three quarters of the intervals
+  must fit, a missing payment counting as a double interval. With three or more payments the
+  amount may vary (bills change with the seasons: "variable amount, about X"); a yearly expense
+  seen only twice needs a similar amount and a bank transfer, a direct debit or a bill-like
+  description (insurance, road tax, licence fee, SDD…), otherwise the Christmas cake would look
+  like a deadline. The page says how many movements were analysed and lists the **almost
+  recognised** ones with the reason (irregular, ended, yearly not confirmed), so a missing bill
+  can be added by hand. **Add** opens the form already filled in; **Ignore** is remembered.
 - **Payment recognised.** With the merchant words of a deadline ("UNIPOL"), a matching payment
   from 20 days before the due date onwards is pointed out next to it: **Paid** moves the deadline
   to the next period, or closes it if it was one-off.
@@ -113,12 +120,19 @@ l'importo diviso per i mesi fra un pagamento e l'altro (600 € l'anno sono 50 �
 spesa annuale non arriva tutta insieme. La dashboard mostra i prossimi 30 giorni e il totale da
 accantonare.
 
-- **Spese che si ripetono, trovate fra i movimenti.** La pagina propone le spese con lo stesso
-  esercente e un importo simile ogni 2, 3, 6 o 12 mesi (`detectPeriodic` in
-  `lib/utils/deadlines.js`, senza IA). Bonifici e addebiti diretti contano dopo due pagamenti;
-  carta e contanti ne vogliono tre, altrimenti il panettone di Natale o la spiaggia d'agosto
-  sembrerebbero scadenze annuali. **Aggiungi** apre il modulo già compilato; **Ignora** viene
-  ricordato.
+- **Spese che si ripetono, trovate fra i movimenti** (`analyzePeriodic` in
+  `lib/utils/deadlines.js`, senza IA, all'apertura della pagina). I movimenti degli ultimi 25 mesi
+  si raggruppano per esercente; una serie ha al massimo un pagamento al mese (il supermercato
+  settimanale non è una bolletta; due contratti con lo stesso fornitore nello stesso mese, luce e
+  gas, si dividono per importo). La cadenza viene dall'intervallo tipico (1, 2, 3, 4, 6 o 12 mesi)
+  e almeno tre quarti degli intervalli devono rientrarci, con un pagamento mancante che conta come
+  intervallo doppio. Con tre o più pagamenti l'importo può variare (le bollette cambiano con le
+  stagioni: «importo variabile, circa X»); una spesa annuale vista solo due volte vuole un importo
+  simile e un bonifico, un addebito o una causale da bolletta (assicurazione, bollo, canone,
+  SDD…), altrimenti il panettone di Natale sembrerebbe una scadenza. La pagina dice quanti
+  movimenti ha analizzato ed elenca quelle **quasi riconosciute** con il motivo (irregolare,
+  finita, annuale non confermata), così una bolletta che manca si aggiunge a mano. **Aggiungi**
+  apre il modulo già compilato; **Ignora** viene ricordato.
 - **Pagamento riconosciuto.** Con le parole dell'esercente di una scadenza («UNIPOL»), un
   pagamento corrispondente dai 20 giorni prima della scadenza in poi viene segnalato accanto:
   **Pagata** la sposta al periodo successivo, o la chiude se era una tantum.

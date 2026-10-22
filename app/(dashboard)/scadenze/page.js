@@ -37,10 +37,10 @@ export default function ScadenzePage() {
     }
   };
   // Sparisce subito; il server la ricorda, così non torna alla prossima visita.
-  const ignore = (match) => {
-    setIgnored((x) => [...x, match]);
+  const ignore = (key) => {
+    setIgnored((x) => [...x, key]);
     fetch('/api/scadenze/proposte', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ignore: match }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ignore: key }),
     }).catch(() => {});
   };
   const markPaid = (d) => call(d.id, `/api/scadenze/${d.id}/pagata`, { method: 'POST' });
@@ -59,7 +59,8 @@ export default function ScadenzePage() {
 
   const active = data.deadlines.filter((d) => d.active);
   const closed = data.deadlines.filter((d) => !d.active);
-  const suggestions = (sugg?.suggestions ?? []).filter((s) => !ignored.includes(s.match));
+  const suggestions = (sugg?.suggestions ?? []).filter((s) => !ignored.includes(s.key));
+  const nearMisses = sugg?.nearMisses ?? [];
 
   return (
     <div className="flex flex-col gap-4 max-w-5xl">
@@ -89,6 +90,14 @@ export default function ScadenzePage() {
         </div>
       </div>
 
+      {sugg && (
+        <p className="text-xs text-base-content/60">
+          {sugg.analyzed.count
+            ? t('analyzed', { n: sugg.analyzed.count, from: fmtDate(sugg.analyzed.from), found: suggestions.length })
+            : t('analyzedNone')}
+        </p>
+      )}
+
       {canEdit && suggestions.length > 0 && (
         <div className="card bg-base-100 shadow-sm">
           <div className="card-body gap-3">
@@ -98,10 +107,10 @@ export default function ScadenzePage() {
             </div>
             <ul className="flex flex-col gap-2">
               {suggestions.map((s) => (
-                <li key={s.match} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                <li key={s.key} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                   <span className="font-medium">{s.title}</span>
                   <span className="text-base-content/70">
-                    {t('suggestLine', { amount: fmtFull(s.amount), every: t('periods.every', { n: s.everyMonths }), date: fmtDate(s.nextDate), times: s.occurrences })}
+                    {t(s.variable ? 'suggestLineVariable' : 'suggestLine', { amount: fmtFull(s.amount), every: t('periods.every', { n: s.everyMonths }), date: fmtDate(s.nextDate), times: s.occurrences })}
                   </span>
                   <span className="flex-1" />
                   <button
@@ -110,12 +119,29 @@ export default function ScadenzePage() {
                   >
                     {t('suggestAdd')}
                   </button>
-                  <button type="button" className="btn btn-ghost btn-xs" onClick={() => ignore(s.match)}>{t('suggestIgnore')}</button>
+                  <button type="button" className="btn btn-ghost btn-xs" onClick={() => ignore(s.key)}>{t('suggestIgnore')}</button>
                 </li>
               ))}
             </ul>
           </div>
         </div>
+      )}
+
+      {nearMisses.length > 0 && (
+        <details className="card bg-base-100 shadow-sm">
+          <summary className="cursor-pointer px-6 py-4 text-sm font-medium">{t('nearTitle', { n: nearMisses.length })}</summary>
+          <div className="px-6 pb-4 flex flex-col gap-2">
+            <p className="text-xs text-base-content/60">{t('nearIntro')}</p>
+            <ul className="text-sm flex flex-col gap-1">
+              {nearMisses.map((m) => (
+                <li key={m.title} className="flex flex-wrap gap-x-3">
+                  <span className="font-medium">{m.title}</span>
+                  <span className="text-base-content/70">{t(`nearReason.${m.reason}`, { n: m.occurrences })}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </details>
       )}
 
       <div className="card bg-base-100 shadow-sm">
