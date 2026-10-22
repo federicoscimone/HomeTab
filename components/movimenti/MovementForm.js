@@ -282,7 +282,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       </div>
 
       {/* Categorie */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <label className="form-control">
           <div className="label"><span className="label-text font-medium">{tCommon('category')}</span></div>
           <select
@@ -330,7 +330,8 @@ export default function MovementForm({ initial = null, expenseId = null }) {
 
       {/* Obiettivo pagato con questa spesa */}
       {canLinkGoal && goalOptions.length > 0 && (
-        <label className="form-control">
+        // Fuori dalle griglie: form-control non esiste più in daisyUI 5, la colonna la dà flex.
+        <label className="form-control flex flex-col">
           <div className="label"><span className="label-text">{t.rich('goal', { muted })}</span></div>
           <select
             className="select select-bordered"
@@ -349,7 +350,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
 
       {/* Voce del progetto, se l'obiettivo scelto ne ha */}
       {canLinkGoal && goalItems.length > 0 && (
-        <label className="form-control">
+        <label className="form-control flex flex-col">
           <div className="label"><span className="label-text">{t('goalItem')}</span></div>
           <select className="select select-bordered" value={form.goalItemId} onChange={(e) => set('goalItemId', e.target.value)}>
             <option value="">{t('noGoalItem')}</option>
