@@ -272,9 +272,10 @@ date, amount and the same masked description and payee as the import. Tool resul
 to the model as data, and no tool can change anything, so a bank description written to look
 like an instruction cannot trigger an action.
 
-**From Telegram**, a receipt photo goes to the model as it is (merchant, items and total are what
-it is for; the photo is not stored), and a text entry the local chain can't categorize goes to
-the categorization step with the same masking as the import ([docs/telegram.md](telegram.md)).
+**Quick entry** (New movement page or Telegram): a receipt photo goes to the model as it is,
+reduced to 2,000 px by the browser (merchant, items and total are what it is for; the photo is
+not stored), and a line the local chain can't categorize goes to the categorization step with
+the same masking as the import ([docs/telegram.md](telegram.md)).
 
 **For saving suggestions** the model receives the signals: category names, amounts already
 written, the masked merchant of recurring expenses and the name of the goal they would help.
@@ -567,9 +568,10 @@ ciò che restituiscono gli strumenti: totali, nomi delle categorie e, dalla rice
 risultati degli strumenti arrivano al modello come dati, e nessuno strumento modifica nulla: una
 causale scritta per sembrare un'istruzione non può far scattare un'azione.
 
-**Da Telegram**, la foto di uno scontrino parte verso il modello così com'è (esercente, voci e
-totale sono ciò che serve; la foto non si salva), e una spesa scritta che la catena locale non sa
-categorizzare passa dalla categorizzazione con lo stesso mascheramento dell'import
+**Registrazione rapida** (pagina Nuovo movimento o Telegram): la foto di uno scontrino parte
+verso il modello così com'è, ridotta a 2.000 px dal browser (esercente, voci e totale sono ciò che
+serve; la foto non si salva), e una riga che la catena locale non sa categorizzare passa dalla
+categorizzazione con lo stesso mascheramento dell'import
 ([docs/telegram.md](telegram.md#5-registra-le-spese-dalla-chat)).
 
 **Per i consigli di risparmio** il modello riceve i segnali: nomi delle categorie, importi già

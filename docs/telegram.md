@@ -76,7 +76,9 @@ The linked chat also receives the reminders of the payment deadlines, if a daily
 
 ## 5. Record expenses from the chat
 
-From a linked chat, users who can create movements record them without opening the app:
+The same quick entry of the app's **New movement** page (`lib/services/quickEntry.js`), from a
+chat: on the page a line or a receipt photo fills in the form; here, from a linked chat, users who
+can create movements record them without opening the app:
 
 - **One line of text**: `12,50 pizza`, `ieri 40 benzina contanti`, `2 pizze 18`, `+1500
   stipendio` for income. Amount, date ("ieri", "altro ieri"), payment method ("contanti",
@@ -197,7 +199,10 @@ chiama `/api/cron/promemoria` ([docs/planning.md](planning.md#scadenze-e-accanto
 
 ## 5. Registra le spese dalla chat
 
-Da una chat collegata, chi può creare movimenti li registra senza aprire l'app:
+La stessa registrazione rapida della pagina **Nuovo movimento** dell'app
+(`lib/services/quickEntry.js`), da una chat: nella pagina una riga o la foto di uno scontrino
+riempiono il modulo; qui, da una chat collegata, chi può creare movimenti li registra senza aprire
+l'app:
 
 - **Una riga di testo**: `12,50 pizza`, `ieri 40 benzina contanti`, `2 pizze 18`, `+1500
   stipendio` per un'entrata. Importo, data («ieri», «altro ieri»), metodo di pagamento

@@ -262,7 +262,10 @@
     "aiUnavailable": "AI is not available: check Settings → AI.",
     "aiBudgetReached": "This month’s spending cap is reached.",
     "aiFailed": "The AI service did not answer. Try again shortly.",
-    "deadlineNotFound": "Deadline not found"
+    "deadlineNotFound": "Deadline not found",
+    "quickEntryNoAmount": "There is no amount in the line: write for example “12.50 pizza”.",
+    "notAReceipt": "It doesn’t look like a receipt, or the total isn’t readable: try a sharper photo.",
+    "aiBudget": "This month’s AI spending cap has been reached."
   },
   "auth": {
     "email": "Email",
@@ -1849,5 +1852,19 @@
       "alertNear": "🟡 {category}: {spent} of {amount} this month ({pct}%).",
       "alertOver": "🔴 {category}: budget exceeded, {spent} of {amount} ({pct}%)."
     }
+  },
+  "quickFill": {
+    "placeholder": "Write the expense: 12.50 pizza · yesterday 40 fuel cash · +1500 salary",
+    "fill": "Fill in",
+    "photo": "📷 Read a receipt",
+    "photoHint": "Upload or take a photo of a receipt: the AI reads merchant, date, total and payment. The photo is not stored.",
+    "photoOff": "Reading receipts needs the AI (Settings → AI).",
+    "intro": "One line or a receipt photo fills in the form below: check it and save. The category comes from rules and history, then the AI if it is on.",
+    "introNoAi": "One line fills in the form below: check it and save. Reading receipts needs the AI.",
+    "filled": "Form filled in: check it and save.",
+    "filledAi": "Form filled in, with the category suggested by the AI: check it and save.",
+    "filledNoCategory": "Form filled in without a category: choose one and save.",
+    "failed": "Could not fill in the form.",
+    "photoUnreadable": "I can’t open this image: try a JPEG or PNG photo."
   }
 }
