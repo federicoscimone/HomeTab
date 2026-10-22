@@ -58,8 +58,9 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://hometab-demo.vercel.app/api
 
 ## A personal deployment (real data)
 
-The same steps work for your own instance, with `DEMO_MODE=false` and without the nightly cron
-(`CRON_SECRET` isn't needed): on first visit the app opens `/setup`, where you create the
+The same steps work for your own instance, with `DEMO_MODE=false`; the nightly reset doesn't run
+there. `CRON_SECRET` is needed only for the Telegram reminders of deadlines, sent by a daily cron
+already declared in `vercel.json` ([docs/planning.md](planning.md)). On first visit the app opens `/setup`, where you create the
 administrator. To receive sign-in and recovery codes on Telegram, add `TELEGRAM_BOT_TOKEN`,
 `TELEGRAM_BOT_USERNAME` and `TELEGRAM_WEBHOOK_SECRET`: on Vercel the bot works through the
 webhook, which the app registers by itself ([docs/telegram.md](telegram.md)). Use a bot that no

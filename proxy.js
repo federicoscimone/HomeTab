@@ -17,6 +17,7 @@ const FIRST_ACCESS = '/primo-accesso';
 const SELF_AUTHENTICATED_API = [
   '/api/integrations/google-drive/run-scheduled',
   '/api/demo/reset',
+  '/api/cron/promemoria',
   '/api/telegram/webhook',
 ];
 const SESSION_COOKIES = ['next-auth.session-token', '__Secure-next-auth.session-token'];

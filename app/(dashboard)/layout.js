@@ -65,7 +65,8 @@ export default function DashboardLayout({ children }) {
           <span className="text-lg font-bold text-primary">{'HomeTab'}</span>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+        {/* pb-24: in fondo resta lo spazio del pulsante della chat, che altrimenti coprirebbe l'ultima riga. */}
+        <main className="flex-1 p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-24 overflow-auto">
           {children}
         </main>
       </div>

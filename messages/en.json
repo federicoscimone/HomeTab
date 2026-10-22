@@ -64,7 +64,8 @@
     "myAccount": "My account",
     "signOut": "Sign out",
     "openMenu": "Open menu",
-    "similarHouseholds": "Similar households"
+    "similarHouseholds": "Similar households",
+    "deadlines": "Deadlines"
   },
   "roles": {
     "viewer": {
@@ -258,7 +259,8 @@
     "templateNoDataRows": "The file has no row with a date and an amount.",
     "aiUnavailable": "AI is not available: check Settings → AI.",
     "aiBudgetReached": "This month’s spending cap is reached.",
-    "aiFailed": "The AI service did not answer. Try again shortly."
+    "aiFailed": "The AI service did not answer. Try again shortly.",
+    "deadlineNotFound": "Deadline not found"
   },
   "auth": {
     "email": "Email",
@@ -798,7 +800,8 @@
       "stato_obiettivi": "goals",
       "confronto_istat": "similar households",
       "segnali_risparmio": "saving signals",
-      "proiezione_anno": "year projection"
+      "proiezione_anno": "year projection",
+      "scadenze": "deadlines"
     },
     "unavailable": {
       "demo": "Chat is off in the public demo: anyone could use up the credit.",
@@ -1220,7 +1223,9 @@
       "user": "User",
       "system": "System",
       "backup": "Backup",
-      "goal": "Goal"
+      "goal": "Goal",
+      "deadline": "Deadline",
+      "budget": "Budget"
     },
     "descriptionNote": "Descriptions stay in the language they were recorded in."
   },
@@ -1568,5 +1573,80 @@
     "needed": "{required} a month needed, {expected} coming in",
     "legendActual": "closed months",
     "legendEstimate": "current month and estimates"
+  },
+  "deadlines": {
+    "title": "Deadlines",
+    "intro": "Bills, taxes, insurance, subscriptions and instalments: when they come and how much to set aside each month so they don’t all land at once.",
+    "new": "New deadline",
+    "loadFailed": "Could not load the deadlines",
+    "saveFailed": "Could not save",
+    "reserveTitle": "To set aside each month",
+    "reserveHint": "Non-monthly deadlines divided by the months between payments: 600 € a year is 50 € a month.",
+    "soonTitle": "In the next 30 days",
+    "soonCount": "{n, plural, =0 {no deadline} one {# deadline} other {# deadlines}}",
+    "overdueTitle": "Overdue",
+    "overdueHint": "Passed without being marked paid or found among the movements.",
+    "suggestTitle": "Recurring expenses",
+    "suggestIntro": "Found in your movements: same merchant and similar amount every 2, 3, 6 or 12 months. Add them to get reminders and see what to set aside.",
+    "suggestLine": "{amount} {every}, next on {date} (seen {times} times)",
+    "suggestAdd": "Add",
+    "suggestIgnore": "Ignore",
+    "empty": "No deadlines: add one or start from the suggestions above.",
+    "cols": {
+      "what": "Deadline",
+      "when": "When",
+      "amount": "Amount",
+      "reserve": "To set aside"
+    },
+    "perMonth": "{amount} a month",
+    "overdue": "{n, plural, one {# day} other {# days}} overdue",
+    "today": "today",
+    "inDays": "in {n, plural, one {# day} other {# days}}",
+    "paymentFound": "Payment found on {date} ({amount}): mark it paid.",
+    "markPaid": "Paid",
+    "confirmDelete": "Delete the deadline “{title}”?",
+    "remindNote": "Reminders go to Telegram for those who linked the chat, a few days before and on the day.",
+    "closedTitle": "Closed ({n})",
+    "cardTitle": "Upcoming deadlines",
+    "openAll": "All deadlines",
+    "nothingSoon": "No deadline in the next 30 days.",
+    "paidBadge": "paid?",
+    "cardReserve": "To set aside each month for non-monthly deadlines: {amount}.",
+    "kinds": {
+      "bill": "Bill",
+      "tax": "Tax",
+      "insurance": "Insurance",
+      "subscription": "Subscription",
+      "loan": "Instalment",
+      "other": "Other"
+    },
+    "periods": {
+      "once": "once",
+      "every": "{n, plural, =1 {every month} =12 {every year} =24 {every 2 years} other {every # months}}"
+    },
+    "form": {
+      "newTitle": "New deadline",
+      "editTitle": "Edit deadline",
+      "title": "What",
+      "titlePlaceholder": "E.g. Car insurance",
+      "kind": "Type",
+      "amount": "Expected amount",
+      "nextDate": "Next due date",
+      "every": "Repeats",
+      "remind": "Reminder",
+      "remindDays": "{n, plural, one {# day before} other {# days before}}",
+      "noRemind": "None",
+      "category": "Category",
+      "noCategory": "None",
+      "match": "Merchant in the movements",
+      "matchPlaceholder": "E.g. UNIPOL",
+      "matchHint": "The words the payment shows in the bank statement: used to recognise it automatically.",
+      "notes": "Notes"
+    },
+    "telegram": {
+      "reminderBefore": "📅 {title}: due on {date}, in {days} days. {amount}",
+      "reminderDue": "📅 {title}: due today. {amount}",
+      "reminderOverdue": "⚠️ {title}: was due on {date}. If you paid it, mark it in the app. {amount}"
+    }
   }
 }
