@@ -1,5 +1,5 @@
 /**
- * Misura la chat sui dati: fa tredici domande a un'istanza in esecuzione e controlla che ogni
+ * Misura la chat sui dati: fa quindici domande a un'istanza in esecuzione e controlla che ogni
  * risposta contenga i numeri giusti. I valori attesi non li calcola lo script: li legge dalle API
  * delle pagine (dashboard, report, movimenti, obiettivi, famiglie simili, proiezione), cioè dai numeri che
  * l'utente vedrebbe aprendo il link della risposta. Una risposta è corretta se contiene tutti gli
@@ -97,10 +97,14 @@ async function categoryId(name, level = 1) {
   return c._id;
 }
 
-/** Totale delle uscite dalla lista dei movimenti, con i filtri del link che la chat propone. */
-async function listSum(params) {
-  return (await api(`/api/movimenti?${new URLSearchParams({ ...params, limit: '1' })}`)).sums.expense;
+/**
+ * Totali dalla lista dei movimenti, con i filtri del link che la chat propone. Come i report:
+ * pagamenti tradizionali, senza i movimenti esclusi dalle analisi.
+ */
+async function listSums(params) {
+  return (await api(`/api/movimenti?${new URLSearchParams({ paymentGroup: 'traditional', inAnalysis: '1', ...params, limit: '1' })}`)).sums;
 }
+const listSum = async (params) => (await listSums(params)).expense;
 
 const CASES = [
   {
@@ -181,6 +185,21 @@ const CASES = [
   {
     q: 'Riusciremo a raggiungere gli obiettivi?',
     expect: async () => (await api('/api/report/proiezione')).goals.map((g) => g.name),
+  },
+  {
+    // Una sottrazione: prima la chat rispondeva «fatela voi».
+    q: `Somma le entrate di stipendio del ${year} e togli tutte le uscite del ${year}: quanto resta?`,
+    expect: async () => {
+      const period = { from: `${year}-01-01`, to: today };
+      const salary = (await listSums({ ...period, type: 'income', categoryIds: await categoryId('Stipendio') })).income;
+      const expense = (await listSums({ ...period, type: 'expense' })).expense;
+      return [money(salary - expense)];
+    },
+  },
+  {
+    // Una proiezione con solo alcune entrate: prima la chat diceva che non si poteva.
+    q: 'Quanto avremo risparmiato a fine anno contando come entrate solo lo stipendio, senza le entrate straordinarie?',
+    expect: async () => [money((await api(`/api/report/proiezione?incomeOnly=${await categoryId('Stipendio')}`)).projection.projected.savings)],
   },
   {
     q: 'Che tempo farà domani a Milano?',

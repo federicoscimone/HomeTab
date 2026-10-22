@@ -116,14 +116,31 @@ as "how much will we have saved this year at this pace?", "where can we improve 
 is read-only and uses the same functions as the reports. The panel lives in the layout: opening
 a verification link changes the page underneath and the conversation stays.
 
-**The model doesn't compute; it picks.** It has eight tools (`lib/ai/agent/tools.js`): month
+**The model doesn't compute; it picks.** It has thirteen tools (`lib/ai/agent/tools.js`): month
 summary, totals by category or subcategory with the year-over-year comparison, any two date ranges
 compared, movement search, savings goals, comparison with similar households, saving signals,
-year-end projection. The code computes every number. Each result carries the amounts already
+year-end projection, deadlines, what-if, deductible expenses, budgets, and a calculator. The code
+computes every number. Each result carries the amounts already
 formatted, which the model must quote verbatim, and the link to the app page that shows the same
 number with the same filters, so every answer can be checked with one click. The tools use the
 pages' defaults (traditional payments, meal vouchers excluded), otherwise the chat and the linked
 page would disagree.
+
+**When the question needs a sum the tools don't make.** "Add up this year's salary and subtract
+all expenses" is a subtraction no report shows. At first the chat could only answer "do it
+yourselves": the rule against mental arithmetic held, but the answer was useless. Three changes
+fixed it (2026-10-22):
+
+- `calcola`, a calculator: sums, differences and averages done by the code, and **every term must
+  be a number that already appeared** in a tool result, an earlier answer or the question
+  (`lib/ai/agent/calc.js`). An invented number is refused and the model has to fetch it from a
+  tool. Only numbers and labels pass through it, so there is nothing to mask.
+- `proiezione_anno` takes `solo_entrate_di` / `escludi_entrate_di`: the projection counting only
+  some income ("only the salary", "without extraordinary income"), computed by the same code as
+  the dashboard's.
+- `cerca_movimenti` counts like the reports by default (same payment group, without the movements
+  excluded from analysis): its totals used to include excluded movements, so they couldn't be
+  compared with the projection, and the model rightly refused to subtract them.
 
 **Why tools and not RAG.** The questions are about numbers, and numbers come from aggregations,
 not from text similar to the question: retrieving "relevant" movements and asking the model to
@@ -142,11 +159,13 @@ is saved on the server.
 Default model: Claude Sonnet 5.5 with low effort, chosen from the same settings page. A question
 costs one or two cents.
 
-**Measured** with `node scripts/chat-eval.js` on the demo data: thirteen questions whose expected
+**Measured** with `node scripts/chat-eval.js` on the demo data: fifteen questions whose expected
 answers are read from the pages' own APIs (dashboard, reports, movements, goals, similar
-households, year projection), one of them off topic. On 2026-10-21 with Sonnet 5.5 every answer
-was correct over five runs as the set grew (three of the first ten questions, one of eleven, one
-of all thirteen), about $0.12 per run.
+households, year projection), one of them off topic, two with a subtraction or a filtered
+projection. On 2026-10-21 with Sonnet 5.5 every answer was correct over five runs as the set grew
+(three of the first ten questions, one of eleven, one of all thirteen), about $0.12 per run; on
+2026-10-22 all fifteen, $0.18, and the two new ones again with a €25,000 one-off income added to
+the data, where the filtered projection must differ.
 
 ## Saving suggestions, on request
 
@@ -520,14 +539,31 @@ più?», «riusciremo a raggiungere gli obiettivi?» o «quanto abbiamo speso in
 all'anno scorso?». È in sola lettura e usa le stesse funzioni dei report. Il pannello vive nel
 layout: aprendo un link di verifica la pagina cambia sotto e la conversazione resta.
 
-**Il modello non calcola: sceglie.** Ha otto strumenti (`lib/ai/agent/tools.js`): riepilogo del
-mese, totali per categoria o sottocategoria con il confronto sull'anno prima, confronto fra due
-intervalli qualsiasi, ricerca dei movimenti, obiettivi di risparmio, confronto con le famiglie
-simili, segnali di risparmio, proiezione di fine anno. Ogni numero lo calcola il codice. Ogni
+**Il modello non calcola: sceglie.** Ha tredici strumenti (`lib/ai/agent/tools.js`): riepilogo
+del mese, totali per categoria o sottocategoria con il confronto sull'anno prima, confronto fra
+due intervalli qualsiasi, ricerca dei movimenti, obiettivi di risparmio, confronto con le famiglie
+simili, segnali di risparmio, proiezione di fine anno, scadenze, simulatore, spese detraibili,
+budget e una calcolatrice. Ogni numero lo calcola il codice. Ogni
 risultato porta gli importi già formattati, che il modello deve citare così come sono, e il link
 alla pagina dell'app che mostra lo stesso numero con gli stessi filtri: ogni risposta si verifica
 con un clic. Gli strumenti usano i valori predefiniti delle pagine (pagamenti tradizionali, buoni
 pasto esclusi), altrimenti chat e pagina collegata non coinciderebbero.
+
+**Quando la domanda chiede un conto che gli strumenti non fanno.** «Somma gli stipendi dell'anno e
+togli tutte le uscite» è una sottrazione che nessun report mostra. All'inizio la chat poteva solo
+rispondere «fatela voi»: la regola contro i conti a mente reggeva, ma la risposta era inutile. Tre
+modifiche l'hanno risolto (22 ottobre 2026):
+
+- `calcola`, una calcolatrice: somme, differenze e medie fatte dal codice, e **ogni termine deve
+  essere un numero già comparso** in un risultato di uno strumento, in una risposta precedente o
+  nella domanda (`lib/ai/agent/calc.js`). Un numero inventato viene rifiutato e il modello deve
+  prenderlo da uno strumento. Ci passano solo numeri ed etichette: niente da mascherare.
+- `proiezione_anno` accetta `solo_entrate_di` / `escludi_entrate_di`: la proiezione contando solo
+  alcune entrate («solo lo stipendio», «senza le entrate straordinarie»), calcolata dallo stesso
+  codice di quella della dashboard.
+- `cerca_movimenti` di base conta come i report (stesso gruppo di pagamenti, senza i movimenti
+  esclusi dalle analisi): i suoi totali comprendevano quelli esclusi, quindi non si potevano
+  confrontare con la proiezione, e il modello giustamente si rifiutava di sottrarli.
 
 **Perché strumenti e non RAG.** Le domande riguardano numeri, e i numeri vengono da aggregazioni,
 non da testi simili alla domanda: recuperare i movimenti «pertinenti» e chiedere al modello di
@@ -546,11 +582,13 @@ del browser (gli ultimi 6 turni si rimandano a ogni domanda): sul server non si 
 Modello predefinito: Claude Sonnet 5.5 con effort basso, scelto dalla stessa pagina delle
 impostazioni. Una domanda costa uno o due centesimi.
 
-**Misurata** con `node scripts/chat-eval.js` sui dati della demo: tredici domande le cui risposte
+**Misurata** con `node scripts/chat-eval.js` sui dati della demo: quindici domande le cui risposte
 attese si leggono dalle API delle pagine (dashboard, report, movimenti, obiettivi, famiglie
-simili, proiezione), una delle quali fuori tema. Il 21 ottobre 2026 con Sonnet 5.5 tutte le
-risposte sono state giuste in cinque passate, man mano che il set cresceva (tre sulle prime dieci
-domande, una su undici, una su tutte e tredici), circa 0,12 $ a passata.
+simili, proiezione), una fuori tema, due con una sottrazione o una proiezione filtrata. Il 21
+ottobre 2026 con Sonnet 5.5 tutte le risposte sono state giuste in cinque passate, man mano che il
+set cresceva (tre sulle prime dieci domande, una su undici, una su tutte e tredici), circa 0,12 $
+a passata; il 22 ottobre tutte e quindici, 0,18 $, e le due nuove anche aggiungendo ai dati
+un'entrata una tantum di 25.000 €, con cui la proiezione filtrata deve dare un altro numero.
 
 ## Consigli di risparmio, su richiesta
 

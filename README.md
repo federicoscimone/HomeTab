@@ -45,7 +45,9 @@ family's data never leaves the house ([running it at home](#running-it-at-home))
   ([docs/ai.md](docs/ai.md#chat-on-the-data)). Off in the public demo.
 - **The year at this pace** — on the dashboard, without AI: savings so far, expected at year end
   (remaining months like the same months last year, adjusted for this year's trend, so the
-  December bonus counts) against last year, and whether each goal arrives by its deadline.
+  December bonus counts; the trend is the median month, so a one-off income doesn't inflate the
+  months ahead) against last year, and whether each goal arrives by its deadline. The chat can
+  also project counting only some income, such as the salary alone.
 - **Reports** — monthly dashboard, category × month pivot, year-over-year comparison by
   category, custom date ranges with a year-end projection. Movements, the pivot and the
   custom-range analysis export to Excel.
