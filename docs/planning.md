@@ -33,6 +33,24 @@ expense doesn't land all at once. The dashboard shows the next 30 days and the t
 
 The chat answers "what do we have to pay this month?" with the `scadenze` tool.
 
+## What if…?
+
+**What if…?** (under Reports) tries a decision before you take it, with no AI: it is arithmetic.
+An idea is a list of changes:
+
+- an **instalment**, € a month for some months (a car loan);
+- a **category** that changes by a percentage or by € a month (restaurants −30%); the page shows
+  each category's average of the last 12 complete months;
+- **income** that changes from a month on (part-time: −600 € a month from January);
+- a **one-off** expense or income in a given month.
+
+The page shows, before and after: savings at year end, savings over the next 12 months, and
+when each goal arrives. Months left this year follow the dashboard projection, then average
+savings; goals receive their share of every month's savings exactly as on the Goals page, so the
+"before" is what the app already shows and the difference is only the effect of the idea
+(`lib/utils/scenario.js`). The dashboard projection links to it, and the chat answers "what if
+we buy the car in instalments?" with the `simula_scenario` tool.
+
 ---
 
 # Strumenti di pianificazione
@@ -69,3 +87,21 @@ accantonare.
   Senza `CRON_SECRET` o senza bot non parte nulla; nella demo è spento.
 
 La chat risponde a «cosa dobbiamo pagare questo mese?» con lo strumento `scadenze`.
+
+## E se…?
+
+**E se…?** (sotto Report) prova una decisione prima di prenderla, senza IA: sono conti.
+Un'ipotesi è un elenco di cambiamenti:
+
+- una **rata**, € al mese per un certo numero di mesi (il finanziamento dell'auto);
+- una **categoria** che cambia di una percentuale o di € al mese (ristoranti −30%); la pagina
+  mostra la media di ogni categoria sugli ultimi 12 mesi completi;
+- **entrate** che cambiano da un certo mese (part-time: −600 € al mese da gennaio);
+- una spesa o un'entrata **una tantum** in un certo mese.
+
+La pagina mostra, prima e dopo: il risparmio a fine anno, quello dei prossimi 12 mesi e quando
+arriva ogni obiettivo. I mesi che restano quest'anno seguono la proiezione della dashboard, poi il
+risparmio medio; gli obiettivi ricevono la loro percentuale del risparmio di ogni mese come nella
+pagina Obiettivi, così il «prima» è quello che l'app mostra già e la differenza è solo l'effetto
+dell'ipotesi (`lib/utils/scenario.js`). La proiezione della dashboard ci porta, e la chat risponde
+a «e se compriamo l'auto a rate?» con lo strumento `simula_scenario`.

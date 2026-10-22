@@ -91,7 +91,10 @@ export default function YearProjectionCard() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
               <h3 className="font-medium">{t('goalsTitle')}</h3>
-              <Link href="/obiettivi" className="link link-primary text-sm">{t('openGoals')}</Link>
+              <span className="flex gap-3">
+                <Link href="/simulatore" className="link link-primary text-sm">{t('tryScenario')}</Link>
+                <Link href="/obiettivi" className="link link-primary text-sm">{t('openGoals')}</Link>
+              </span>
             </div>
             <ul className="flex flex-col gap-2">
               {data.goals.map((g) => (
