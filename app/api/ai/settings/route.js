@@ -53,7 +53,7 @@ async function modelCatalog(doc, ollamaBaseUrl) {
     const builtIn = p.models
       .filter((m) => !own.some((c) => c.spec === `${p.id}:${m}`))
       .map((m) => ({ id: `${p.id}:${m}`, ...(({ input, output }) => ({ input, output }))(rates(m)) }));
-    return { ...p, models: [...builtIn, ...own.map((c) => ({ id: c.spec, ...(({ input, output }) => ({ input, output }))(rates(c.spec.slice(p.id.length + 1))), custom: true }))] };
+    return { ...p, models: [...builtIn, ...own.map((c) => ({ id: c.spec, ...(({ input, output }) => ({ input, output }))(rates(c.spec.slice(p.id.length + 1))), custom: c.origin !== 'page' }))] };
   });
   return { catalog, ollamaOnline: local !== null, customModels: custom };
 }
