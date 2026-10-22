@@ -52,8 +52,10 @@ così i dati della famiglia non escono mai ([installarla in casa](#installarla-i
   ([docs/ai.md](docs/ai.md#la-chat-sui-dati)). Spenta nella demo pubblica.
 - **L'anno continuando così**: nella dashboard, senza IA, il risparmio finora e quello previsto a
   fine anno (i mesi che mancano come gli stessi mesi dell'anno scorso, corretti per l'andamento di
-  quest'anno, così la tredicesima conta) contro l'anno scorso, e se ogni obiettivo arriva entro la
-  scadenza.
+  quest'anno, così la tredicesima conta; l'andamento è quello del mese mediano, così un'entrata
+  una tantum non gonfia i mesi a venire) contro l'anno scorso, e se ogni obiettivo arriva entro la
+  scadenza. La chat sa proiettare anche contando solo alcune entrate, per esempio il solo
+  stipendio.
 - **Famiglie simili**: le vostre spese medie mensili per capitolo accanto alla media ISTAT delle
   famiglie con lo stesso numero di componenti nella vostra regione (indagine 2025), da
   un'istantanea versionata dei dati SDMX di ISTAT; la casa è senza affitti figurativi
