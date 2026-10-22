@@ -8,7 +8,9 @@ automatica, report, obiettivi di risparmio e progetti di famiglia, scadenze e bu
 un assistente IA facoltativo che risponde con i numeri dell'app.
 
 È fatta con Next.js 16 (App Router), MongoDB e NextAuth. Parte con un solo
-`docker compose up` e, al primo avvio, contiene già 24 mesi di dati demo realistici.
+`docker compose up` e, al primo avvio, contiene già 24 mesi di dati demo realistici. Può vivere
+interamente in casa — su un mini PC, un NAS o un Raspberry Pi 5 — con l'IA su un modello locale,
+così i dati della famiglia non escono mai ([installarla in casa](#installarla-in-casa)).
 
 ![La dashboard: budget, scadenze, l'anno continuando così e i consigli di risparmio su richiesta](docs/images/dashboard-tour.gif)
 
@@ -34,8 +36,8 @@ un assistente IA facoltativo che risponde con i numeri dell'app.
   categoria, intervalli di date a scelta con proiezione a fine anno. Movimenti, pivot e analisi
   si esportano in Excel.
 - **Import assistito dall'IA**: facoltativo. Le righe che nessuna regola riconosce ricevono una
-  categoria suggerita da un modello linguistico (di serie Claude Haiku 5.5, attraverso
-  LangChain), che impara dalle categorie usate finora dalla famiglia; dalla causale ricava anche
+  categoria suggerita da un modello linguistico (di serie Claude Haiku 5.5; oppure OpenAI,
+  Gemini, Mistral o un modello locale con Ollama, tutti attraverso LangChain), che impara dalle categorie usate finora dalla famiglia; dalla causale ricava anche
   l'esercente, e per una banca nuova propone il template di import, verificato con il parser
   dell'app. I dati personali vengono mascherati prima dell'invio e un tetto mensile rigido
   (3 $ di default) è garantito da una prenotazione atomica; un mese tipico costa pochi centesimi
@@ -44,7 +46,7 @@ un assistente IA facoltativo che risponde con i numeri dell'app.
   «quanto avremo risparmiato quest'anno continuando così?» o «riusciremo a raggiungere gli
   obiettivi?» ricevono risposta chiamando le stesse funzioni dei report, quindi il modello non fa
   mai i conti, e ogni risposta porta il link alla pagina che mostra lo stesso numero. Tutte le
-  risposte giuste su un set di tredici domande, uno o due centesimi a domanda
+  risposte giuste su un set di tredici domande con Sonnet 5.5, uno o due centesimi a domanda
   ([docs/ai.md](docs/ai.md#la-chat-sui-dati)). Spenta nella demo pubblica.
 - **L'anno continuando così**: nella dashboard, senza IA, il risparmio finora e quello previsto a
   fine anno (i mesi che mancano come gli stessi mesi dell'anno scorso, corretti per l'andamento di
@@ -114,6 +116,22 @@ l'account amministratore. Le
 categorie si creano dalle Impostazioni oppure, lanciando l'app dai sorgenti, con `npm run seed`
 (un albero predefinito con le regole a parole chiave) e `node lib/seed-income.js` (categorie delle
 entrate). Entrambi non fanno nulla se il database ha già delle categorie.
+
+## Installarla in casa
+
+Per la massima riservatezza HomeTab gira su un vostro computer, raggiungibile solo dalla rete di
+casa (e da fuori con una VPN), con l'IA su un **modello locale con [Ollama](https://ollama.com)**:
+scontrini, import e chat funzionano allora senza che nulla esca di casa, e senza costi. I
+fornitori a pagamento restano possibili, con i dati personali mascherati prima dell'invio.
+
+Gira anche su un **Raspberry Pi 5** (almeno 4 GB, meglio 8, con un SSD). Non su un Pi 4 o
+precedenti: MongoDB dalla 5.0 in poi richiede un processore ARMv8.2-A, che il Pi 4 non ha. Sul Pi
+i modelli locali girano sul processore e sono lenti: la coppia migliore è Ollama su un PC di casa
+con una scheda video.
+
+Backup sui vostri dischi, la memoria di MongoDB su una scheda piccola, il kernel del Pi 5 e
+l'HTTPS nella rete di casa: [docs/self-hosting.md](docs/self-hosting.md#hometab-in-casa).
+Fornitori di IA e modelli locali: [docs/ai.md](docs/ai.md#import-assistito-dallia).
 
 ## Pubblicare una demo
 

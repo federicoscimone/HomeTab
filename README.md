@@ -7,7 +7,9 @@ templates and automatic categorization, reports, savings goals and family projec
 monthly budgets, and an optional AI assistant that answers from the app's own numbers.
 
 Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
-`docker compose up`, and starts with 24 months of realistic demo data.
+`docker compose up`, and starts with 24 months of realistic demo data. It can live entirely
+inside your home — on a mini PC, a NAS or a Raspberry Pi 5 — with the AI on a local model, so the
+family's data never leaves the house ([running it at home](#running-it-at-home)).
 
 ![The dashboard: budgets, deadlines, the year at this pace and saving suggestions on request](docs/images/dashboard-tour.gif)
 
@@ -26,7 +28,8 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   Duplicates are detected before saving. In demo mode a template and a sample bank statement are
   ready to try it.
 - **AI-assisted import** — optional: rows that no keyword rule recognises get a category
-  suggested by a language model (Claude Haiku 5.5 by default, through LangChain), learned from
+  suggested by a language model (Claude Haiku 5.5 by default; OpenAI, Gemini, Mistral or a local
+  model with Ollama, all through LangChain), learned from
   the family's own past categories, and the merchant is extracted from the bank description;
   for a bank it doesn't know yet, the model proposes the import template, checked against the
   app's parser.
@@ -37,7 +40,7 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   will we have saved this year at this pace?", "will we reach our goals?" are answered through
   tool calls to the same functions as the reports, so the model never does the arithmetic, and
   every answer links to the page that shows the same number. Every answer correct on a
-  thirteen-question set, one or two cents per question
+  thirteen-question set with Sonnet 5.5, one or two cents per question
   ([docs/ai.md](docs/ai.md#chat-on-the-data)). Off in the public demo.
 - **The year at this pace** — on the dashboard, without AI: savings so far, expected at year end
   (remaining months like the same months last year, adjusted for this year's trend, so the
@@ -110,6 +113,22 @@ administrator account. Categories
 are created in Settings or, when running from source, with `npm run seed` (a default tree with
 keyword rules) and `node lib/seed-income.js` (income categories). Both skip a database that
 already has categories.
+
+## Running it at home
+
+For maximum privacy HomeTab runs on a computer of yours, reachable only from the home network
+(and from outside through a VPN), with the AI on a **local model through
+[Ollama](https://ollama.com)**: receipts, import and chat then work without anything leaving the
+house, at no cost. Paid providers remain an option, with personal data masked before sending.
+
+It also runs on a **Raspberry Pi 5** (4 GB at least, 8 GB recommended, with an SSD). Not on a
+Pi 4 or older: MongoDB 5.0 and later need an ARMv8.2-A processor, which the Pi 4 lacks. On the
+Pi the local models run on the processor and are slow; Ollama on a PC with a graphics card in
+the same house is the better pairing.
+
+Backups on your own disks, MongoDB's memory on a small board, the Pi 5's kernel and HTTPS in the
+home network: [docs/self-hosting.md](docs/self-hosting.md). AI providers and local models:
+[docs/ai.md](docs/ai.md).
 
 ## Deploying a public demo
 

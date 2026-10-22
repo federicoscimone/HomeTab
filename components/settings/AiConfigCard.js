@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useFormat } from '@/lib/hooks/useFormat';
+import { CustomModels, OllamaSettings, ProviderKeys } from '@/components/settings/AiProviders';
 
 /** Corpo JSON della risposta; in caso di errore, il messaggio del server. */
 async function jsonOrThrow(res) {
@@ -12,8 +13,8 @@ async function jsonOrThrow(res) {
 }
 
 /**
- * Modello, effort, tetto mensile e chiave API, salvati sul database.
- * La chiave si scrive e non si rilegge: dal server arrivano solo l'origine e le ultime 4 cifre.
+ * Modelli, effort, tetto mensile, chiavi dei fornitori, Ollama e modelli aggiunti a mano,
+ * salvati sul database.
  *
  * @param {{ data: object, onSaved: (data: object) => void }} props
  */
@@ -32,20 +33,31 @@ export default function AiConfigCard({ data, onSaved }) {
     importAutoSuggest: settings.importAutoSuggest.value === true,
     importWebSearch: settings.importWebSearch.value === true,
   });
-  const [apiKey, setApiKey] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null); // { kind: 'success'|'error'|'info', text }
 
-  const key = keys.anthropic;
-  const modelOptions = catalog.map((p) => (
-    <optgroup key={p.id} label={p.label}>
-      {p.models.map((m) => (
-        <option key={m.id} value={m.id}>
-          {t('modelOption', { model: m.id.split(':')[1], input: fmtUsd(m.input), output: fmtUsd(m.output) })}
-        </option>
-      ))}
-    </optgroup>
-  ));
+  const known = new Set(catalog.flatMap((p) => p.models.map((m) => m.id)));
+  const modelName = (id) => id.slice(id.indexOf(':') + 1);
+  /**
+   * Le opzioni dei menu, un gruppo per fornitore. Un modello scelto che non c'è più (Ollama spento,
+   * modello aggiunto a mano e poi tolto) resta visibile, segnato come non disponibile.
+   */
+  const modelOptions = (current) => [
+    ...catalog.filter((p) => p.models.length > 0).map((p) => (
+      <optgroup key={p.id} label={p.local ? t('ollamaGroup') : keys[p.id]?.configured ? p.label : t('noKeyGroup', { provider: p.label })}>
+        {p.models.map((m) => (
+          <option key={m.id} value={m.id}>
+            {p.local
+              ? t('localOption', { model: modelName(m.id), caps: [m.vision && t('capVision'), m.tools && t('capTools')].filter(Boolean).join(', ') || '—' })
+              : t(m.custom ? 'modelOptionCustom' : 'modelOption', { model: modelName(m.id), input: fmtUsd(m.input), output: fmtUsd(m.output) })}
+          </option>
+        ))}
+      </optgroup>
+    )),
+    current && current !== 'none' && !known.has(current)
+      ? <option key="unavailable" value={current}>{t('unavailableOption', { model: current })}</option>
+      : null,
+  ];
   const disabled = demo || busy;
 
   const save = async (body, okText) => {
@@ -80,34 +92,6 @@ export default function AiConfigCard({ data, onSaved }) {
     }, t('saved'));
   };
 
-  const handleSaveKey = async (e) => {
-    e.preventDefault();
-    if (!apiKey) return;
-    if (await save({ anthropicApiKey: apiKey }, t('keySaved'))) setApiKey('');
-  };
-
-  const handleRemoveKey = () => save({ anthropicApiKey: null }, t('keyRemoved'));
-
-  const handleVerify = async () => {
-    setBusy(true);
-    setMessage(null);
-    try {
-      const res = await fetch('/api/ai/settings/verify-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(apiKey ? { apiKey } : {}),
-      });
-      const { valid } = await jsonOrThrow(res);
-      if (valid === true) setMessage({ kind: 'success', text: t('keyValid') });
-      else if (valid === false) setMessage({ kind: 'error', text: t('keyInvalid') });
-      else setMessage({ kind: 'info', text: t('keyUnknown') });
-    } catch (err) {
-      setMessage({ kind: 'error', text: err.message || t('verifyFailed') });
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const sourceBadge = (source) => (
     <span className="badge badge-ghost badge-sm">{t(`sources.${source}`)}</span>
   );
@@ -135,7 +119,7 @@ export default function AiConfigCard({ data, onSaved }) {
               onChange={(e) => setForm((f) => ({ ...f, importModel: e.target.value }))}
             >
               <option value="none">{t('modelOff')}</option>
-              {modelOptions}
+              {modelOptions(form.importModel)}
             </select>
           </label>
 
@@ -148,7 +132,7 @@ export default function AiConfigCard({ data, onSaved }) {
               onChange={(e) => setForm((f) => ({ ...f, importFallbackModel: e.target.value }))}
             >
               <option value="none">{t('fallbackOff')}</option>
-              {modelOptions}
+              {modelOptions(form.importFallbackModel)}
             </select>
             <span className="text-xs text-base-content/60">{t('fallbackHint')}</span>
           </label>
@@ -189,7 +173,7 @@ export default function AiConfigCard({ data, onSaved }) {
               onChange={(e) => setForm((f) => ({ ...f, chatModel: e.target.value }))}
             >
               <option value="none">{t('modelOff')}</option>
-              {modelOptions}
+              {modelOptions(form.chatModel)}
             </select>
           </label>
 
@@ -241,49 +225,9 @@ export default function AiConfigCard({ data, onSaved }) {
           </div>
         </form>
 
-        <form className="rounded-xl border border-base-200 p-4 flex flex-col gap-3" onSubmit={handleSaveKey}>
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold">{t('keyTitle')}</h3>
-            {key.configured && sourceBadge(key.source)}
-          </div>
-          <p className="text-sm text-base-content/70">
-            {key.configured ? t('keyConfigured', { hint: key.hint }) : t('keyMissing')}
-          </p>
-          {key.unreadable && <div className="alert alert-warning py-2 text-sm"><span>{t('keyUnreadable')}</span></div>}
-          {key.source === 'env' && <p className="text-xs text-base-content/60">{t('keyFromEnv')}</p>}
-
-          <div className="flex flex-col gap-2 md:flex-row">
-            <input
-              type="password"
-              autoComplete="off"
-              spellCheck={false}
-              className="input w-full md:flex-1 font-mono"
-              placeholder={t('keyPlaceholder')}
-              aria-label={t('keyTitle')}
-              value={apiKey}
-              disabled={disabled}
-              onChange={(e) => setApiKey(e.target.value)}
-            />
-            <div className="flex gap-2">
-              <button type="button" className="btn btn-outline" onClick={handleVerify} disabled={disabled || (!apiKey && !key.configured)}>
-                {t('verify')}
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={disabled || !apiKey}>
-                {t('saveKey')}
-              </button>
-              {key.source === 'db' && (
-                <button type="button" className="btn btn-outline btn-error" onClick={handleRemoveKey} disabled={disabled}>
-                  {t('removeKey')}
-                </button>
-              )}
-            </div>
-          </div>
-          {/* Avviso, non blocco: Anthropic potrebbe cambiare formato, e la verifica resta la prova vera. */}
-          {apiKey && !apiKey.trim().startsWith('sk-ant-') && (
-            <p className="text-xs text-warning">{t('keyPrefixWarning')}</p>
-          )}
-          <p className="text-xs text-base-content/60">{t('keyHint')}</p>
-        </form>
+        <ProviderKeys data={data} disabled={disabled} save={save} setMessage={setMessage} />
+        <OllamaSettings data={data} disabled={disabled} save={save} setMessage={setMessage} />
+        <CustomModels data={data} disabled={disabled} save={save} />
       </div>
     </div>
   );

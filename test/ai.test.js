@@ -124,19 +124,114 @@ test('input delle impostazioni: solo modelli con prezzo, tetto entro i limiti, c
     assert.equal(aiSettingsInput({ importEffort: 'max' }).error, 'invalidEffort');
     assert.equal(aiSettingsInput({ monthlyBudgetUsd: 300 }).error, 'invalidBudget');
     assert.equal(aiSettingsInput({ monthlyBudgetUsd: '3' }).error, 'invalidBudget');
-    assert.equal(aiSettingsInput({ anthropicApiKey: 'corta' }).error, 'invalidApiKey');
-    assert.equal(aiSettingsInput({ anthropicApiKey: 'sk-ant con spazi dentro la chiave' }).error, 'invalidApiKey');
+    assert.equal(aiSettingsInput({ apiKey: { provider: 'anthropic', key: 'corta' } }).error, 'invalidApiKey');
+    assert.equal(aiSettingsInput({ apiKey: { provider: 'anthropic', key: 'sk-ant con spazi dentro la chiave' } }).error, 'invalidApiKey');
+    // Ollama non ha chiave, e un fornitore inventato nemmeno.
+    assert.equal(aiSettingsInput({ apiKey: { provider: 'ollama', key: 'sk-qualcosa-di-abbastanza-lungo' } }).error, 'invalidApiKey');
+    assert.equal(aiSettingsInput({ apiKey: { provider: 'toString', key: 'sk-qualcosa-di-abbastanza-lungo' } }).error, 'invalidApiKey');
 
-    const ok = aiSettingsInput({ importModel: 'anthropic:claude-sonnet-5-5', monthlyBudgetUsd: 2.555, anthropicApiKey: ' sk-ant-api03-abcdefghijklmnop ' });
+    const ok = aiSettingsInput({ importModel: 'anthropic:claude-sonnet-5-5', monthlyBudgetUsd: 2.555, apiKey: { provider: 'anthropic', key: ' sk-ant-api03-abcdefghijklmnop ' } });
     assert.equal(ok.set.importModel, 'anthropic:claude-sonnet-5-5');
     assert.equal(ok.set.monthlyBudgetUsd, 2.56);
     assert.equal(ok.set['providers.anthropic'].hint, 'mnop');
-    assert.deepEqual(ok.changes, ['importModel', 'monthlyBudgetUsd', 'anthropicApiKey:replaced']);
+    assert.deepEqual(ok.changes, ['importModel', 'monthlyBudgetUsd', 'apiKey:anthropic:replaced']);
     assert.ok(!JSON.stringify(ok.changes).includes('sk-ant'));
 
-    const reset = aiSettingsInput({ importModel: null, anthropicApiKey: null });
+    const openai = aiSettingsInput({ apiKey: { provider: 'openai', key: 'sk-proj-abcdefghijklmnopqrstu' } });
+    assert.equal(openai.set['providers.openai'].hint, 'rstu');
+
+    const reset = aiSettingsInput({ importModel: null, apiKey: { provider: 'anthropic', key: null } });
     assert.deepEqual(reset.unset, { importModel: '', 'providers.anthropic': '' });
     assert.equal(aiSettingsInput({ importModel: 'none' }).set.importModel, 'none');
+  } finally {
+    process.env = saved;
+  }
+});
+
+test('fornitori: modelli della tabella, aggiunti a mano e locali; indirizzo di Ollama', async () => {
+  const { aiSettingsInput } = await import('../lib/ai/settingsInput.js');
+  // Tabella: ogni modello con il suo fornitore, non con un altro.
+  assert.equal(aiSettingsInput({ chatModel: 'openai:gpt-6-luna' }).set.chatModel, 'openai:gpt-6-luna');
+  assert.equal(aiSettingsInput({ chatModel: 'google:gemini-3.8-flash' }).set.chatModel, 'google:gemini-3.8-flash');
+  assert.equal(aiSettingsInput({ chatModel: 'mistral:mistral-small-2603' }).set.chatModel, 'mistral:mistral-small-2603');
+  assert.equal(aiSettingsInput({ chatModel: 'openai:claude-haiku-5-5' }).error, 'invalidModel');
+  assert.equal(aiSettingsInput({ chatModel: 'openai:constructor' }).error, 'invalidModel');
+
+  // Locali: qualsiasi nome ben formato, senza prezzo.
+  assert.equal(aiSettingsInput({ chatModel: 'ollama:qwen3:8b' }).set.chatModel, 'ollama:qwen3:8b');
+  assert.equal(aiSettingsInput({ chatModel: 'ollama:utente/modello:q4_K_M' }).set.chatModel, 'ollama:utente/modello:q4_K_M');
+  assert.equal(aiSettingsInput({ chatModel: 'ollama:con spazi' }).error, 'invalidModel');
+
+  // Aggiunto a mano e scelto nella stessa richiesta; poi tolto, e non si può più scegliere.
+  const added = aiSettingsInput({
+    addCustomModel: { provider: 'mistral', name: ' mistral-medium-2604 ', input: 1.5, output: 7.5 },
+    importModel: 'mistral:mistral-medium-2604',
+  });
+  assert.deepEqual(added.set.customModels, [{ spec: 'mistral:mistral-medium-2604', input: 1.5, output: 7.5, cacheRead: null }]);
+  assert.equal(added.set.importModel, 'mistral:mistral-medium-2604');
+  assert.deepEqual(added.changes, ['customModel:added', 'importModel']);
+  const doc = { customModels: added.set.customModels };
+  assert.equal(aiSettingsInput({ chatModel: 'mistral:mistral-medium-2604' }, doc).set.chatModel, 'mistral:mistral-medium-2604');
+  const removed = aiSettingsInput({ removeCustomModel: 'mistral:mistral-medium-2604', chatModel: 'mistral:mistral-medium-2604' }, doc);
+  assert.equal(removed.error, 'invalidModel');
+  // Prezzi assurdi, fornitori locali o inventati, nomi strani: rifiutati.
+  for (const bad of [
+    { provider: 'openai', name: 'gpt-x', input: -1, output: 1 },
+    { provider: 'openai', name: 'gpt-x', input: 1, output: 5000 },
+    { provider: 'openai', name: 'gpt-x', input: '1', output: 1 },
+    { provider: 'ollama', name: 'qwen3', input: 0, output: 0 },
+    { provider: 'openai', name: 'gpt x', input: 1, output: 1 },
+  ]) assert.equal(aiSettingsInput({ addCustomModel: bad }).error, 'invalidCustomModel');
+
+  // Indirizzo di Ollama: ridotto all'origine, solo http(s), senza credenziali.
+  assert.equal(aiSettingsInput({ ollamaBaseUrl: 'http://192.168.1.20:11434/api/' }).set.ollamaBaseUrl, 'http://192.168.1.20:11434');
+  assert.deepEqual(aiSettingsInput({ ollamaBaseUrl: '' }).unset, { ollamaBaseUrl: '' });
+  for (const bad of ['ftp://host:11434', 'http://u:p@host:11434', 'non un indirizzo', 42]) {
+    assert.equal(aiSettingsInput({ ollamaBaseUrl: bad }).error, 'invalidOllamaUrl');
+  }
+});
+
+test('prezzi: rincari annunciati dal loro giorno, prezzi scritti a mano prima della tabella', async () => {
+  const { currentRates, costMicroUsd } = await import('../lib/ai/pricing.js');
+  const { priceFor } = await import('../lib/ai/settings.js');
+  const before = new Date('2026-11-30T12:00:00Z');
+  const after = new Date('2026-12-01T00:00:00Z');
+  assert.equal(currentRates('gemini-4-argon', before).input, 2);
+  assert.equal(currentRates('gemini-4-argon', after).input, 4);
+  assert.equal(costMicroUsd('gemini-4-argon', { input_tokens: 1000, output_tokens: 100 }, after), 4_000 + 2_000);
+
+  const parsed = { spec: 'openai:gpt-6-luna', provider: 'openai', name: 'gpt-6-luna' };
+  assert.equal(priceFor(parsed, {}).input, 0.10);
+  // Un prezzo scritto dall'utente corregge quello della tabella.
+  const fixed = priceFor(parsed, { customModels: [{ spec: 'openai:gpt-6-luna', input: 0.2, output: 1, cacheRead: null }] });
+  assert.equal(fixed.input, 0.2);
+  assert.equal(fixed.effort, false);
+  assert.equal(costMicroUsd(fixed, { input_tokens: 1000, output_tokens: 1000 }), 200 + 1000);
+  assert.equal(priceFor({ spec: 'google:gpt-6-luna', provider: 'google', name: 'gpt-6-luna' }, {}), null);
+});
+
+test('disponibilità: i modelli locali non chiedono chiave né tetto, gli altri sì', async () => {
+  const { aiAvailability } = await import('../lib/ai/index.js');
+  const saved = { ...process.env };
+  try {
+    delete process.env.DEMO_MODE;
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.OLLAMA_BASE_URL;
+    const local = aiAvailability('chat', { chatModel: 'ollama:qwen3:8b', monthlyBudgetUsd: 0 });
+    assert.equal(local.available, true);
+    assert.equal(local.baseUrl, 'http://127.0.0.1:11434');
+    assert.equal(local.price, null);
+    assert.equal(aiAvailability('chat', { chatModel: 'ollama:qwen3:8b', ollamaBaseUrl: 'http://10.0.0.5:11434' }).baseUrl, 'http://10.0.0.5:11434');
+
+    assert.equal(aiAvailability('chat', { chatModel: 'openai:gpt-6-luna' }).reason, 'notConfigured');
+    process.env.OPENAI_API_KEY = 'sk-di-prova-abbastanza-lunga';
+    const cloud = aiAvailability('chat', { chatModel: 'openai:gpt-6-luna' });
+    assert.equal(cloud.available, true);
+    assert.equal(cloud.price.provider, 'openai');
+    assert.equal(aiAvailability('chat', { chatModel: 'openai:gpt-6-luna', monthlyBudgetUsd: 0 }).reason, 'noBudget');
+    assert.equal(aiAvailability('chat', { chatModel: 'openai:gpt-9' }).reason, 'unknownModel');
+    // La ricerca web è uno strumento di Anthropic.
+    assert.equal(aiAvailability('importWebSearch', { importModel: 'openai:gpt-6-luna', importWebSearch: true }).reason, 'noWebSearch');
   } finally {
     process.env = saved;
   }

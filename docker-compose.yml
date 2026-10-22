@@ -69,8 +69,18 @@ services:
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
       AI_MODEL_IMPORT: ${AI_MODEL_IMPORT:-}
+      AI_MODEL_CHAT: ${AI_MODEL_CHAT:-}
       AI_MONTHLY_BUDGET_USD: ${AI_MONTHLY_BUDGET_USD:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-}
+      OLLAMA_NUM_CTX: ${OLLAMA_NUM_CTX:-}
+    # Da dentro il container 127.0.0.1 è il container stesso: un Ollama installato sul computer
+    # che ospita Docker si raggiunge come http://host.docker.internal:11434.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     # Porta sull'host. Dietro un reverse proxy conviene legarla a 127.0.0.1 (APP_BIND), così
     # l'app non è raggiungibile in rete aggirando il proxy.
     ports:

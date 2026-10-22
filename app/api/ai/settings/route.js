@@ -9,8 +9,8 @@ import { writeAudit } from '@/lib/utils/audit';
 import { serverTranslator } from '@/lib/i18n/server';
 import { aiAvailability } from '@/lib/ai';
 import { monthSpending, capMicro } from '@/lib/ai/budget';
-import { microToUsd, PRICES } from '@/lib/ai/pricing';
-import { providerCatalog } from '@/lib/ai/providers';
+import { currentRates, microToUsd } from '@/lib/ai/pricing';
+import { CLOUD_PROVIDERS, ollamaModels, providerById, providerCatalog } from '@/lib/ai/providers';
 import { EFFORTS, loadAiSettings, providerKey, resolveAiSettings } from '@/lib/ai/settings';
 import { aiSettingsInput, MAX_BUDGET_USD } from '@/lib/ai/settingsInput';
 
@@ -24,9 +24,36 @@ const CHANGE_LABELS = {
   importWebSearch: 'ricerca web degli esercenti',
   chatModel: 'modello della chat',
   chatEffort: 'effort della chat',
-  'anthropicApiKey:replaced': 'chiave Anthropic sostituita',
-  'anthropicApiKey:removed': 'chiave Anthropic eliminata',
+  ollamaBaseUrl: 'indirizzo di Ollama',
+  'customModel:added': 'modello aggiunto',
+  'customModel:removed': 'modello tolto',
 };
+
+/** «apiKey:openai:replaced» → «chiave OpenAI sostituita». */
+const changeLabel = (c) => {
+  const [kind, provider, what] = c.split(':');
+  if (kind !== 'apiKey') return CHANGE_LABELS[c];
+  return `chiave ${providerById(provider)?.label ?? provider} ${what === 'removed' ? 'eliminata' : 'sostituita'}`;
+};
+
+/**
+ * I modelli per i menu, fornitore per fornitore: quelli della tabella e quelli aggiunti a mano
+ * con il loro prezzo, e per Ollama quelli installati, con ciò che sanno fare. `ollamaOnline`
+ * false: Ollama non risponde all'indirizzo impostato.
+ */
+async function modelCatalog(doc, ollamaBaseUrl) {
+  const custom = doc.customModels ?? [];
+  const local = await ollamaModels(ollamaBaseUrl);
+  const catalog = providerCatalog().map((p) => {
+    if (p.local) return { ...p, models: (local ?? []).map((m) => ({ id: `${p.id}:${m.name}`, vision: m.vision, tools: m.tools })) };
+    const own = custom.filter((c) => c.spec.startsWith(`${p.id}:`));
+    const builtIn = p.models
+      .filter((m) => !own.some((c) => c.spec === `${p.id}:${m}`))
+      .map((m) => ({ id: `${p.id}:${m}`, ...(({ input, output }) => ({ input, output }))(currentRates(m)) }));
+    return { ...p, models: [...builtIn, ...own.map((c) => ({ id: c.spec, input: c.input, output: c.output, custom: true }))] };
+  });
+  return { catalog, ollamaOnline: local !== null, customModels: custom };
+}
 
 /** Tutto ciò che serve alla pagina. La chiave non c'è mai: solo se esiste, da dove viene e le ultime 4 cifre. */
 async function settingsView() {
@@ -43,7 +70,11 @@ async function settingsView() {
       .select('task model outcome inputTokens outputTokens cacheReadTokens costMicro durationMs createdAt')
       .lean(),
   ]);
-  const { source, hint, unreadable } = providerKey('anthropic', doc);
+  const keys = Object.fromEntries(CLOUD_PROVIDERS.map((id) => {
+    const { source, hint, unreadable } = providerKey(id, doc);
+    return [id, { configured: Boolean(source), source, hint, unreadable }];
+  }));
+  const { catalog, ollamaOnline, customModels } = await modelCatalog(doc, settings.ollamaBaseUrl.value);
 
   return {
     demo: isDemoMode(),
@@ -56,12 +87,12 @@ async function settingsView() {
       importWebSearch: settings.importWebSearch,
       chatModel: settings.chatModel,
       chatEffort: settings.chatEffort,
+      ollamaBaseUrl: settings.ollamaBaseUrl,
     },
-    keys: { anthropic: { configured: Boolean(source), source, hint, unreadable } },
-    catalog: providerCatalog().map((p) => ({
-      ...p,
-      models: p.models.map((m) => ({ id: `${p.id}:${m}`, input: PRICES[m]?.input, output: PRICES[m]?.output })),
-    })),
+    keys,
+    catalog,
+    ollamaOnline,
+    customModels,
     efforts: EFFORTS,
     maxBudgetUsd: MAX_BUDGET_USD,
     import: (({ available, reason, model }) => ({ available, reason, model }))(aiAvailability('importCategorize', doc)),
@@ -88,12 +119,12 @@ export async function PUT(req) {
   const blocked = await demoBlocked();
   if (blocked) return blocked;
 
-  const input = aiSettingsInput(await req.json().catch(() => null));
+  await connectDB();
+  const input = aiSettingsInput(await req.json().catch(() => null), await loadAiSettings());
   if (input.error) {
     return NextResponse.json({ error: (await serverTranslator('errors'))(input.error) }, { status: 400 });
   }
 
-  await connectDB();
   const update = { $set: { ...input.set, updatedBy: session.user.id } };
   if (Object.keys(input.unset).length) update.$unset = input.unset;
   await AiSettings.updateOne({ _id: 'ai' }, update, { upsert: true });
@@ -102,7 +133,7 @@ export async function PUT(req) {
     action: 'UPDATE',
     resource: 'system',
     resourceId: 'ai',
-    description: `Impostazioni IA aggiornate: ${input.changes.map((c) => CHANGE_LABELS[c]).join(', ')}`,
+    description: `Impostazioni IA aggiornate: ${input.changes.map(changeLabel).join(', ')}`,
     meta: { changes: input.changes },
   });
   return NextResponse.json(await settingsView());

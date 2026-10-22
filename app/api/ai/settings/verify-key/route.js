@@ -2,13 +2,16 @@ import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/auth/guard';
 import { demoBlocked } from '@/lib/demoGuard';
 import connectDB from '@/lib/mongodb';
-import { loadAiSettings, providerKey } from '@/lib/ai/settings';
+import { providerById } from '@/lib/ai/providers';
+import { loadAiSettings, providerKey, resolveAiSettings } from '@/lib/ai/settings';
+import { ollamaUrl } from '@/lib/ai/settingsInput';
 
 /**
- * Verifica una chiave Anthropic chiedendo l'elenco dei modelli, una chiamata che non consuma
- * token e non costa nulla. Senza `apiKey` nel corpo verifica quella già configurata.
+ * Verifica la chiave di un fornitore chiedendo l'elenco dei modelli, una chiamata che non
+ * consuma token e non costa nulla; per Ollama, che risponda all'indirizzo. Senza `secret` nel
+ * corpo verifica la chiave (o l'indirizzo) già configurata.
  *
- * @returns {{ valid: boolean|null }} null se Anthropic non ha dato una risposta chiara.
+ * @returns {{ valid: boolean|null }} null se il fornitore non ha dato una risposta chiara.
  */
 export async function POST(req) {
   const { denied } = await requirePermission('settings:manage');
@@ -17,24 +20,16 @@ export async function POST(req) {
   if (blocked) return blocked;
 
   const body = (await req.json().catch(() => null)) ?? {};
-  let apiKey = typeof body.apiKey === 'string' ? body.apiKey.trim() : '';
-  if (!apiKey) {
+  const provider = providerById(body.provider);
+  if (!provider) return NextResponse.json({ valid: false });
+  let secret = typeof body.secret === 'string' ? body.secret.trim() : '';
+  // Per Ollama il «segreto» è l'indirizzo: solo http(s), come quello che si salva.
+  if (secret && provider.local) secret = ollamaUrl(secret) ?? '';
+  if (!secret && !body.secret) {
     await connectDB();
-    apiKey = providerKey('anthropic', await loadAiSettings()).apiKey || '';
+    const doc = await loadAiSettings();
+    secret = (provider.local ? resolveAiSettings(doc).ollamaBaseUrl.value : providerKey(body.provider, doc).apiKey) || '';
   }
-  if (!apiKey) return NextResponse.json({ valid: false });
-
-  const base = (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com').replace(/\/$/, '');
-  try {
-    const res = await fetch(`${base}/v1/models?limit=1`, {
-      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      signal: AbortSignal.timeout(10_000),
-      cache: 'no-store',
-    });
-    if (res.ok) return NextResponse.json({ valid: true });
-    if (res.status === 401 || res.status === 403) return NextResponse.json({ valid: false });
-    return NextResponse.json({ valid: null });
-  } catch {
-    return NextResponse.json({ valid: null });
-  }
+  if (!secret) return NextResponse.json({ valid: false });
+  return NextResponse.json(await provider.verify(secret));
 }
