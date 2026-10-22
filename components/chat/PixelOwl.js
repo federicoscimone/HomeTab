@@ -1,6 +1,10 @@
 /**
  * Il gufo dell'assistente, disegnato a pixel su una griglia 24 × 24: occhiali e calcolatrice,
  * perché l'assistente fa i conti. Ogni carattere della mappa è un pixel; «.» è trasparente.
+ *
+ * Ogni tanto sbatte le palpebre: due livelli di palpebra sopra le lenti (mezza e chiusa) che
+ * compaiono a scatti, come in un'animazione a pixel. Il ritmo sta in app/globals.css
+ * (owl-lid-half, owl-lid-full); chi chiede di ridurre il movimento vede il gufo fermo.
  */
 
 const MAP = [
@@ -60,6 +64,17 @@ const RECTS = MAP.flatMap((row, y) => {
   return out;
 });
 
+/** Le lenti: colonne 4-8 e 15-19, righe 8-10 della mappa. */
+const LENSES = [4, 15];
+const LENS_WIDTH = 5;
+/** Palpebra a metà: la riga alta coperta, il bordo scuro sotto. Chiusa: due righe e il bordo. */
+const LID_HALF = [{ y: 8, fill: COLORS.B }, { y: 9, fill: COLORS.b }];
+const LID_FULL = [{ y: 8, fill: COLORS.B }, { y: 9, fill: COLORS.B }, { y: 10, fill: COLORS.b }];
+
+const lid = (rows) => LENSES.flatMap((x) => rows.map((r) => (
+  <rect key={`${x}-${r.y}`} x={x} y={r.y} width={LENS_WIDTH} height={1} fill={r.fill} />
+)));
+
 /** @param {{ size?: number, className?: string }} props */
 export default function PixelOwl({ size = 32, className = '' }) {
   return (
@@ -72,6 +87,8 @@ export default function PixelOwl({ size = 32, className = '' }) {
       aria-hidden="true"
     >
       {RECTS.map((r) => <rect key={`${r.x}-${r.y}`} x={r.x} y={r.y} width={r.w} height={1} fill={r.fill} />)}
+      <g className="owl-lid-half">{lid(LID_HALF)}</g>
+      <g className="owl-lid-full">{lid(LID_FULL)}</g>
     </svg>
   );
 }
