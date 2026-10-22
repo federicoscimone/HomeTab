@@ -187,9 +187,10 @@ judgements reach the model as preferences.
 | Mistral | mistral-small-2603 ($0.15 / $0.60) | [console.mistral.ai](https://console.mistral.ai/api-keys) | European company |
 | Ollama | whatever is installed | none | Local: free, no cap, data stays home |
 
-Prices were checked on the providers' pages on 22 October 2026 and are in `lib/ai/pricing.js`.
-Any other paid model, or a price that changed, can be added from the settings page (**Other
-models**: provider, exact name and price) without touching the code.
+Prices were checked on the providers' pages on 22 October 2026 and are in `lib/ai/pricing.js`:
+that is the starting point. **Update prices** re-reads the official pages when you ask (below),
+and any other paid model can be added from the settings page (**Other models**: provider, exact
+name and price) without touching the code.
 
 **For a paid provider**, create the key with a monthly spending limit where the provider allows
 it (on the [Claude Console](https://platform.claude.com) a workspace with a [spend
@@ -242,6 +243,33 @@ knows the providers, and records what changes between them:
   call is charged.
 
 A new provider is its LangChain package plus an entry there.
+
+### Keeping prices current
+
+Providers change prices every few weeks, and none of them publishes prices in a form a program
+can read: the model lists of their APIs have no prices. **Settings → AI → Model prices → Update
+prices** does it on request:
+
+1. The server downloads the official pricing pages (Anthropic, OpenAI and Google: one page each;
+   Mistral: the page of each current chat model, picked from its model index) and keeps their
+   visible text. Long pages are cut to the pieces around the models of interest.
+2. The import model reads them, one call per provider (about one cent in all with Haiku 5.5),
+   and for each model returns the standard prices, any announced future price with its date, and
+   **the sentence it read them from**.
+3. The code keeps a price only if that sentence is really in the page and contains those
+   numbers. A price the model made up, or one suggested by text written to fool it, does not
+   pass: the spending cap relies on these numbers, and the pages are third-party text.
+4. The page shows old and new side by side, with the sentence; nothing changes until an
+   administrator presses **Apply**. The check is applied by its id, so what is saved is exactly
+   what the server read and verified.
+
+Applied prices are saved in the database (`priceOverrides`, or on the model for those added by
+hand) and take the place of the code's table; announced increases apply on their date.
+
+**History.** Every change is recorded in `modelprices`: the starting price, the prices read from
+the pages, those entered by hand, and announced ones with their future date. The page shows it
+model by model, newest first, with an arrow for each rise or fall: over time it shows how
+prices move.
 
 ## 3. How the spending cap works
 
@@ -553,9 +581,9 @@ arrivano al modello come preferenze.
 | Ollama | quelli installati | nessuna | In locale: gratis, senza tetto, i dati restano in casa |
 
 I prezzi sono verificati sulle pagine dei fornitori il 22 ottobre 2026 e stanno in
-`lib/ai/pricing.js`. Qualsiasi altro modello a pagamento, o un prezzo cambiato, si aggiunge dalla
-pagina delle impostazioni (**Altri modelli**: fornitore, nome esatto e prezzo) senza toccare il
-codice.
+`lib/ai/pricing.js`: è il punto di partenza. **Aggiorna i prezzi** rilegge le pagine ufficiali
+quando lo chiedete (sotto), e qualsiasi altro modello a pagamento si aggiunge dalla pagina delle
+impostazioni (**Altri modelli**: fornitore, nome esatto e prezzo) senza toccare il codice.
 
 **Per un fornitore a pagamento**, crea la chiave con un limite di spesa mensile dove il fornitore
 lo permette (nella [Claude Console](https://platform.claude.com) un workspace con un [limite di
@@ -610,6 +638,33 @@ i fornitori, e registra ciò che cambia fra loro:
   si paga.
 
 Un fornitore nuovo è il suo pacchetto LangChain più una voce lì.
+
+### Tenere aggiornati i prezzi
+
+I fornitori cambiano i prezzi ogni poche settimane, e nessuno li pubblica in una forma leggibile
+da un programma: gli elenchi dei modelli delle loro API non hanno prezzi. **Impostazioni → IA →
+Prezzi dei modelli → Aggiorna i prezzi** lo fa su richiesta:
+
+1. Il server scarica le pagine ufficiali dei prezzi (Anthropic, OpenAI e Google: una pagina
+   ciascuno; Mistral: la pagina di ogni modello di chat attuale, presa dal suo indice) e ne tiene
+   il testo visibile. Le pagine lunghe si riducono ai pezzi intorno ai modelli che interessano.
+2. Il modello dell'import le legge, una chiamata per fornitore (circa un centesimo in tutto con
+   Haiku 5.5), e per ogni modello restituisce i prezzi standard, l'eventuale prezzo futuro
+   annunciato con la sua data e **la frase da cui li ha letti**.
+3. Il codice tiene un prezzo solo se quella frase è davvero nella pagina e contiene quei numeri.
+   Un prezzo inventato dal modello, o suggerito da un testo scritto per ingannarlo, non passa:
+   il tetto di spesa si basa su questi numeri, e le pagine sono testo di terzi.
+4. La pagina mostra vecchio e nuovo affiancati, con la frase; nulla cambia finché un
+   amministratore non preme **Applica**. Il controllo si applica per id, quindi si salva
+   esattamente ciò che il server ha letto e verificato.
+
+I prezzi applicati si salvano sul database (`priceOverrides`, o sul modello per quelli aggiunti a
+mano) e prendono il posto della tabella del codice; i rincari annunciati scattano alla loro data.
+
+**Storico.** Ogni cambiamento resta in `modelprices`: il prezzo di partenza, quelli letti dalle
+pagine, quelli scritti a mano e quelli annunciati con la loro data futura. La pagina lo mostra
+modello per modello, dal più recente, con una freccia per ogni salita o discesa: col tempo fa
+vedere come si muovono i prezzi.
 
 ## 3. Come funziona il tetto di spesa
 

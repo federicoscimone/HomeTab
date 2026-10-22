@@ -41,7 +41,9 @@ così i dati della famiglia non escono mai ([installarla in casa](#installarla-i
   l'esercente, e per una banca nuova propone il template di import, verificato con il parser
   dell'app. I dati personali vengono mascherati prima dell'invio e un tetto mensile rigido
   (3 $ di default) è garantito da una prenotazione atomica; un mese tipico costa pochi centesimi
-  ([docs/ai.md](docs/ai.md#import-assistito-dallia)). Spento nella demo pubblica.
+  ([docs/ai.md](docs/ai.md#import-assistito-dallia)). I prezzi dei modelli si rileggono su
+  richiesta dalle pagine ufficiali dei fornitori, ognuno verificato sul testo della pagina, e
+  restano in uno storico. Spento nella demo pubblica.
 - **Chat sui dati**: facoltativa, in sola lettura, dal gufo in basso a destra. Domande come
   «quanto avremo risparmiato quest'anno continuando così?» o «riusciremo a raggiungere gli
   obiettivi?» ricevono risposta chiamando le stesse funzioni dei report, quindi il modello non fa

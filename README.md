@@ -34,8 +34,9 @@ family's data never leaves the house ([running it at home](#running-it-at-home))
   for a bank it doesn't know yet, the model proposes the import template, checked against the
   app's parser.
   Personal data is masked before sending, and a hard monthly cap (default $3) is enforced
-  atomically; a typical month costs a few cents ([docs/ai.md](docs/ai.md)). Off in the public
-  demo.
+  atomically; a typical month costs a few cents ([docs/ai.md](docs/ai.md)). Model prices are
+  re-read from the providers' official pages on request, each one checked against the page text,
+  and kept in a history. Off in the public demo.
 - **Chat on your data** — optional, read-only, from the pixel owl at the bottom right: "how much
   will we have saved this year at this pace?", "will we reach our goals?" are answered through
   tool calls to the same functions as the reports, so the model never does the arithmetic, and

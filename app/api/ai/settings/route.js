@@ -11,8 +11,9 @@ import { aiAvailability } from '@/lib/ai';
 import { monthSpending, capMicro } from '@/lib/ai/budget';
 import { currentRates, microToUsd } from '@/lib/ai/pricing';
 import { CLOUD_PROVIDERS, ollamaModels, providerById, providerCatalog } from '@/lib/ai/providers';
-import { EFFORTS, loadAiSettings, providerKey, resolveAiSettings } from '@/lib/ai/settings';
+import { EFFORTS, loadAiSettings, priceFor, providerKey, resolveAiSettings } from '@/lib/ai/settings';
 import { aiSettingsInput, MAX_BUDGET_USD } from '@/lib/ai/settingsInput';
+import { recordManualPrice } from '@/lib/services/prices';
 
 /** Etichette dei campi per la descrizione dell'audit log (registrata in italiano, come le altre). */
 const CHANGE_LABELS = {
@@ -47,10 +48,12 @@ async function modelCatalog(doc, ollamaBaseUrl) {
   const catalog = providerCatalog().map((p) => {
     if (p.local) return { ...p, models: (local ?? []).map((m) => ({ id: `${p.id}:${m.name}`, vision: m.vision, tools: m.tools })) };
     const own = custom.filter((c) => c.spec.startsWith(`${p.id}:`));
+    // Il prezzo in vigore oggi: quello riletto dalla pagina, se c'è, o quello della tabella.
+    const rates = (name) => currentRates(priceFor({ spec: `${p.id}:${name}`, provider: p.id, name }, doc));
     const builtIn = p.models
       .filter((m) => !own.some((c) => c.spec === `${p.id}:${m}`))
-      .map((m) => ({ id: `${p.id}:${m}`, ...(({ input, output }) => ({ input, output }))(currentRates(m)) }));
-    return { ...p, models: [...builtIn, ...own.map((c) => ({ id: c.spec, input: c.input, output: c.output, custom: true }))] };
+      .map((m) => ({ id: `${p.id}:${m}`, ...(({ input, output }) => ({ input, output }))(rates(m)) }));
+    return { ...p, models: [...builtIn, ...own.map((c) => ({ id: c.spec, ...(({ input, output }) => ({ input, output }))(rates(c.spec.slice(p.id.length + 1))), custom: true }))] };
   });
   return { catalog, ollamaOnline: local !== null, customModels: custom };
 }
@@ -93,6 +96,7 @@ async function settingsView() {
     catalog,
     ollamaOnline,
     customModels,
+    pricesCheckedAt: doc.pricesCheckedAt ?? null,
     efforts: EFFORTS,
     maxBudgetUsd: MAX_BUDGET_USD,
     import: (({ available, reason, model }) => ({ available, reason, model }))(aiAvailability('importCategorize', doc)),
@@ -128,6 +132,8 @@ export async function PUT(req) {
   const update = { $set: { ...input.set, updatedBy: session.user.id } };
   if (Object.keys(input.unset).length) update.$unset = input.unset;
   await AiSettings.updateOne({ _id: 'ai' }, update, { upsert: true });
+  // Un prezzo scritto a mano entra nello storico come quelli letti dalle pagine.
+  if (input.changes.includes('customModel:added')) await recordManualPrice(input.set.customModels.at(-1), session.user.id);
 
   await writeAudit(session, req, {
     action: 'UPDATE',
