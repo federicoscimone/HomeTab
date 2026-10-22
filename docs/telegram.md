@@ -67,6 +67,9 @@ and a test copy at home) need two bots.
 From then on, signing in asks for a code after the password. Password recovery sends a code to
 the linked chat, besides the usual email link.
 
+The linked chat also receives the reminders of the payment deadlines, if a daily cron calls
+`/api/cron/promemoria` ([docs/planning.md](planning.md)).
+
 ## How it is protected
 
 - Codes are 6 digits, valid 5 minutes, at most 5 wrong attempts, single use, bound to their
@@ -163,6 +166,9 @@ produzione su Vercel e una copia di prova a casa) richiedono due bot.
 
 Da quel momento l'accesso chiede un codice dopo la password. Il recupero della password invia un
 codice alla chat collegata, oltre al consueto link via email.
+
+La chat collegata riceve anche i promemoria delle scadenze di pagamento, se un cron giornaliero
+chiama `/api/cron/promemoria` ([docs/planning.md](planning.md#scadenze-e-accantonamenti)).
 
 ## Come è protetta
 

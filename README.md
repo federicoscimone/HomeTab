@@ -47,6 +47,10 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
   months and gaps from similar households, each with its amount and the months it would gain on a
   goal; the AI picks three and explains them, and any number it invents discards its text
   ([docs/ai.md](docs/ai.md#saving-suggestions-on-request)).
+- **Deadlines and set-asides** — bills, taxes, insurance and subscriptions with the monthly amount
+  to set aside for the non-monthly ones; recurring payments are found in your movements and
+  proposed, payments are recognised, and Telegram reminds you before the due date
+  ([docs/planning.md](docs/planning.md)).
 - **Savings goals** — the savings of each closed month are split among goals; every goal shows
   the monthly amount it needs and its estimated arrival date.
 - **Two-step verification and Telegram** — optional for each user: after the password, a

@@ -64,7 +64,8 @@
     "myAccount": "Il mio account",
     "signOut": "Disconnetti",
     "openMenu": "Apri menu",
-    "similarHouseholds": "Famiglie simili"
+    "similarHouseholds": "Famiglie simili",
+    "deadlines": "Scadenze"
   },
   "roles": {
     "viewer": {
@@ -258,7 +259,8 @@
     "templateNoDataRows": "Nel file non c’è nessuna riga con una data e un importo.",
     "aiUnavailable": "L’IA non è disponibile: controlla Impostazioni → IA.",
     "aiBudgetReached": "Tetto di spesa del mese raggiunto.",
-    "aiFailed": "Il servizio IA non ha risposto. Riprova fra poco."
+    "aiFailed": "Il servizio IA non ha risposto. Riprova fra poco.",
+    "deadlineNotFound": "Scadenza non trovata"
   },
   "auth": {
     "email": "Email",
@@ -798,7 +800,8 @@
       "stato_obiettivi": "obiettivi",
       "confronto_istat": "confronto con famiglie simili",
       "segnali_risparmio": "segnali di risparmio",
-      "proiezione_anno": "proiezione dell’anno"
+      "proiezione_anno": "proiezione dell’anno",
+      "scadenze": "scadenze"
     },
     "unavailable": {
       "demo": "Nella demo pubblica la chat è spenta: chiunque potrebbe consumare il credito.",
@@ -1220,7 +1223,9 @@
       "user": "Utente",
       "system": "Sistema",
       "backup": "Backup",
-      "goal": "Obiettivo"
+      "goal": "Obiettivo",
+      "deadline": "Scadenza",
+      "budget": "Budget"
     },
     "descriptionNote": "Le descrizioni restano nella lingua in cui sono state registrate."
   },
@@ -1568,5 +1573,80 @@
     "needed": "servirebbero {required} al mese, ne arrivano {expected}",
     "legendActual": "mesi chiusi",
     "legendEstimate": "mese in corso e stime"
+  },
+  "deadlines": {
+    "title": "Scadenze",
+    "intro": "Bollette, tasse, polizze, abbonamenti e rate: quando arrivano e quanto mettere da parte ogni mese per non trovarsele tutte insieme.",
+    "new": "Nuova scadenza",
+    "loadFailed": "Impossibile caricare le scadenze",
+    "saveFailed": "Salvataggio non riuscito",
+    "reserveTitle": "Da accantonare ogni mese",
+    "reserveHint": "Le scadenze non mensili divise per i mesi fra un pagamento e l’altro: 600 € l’anno sono 50 € al mese.",
+    "soonTitle": "Nei prossimi 30 giorni",
+    "soonCount": "{n, plural, =0 {nessuna scadenza} one {# scadenza} other {# scadenze}}",
+    "overdueTitle": "Scadute",
+    "overdueHint": "Passate senza essere segnate pagate né trovate fra i movimenti.",
+    "suggestTitle": "Spese che si ripetono",
+    "suggestIntro": "Trovate fra i vostri movimenti: stesso esercente e importo simile ogni 2, 3, 6 o 12 mesi. Aggiungetele per ricevere il promemoria e vedere la quota da accantonare.",
+    "suggestLine": "{amount} {every}, prossima il {date} (vista {times} volte)",
+    "suggestAdd": "Aggiungi",
+    "suggestIgnore": "Ignora",
+    "empty": "Nessuna scadenza: aggiungetene una o partite da quelle proposte qui sopra.",
+    "cols": {
+      "what": "Scadenza",
+      "when": "Quando",
+      "amount": "Importo",
+      "reserve": "Da accantonare"
+    },
+    "perMonth": "{amount} al mese",
+    "overdue": "scaduta da {n, plural, one {# giorno} other {# giorni}}",
+    "today": "oggi",
+    "inDays": "tra {n, plural, one {# giorno} other {# giorni}}",
+    "paymentFound": "Pagamento trovato il {date} ({amount}): segnatela pagata.",
+    "markPaid": "Pagata",
+    "confirmDelete": "Eliminare la scadenza «{title}»?",
+    "remindNote": "I promemoria arrivano su Telegram a chi ha collegato la chat, qualche giorno prima e il giorno stesso.",
+    "closedTitle": "Concluse ({n})",
+    "cardTitle": "Prossime scadenze",
+    "openAll": "Tutte le scadenze",
+    "nothingSoon": "Nessuna scadenza nei prossimi 30 giorni.",
+    "paidBadge": "pagata?",
+    "cardReserve": "Da accantonare ogni mese per le scadenze non mensili: {amount}.",
+    "kinds": {
+      "bill": "Bolletta",
+      "tax": "Tassa",
+      "insurance": "Polizza",
+      "subscription": "Abbonamento",
+      "loan": "Rata",
+      "other": "Altro"
+    },
+    "periods": {
+      "once": "una volta",
+      "every": "{n, plural, =1 {ogni mese} =12 {ogni anno} =24 {ogni 2 anni} other {ogni # mesi}}"
+    },
+    "form": {
+      "newTitle": "Nuova scadenza",
+      "editTitle": "Modifica scadenza",
+      "title": "Che cosa",
+      "titlePlaceholder": "Es. Assicurazione auto",
+      "kind": "Tipo",
+      "amount": "Importo previsto",
+      "nextDate": "Prossima scadenza",
+      "every": "Si ripete",
+      "remind": "Promemoria",
+      "remindDays": "{n, plural, one {# giorno prima} other {# giorni prima}}",
+      "noRemind": "Nessuno",
+      "category": "Categoria",
+      "noCategory": "Nessuna",
+      "match": "Esercente nei movimenti",
+      "matchPlaceholder": "Es. UNIPOL",
+      "matchHint": "Le parole con cui il pagamento compare nell’estratto conto: servono a riconoscerlo da soli.",
+      "notes": "Note"
+    },
+    "telegram": {
+      "reminderBefore": "📅 {title}: scade il {date}, tra {days} giorni. {amount}",
+      "reminderDue": "📅 {title}: scade oggi. {amount}",
+      "reminderOverdue": "⚠️ {title}: era da pagare il {date}. Se l’avete pagata, segnatela nell’app. {amount}"
+    }
   }
 }

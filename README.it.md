@@ -52,6 +52,10 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
   anomali e scarti dalle famiglie simili, ognuno con il suo importo e i mesi che farebbe guadagnare
   a un obiettivo; l'IA ne sceglie tre e li spiega, e se inventa un numero il suo testo si scarta
   ([docs/ai.md](docs/ai.md#consigli-di-risparmio-su-richiesta)).
+- **Scadenze e accantonamenti**: bollette, tasse, polizze e abbonamenti, con la quota da
+  accantonare ogni mese per quelle non mensili; le spese che si ripetono vengono trovate fra i
+  movimenti e proposte, i pagamenti riconosciuti, e Telegram avvisa prima della scadenza
+  ([docs/planning.md](docs/planning.md#strumenti-di-pianificazione)).
 - **Obiettivi di risparmio**: il risparmio di ogni mese chiuso si ripartisce tra gli obiettivi;
   per ciascuno si vedono la quota mensile che serve e la data prevista di arrivo.
 - **Verifica in due passaggi e Telegram**: facoltativa per ogni utente; dopo la password serve

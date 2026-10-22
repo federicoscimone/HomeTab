@@ -20,7 +20,7 @@ const ACTION_COLORS = {
   BACKUP_DISCONNECT: 'badge-ghost',
 };
 
-const RESOURCES = ['movement', 'category', 'template', 'keyword', 'user', 'goal', 'backup', 'system'];
+const RESOURCES = ['movement', 'category', 'template', 'keyword', 'user', 'goal', 'deadline', 'budget', 'backup', 'system'];
 
 const LIMIT = 25;
 
