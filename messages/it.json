@@ -1856,8 +1856,6 @@
   "quickFill": {
     "placeholder": "Scrivi la spesa: 12,50 pizza · ieri 40 benzina contanti · +1500 stipendio",
     "fill": "Compila",
-    "photo": "📷 Leggi uno scontrino",
-    "photoHint": "Carica o scatta la foto di uno scontrino: l’IA legge esercente, data, totale e pagamento. La foto non si salva.",
     "photoOff": "Per leggere gli scontrini serve l’IA (Impostazioni → IA).",
     "intro": "Una riga o la foto di uno scontrino riempiono il modulo qui sotto: controllate e salvate. La categoria la trovano le regole e lo storico, poi l’IA se è attiva.",
     "introNoAi": "Una riga riempie il modulo qui sotto: controllate e salvate. La lettura degli scontrini richiede l’IA.",
@@ -1865,6 +1863,18 @@
     "filledAi": "Modulo compilato, con la categoria proposta dall’IA: controllatela e salvate.",
     "filledNoCategory": "Modulo compilato senza categoria: sceglietela e salvate.",
     "failed": "Non è stato possibile compilare il modulo.",
-    "photoUnreadable": "Non riesco ad aprire questa immagine: provate con una foto JPEG o PNG."
+    "photoUnreadable": "Non riesco ad aprire questa immagine: provate con una foto JPEG o PNG.",
+    "shoot": "📷 Scatta",
+    "choose": "🖼 Scegli una foto",
+    "shootHint": "Fotografate lo scontrino: sul telefono con la fotocamera, sul computer con la webcam.",
+    "chooseHint": "Scegliete la foto di uno scontrino dalla galleria o da una cartella.",
+    "cameraNeedsHttps": "Il browser concede la webcam solo su una connessione sicura (HTTPS): scegliete una foto dalla cartella o trascinatela qui.",
+    "introDesktop": "Una riga o la foto di uno scontrino (scattata con la webcam, scelta da una cartella o trascinata qui) riempiono il modulo qui sotto: controllate e salvate.",
+    "cameraTitle": "Fotografa lo scontrino",
+    "cameraHint": "Inquadrate lo scontrino intero, ben illuminato e dritto.",
+    "cameraShoot": "Scatta",
+    "cameraCancel": "Annulla",
+    "cameraDenied": "Il permesso per la webcam è stato negato: concedetelo dalle impostazioni del browser, o scegliete una foto.",
+    "cameraUnavailable": "Nessuna webcam disponibile: scegliete una foto da una cartella."
   }
 }
