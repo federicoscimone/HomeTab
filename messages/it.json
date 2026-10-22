@@ -1071,7 +1071,8 @@
       "importWebSearch": "Ricerca web",
       "chat": "Chat sui dati",
       "advice": "Consigli di risparmio",
-      "istatMapping": "Capitoli ISTAT delle categorie"
+      "istatMapping": "Capitoli ISTAT delle categorie",
+      "receiptScan": "Scontrini da Telegram"
     },
     "outcomes": {
       "ok": "Riuscita",
@@ -1418,10 +1419,29 @@
   },
   "telegramBot": {
     "help": "Questo è il bot di HomeTab. Per collegarlo al tuo account apri la pagina Account dell'app e scegli «Collega Telegram».",
-    "alreadyLinked": "Questa chat è collegata al tuo account HomeTab: qui riceverai i codici di accesso e di recupero.",
+    "alreadyLinked": "Questa chat è collegata al tuo account HomeTab: qui ricevi i codici di accesso e i promemoria delle scadenze.\n\nPer registrare una spesa scrivila in una riga, ad esempio «12,50 pizza», «ieri 40 benzina contanti» o «+1500 stipendio» per un’entrata. Oppure manda la foto di uno scontrino.",
     "invalidLink": "Il link non è valido o è scaduto. Generane uno nuovo dalla pagina Account di HomeTab.",
     "linked": "Fatto, {name}: questa chat è collegata al tuo account HomeTab. Qui riceverai i codici di accesso e di recupero.",
-    "chatTaken": "Questa chat è già collegata a un altro account HomeTab: scollegala da quell'account prima di usarla qui."
+    "chatTaken": "Questa chat è già collegata a un altro account HomeTab: scollegala da quell'account prima di usarla qui.",
+    "summary": "{kind} di {amount} · {text}\n{category} · {date}",
+    "expense": "Uscita",
+    "income": "Entrata",
+    "noCategory": "senza categoria (completala nell’app)",
+    "saved": "✅ Registrato.",
+    "savedShort": "Registrato",
+    "undo": "Annulla",
+    "undone": "Annullato",
+    "expired": "Non più disponibile",
+    "notAllowed": "Il tuo account non può registrare movimenti: chiedi a un amministratore.",
+    "photoNoAi": "Per leggere gli scontrini serve l’IA, che qui non è attiva. Scrivi la spesa in una riga, ad esempio «12,50 pizza».",
+    "photoBudget": "Il tetto di spesa per l’IA di questo mese è raggiunto: scrivi la spesa in una riga, ad esempio «12,50 pizza».",
+    "photoFailed": "Non sono riuscito a leggere la foto. Riprova, o scrivi la spesa in una riga.",
+    "notAReceipt": "Non sembra uno scontrino, o il totale non si legge. Riprova con una foto più nitida, o scrivi la spesa in una riga.",
+    "receiptRead": "🧾 Ho letto lo scontrino:",
+    "confirm": "✅ Registra",
+    "discard": "❌ Annulla",
+    "discarded": "Scartato",
+    "categoryFromAi": "{category} (proposta dall’IA)"
   },
   "istat": {
     "title": "Famiglie simili",

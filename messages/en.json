@@ -1071,7 +1071,8 @@
       "importWebSearch": "Web search",
       "chat": "Data chat",
       "advice": "Saving suggestions",
-      "istatMapping": "ISTAT categories"
+      "istatMapping": "ISTAT categories",
+      "receiptScan": "Telegram receipts"
     },
     "outcomes": {
       "ok": "Succeeded",
@@ -1418,10 +1419,29 @@
   },
   "telegramBot": {
     "help": "This is the HomeTab bot. To link it to your account, open the Account page in the app and choose “Connect Telegram”.",
-    "alreadyLinked": "This chat is linked to your HomeTab account: sign-in and recovery codes will arrive here.",
+    "alreadyLinked": "This chat is linked to your HomeTab account: here you get sign-in codes and deadline reminders.\n\nTo record an expense write it on one line, for example “12.50 pizza”, “yesterday 40 fuel cash” or “+1500 salary” for income. Or send a photo of a receipt.",
     "invalidLink": "The link is invalid or has expired. Create a new one from the Account page in HomeTab.",
     "linked": "Done, {name}: this chat is now linked to your HomeTab account. Sign-in and recovery codes will arrive here.",
-    "chatTaken": "This chat is already linked to another HomeTab account: disconnect it there before using it here."
+    "chatTaken": "This chat is already linked to another HomeTab account: disconnect it there before using it here.",
+    "summary": "{kind} of {amount} · {text}\n{category} · {date}",
+    "expense": "Expense",
+    "income": "Income",
+    "noCategory": "no category (complete it in the app)",
+    "saved": "✅ Recorded.",
+    "savedShort": "Recorded",
+    "undo": "Undo",
+    "undone": "Undone",
+    "expired": "No longer available",
+    "notAllowed": "Your account can’t record movements: ask an administrator.",
+    "photoNoAi": "Reading receipts needs the AI, which is not active here. Write the expense on one line, for example “12.50 pizza”.",
+    "photoBudget": "This month’s AI spending cap has been reached: write the expense on one line, for example “12.50 pizza”.",
+    "photoFailed": "I couldn’t read the photo. Try again, or write the expense on one line.",
+    "notAReceipt": "It doesn’t look like a receipt, or the total isn’t readable. Try a sharper photo, or write the expense on one line.",
+    "receiptRead": "🧾 I read the receipt:",
+    "confirm": "✅ Record",
+    "discard": "❌ Cancel",
+    "discarded": "Discarded",
+    "categoryFromAi": "{category} (suggested by AI)"
   },
   "istat": {
     "title": "Similar households",

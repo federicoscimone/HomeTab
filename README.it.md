@@ -56,6 +56,9 @@ automatica, report mensili e annuali, obiettivi di risparmio, più utenti con ru
   accantonare ogni mese per quelle non mensili; le spese che si ripetono vengono trovate fra i
   movimenti e proposte, i pagamenti riconosciuti, e Telegram avvisa prima della scadenza
   ([docs/planning.md](docs/planning.md#strumenti-di-pianificazione)).
+- **Registrazione da Telegram**: «12,50 pizza» nella chat del bot registra una spesa,
+  categorizzata dalla catena dell'import, con un pulsante Annulla; la foto di uno scontrino la
+  legge l'IA e aspetta la conferma ([docs/telegram.md](docs/telegram.md#telegram-e-verifica-in-due-passaggi)).
 - **Obiettivi di risparmio**: il risparmio di ogni mese chiuso si ripartisce tra gli obiettivi;
   per ciascuno si vedono la quota mensile che serve e la data prevista di arrivo.
 - **Verifica in due passaggi e Telegram**: facoltativa per ogni utente; dopo la password serve
