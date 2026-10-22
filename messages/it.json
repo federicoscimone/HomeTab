@@ -807,7 +807,8 @@
       "proiezione_anno": "proiezione dell’anno",
       "scadenze": "scadenze",
       "simula_scenario": "simulazione «e se»",
-      "spese_detraibili": "spese detraibili"
+      "spese_detraibili": "spese detraibili",
+      "budget_mese": "budget del mese"
     },
     "unavailable": {
       "demo": "Nella demo pubblica la chat è spenta: chiunque potrebbe consumare il credito.",
@@ -1447,7 +1448,9 @@
     "confirm": "✅ Registra",
     "discard": "❌ Annulla",
     "discarded": "Scartato",
-    "categoryFromAi": "{category} (proposta dall’IA)"
+    "categoryFromAi": "{category} (proposta dall’IA)",
+    "budgetLine": "📊 {category}: {spent} di {amount} questo mese ({pct}%)",
+    "budgetOver": "🔴 {category}: budget superato, {spent} di {amount} ({pct}%)"
   },
   "istat": {
     "title": "Famiglie simili",
@@ -1815,5 +1818,25 @@
     "save": "Salva",
     "saved": "Salvato.",
     "failed": "Salvataggio non riuscito"
+  },
+  "budgets": {
+    "title": "Budget del mese",
+    "intro": "Quanto avete speso in ogni categoria rispetto al tetto che vi siete dati.",
+    "edit": "Modifica",
+    "set": "Imposta i budget",
+    "empty": "Nessun budget: impostatene uno per le categorie che volete tenere d’occhio.",
+    "spentOf": "{spent} di {amount} ({pct}%)",
+    "projectedOver": "A questo ritmo arrivate a {amount} a fine mese.",
+    "alertsNote": "Su Telegram arriva un avviso all’80% e al 100%, una volta al mese, a chi ha collegato la chat.",
+    "failed": "Salvataggio non riuscito",
+    "modalTitle": "Budget mensili",
+    "modalIntro": "Un tetto al mese per le categorie che volete tenere d’occhio; vuoto = nessun budget. Accanto, la media degli ultimi 3 mesi.",
+    "average": "media {amount} al mese",
+    "useSuggested": "usa {amount}",
+    "none": "nessuno",
+    "telegram": {
+      "alertNear": "🟡 {category}: {spent} di {amount} questo mese ({pct}%).",
+      "alertOver": "🔴 {category}: budget superato, {spent} di {amount} ({pct}%)."
+    }
   }
 }

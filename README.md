@@ -63,6 +63,9 @@ Built with Next.js 16 (App Router), MongoDB and NextAuth. It runs with a single
 - **Deductible expenses (730)** — the year's deductible expenses by type, checked for traceable
   payment (cash medical expenses flagged to check), with the movement list and a CSV for the tax
   return; no tax computation ([docs/planning.md](docs/planning.md#deductible-expenses-730)).
+- **Monthly budgets** — a cap per category with the average of the last months as a hint,
+  progress and month-end pace on the dashboard, Telegram alerts at 80% and 100%
+  ([docs/planning.md](docs/planning.md#monthly-budgets)).
 - **Savings goals** — the savings of each closed month are split among goals; every goal shows
   the monthly amount it needs and its estimated arrival date.
 - **Two-step verification and Telegram** — optional for each user: after the password, a

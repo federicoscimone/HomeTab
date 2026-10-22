@@ -82,6 +82,22 @@ insurance), the list of movements and a CSV for whoever fills in the return.
 - The app **does not compute the deduction**: rates, thresholds and limits change every year and
   depend on income, and it doesn't know whose name is on each receipt (`lib/utils/deductions.js`).
 
+## Monthly budgets
+
+A monthly cap for the categories you want to keep an eye on, set from the dashboard with the
+average of the last 3 complete months next to each (and a suggested value rounded up). The
+dashboard card shows spent against budget, the percentage and, from the fifth day, where you'll
+end up at this pace (`lib/utils/budgets.js`). All payment methods count, meal vouchers too;
+movements excluded from analysis don't.
+
+- **Telegram alerts** at 80% and 100%, once per threshold per month, from the same daily cron as
+  the deadlines (`/api/cron/promemoria`): so they cover every movement, from the import, the form
+  or the bot. Jumping straight past 100% sends only the 100% alert.
+- An expense recorded from the bot gets the category's budget in the reply: "Fuel: 308.63 € of
+  300.00 € (103%)".
+
+The chat answers "how are we doing with the grocery budget?" with the `budget_mese` tool.
+
 ---
 
 # Strumenti di pianificazione
@@ -169,3 +185,20 @@ assicurazioni), l'elenco dei movimenti e un CSV per chi compila la dichiarazione
   dal totale.
 - L'app **non calcola la detrazione**: percentuali, franchigie e limiti cambiano ogni anno e
   dipendono dal reddito, e non sa a chi è intestata ogni ricevuta (`lib/utils/deductions.js`).
+
+## Budget mensili
+
+Un tetto al mese per le categorie che volete tenere d'occhio, impostato dalla dashboard con la
+media degli ultimi 3 mesi completi accanto a ognuna (e un valore suggerito, arrotondato per
+eccesso). La scheda della dashboard mostra lo speso rispetto al budget, la percentuale e, dal
+quinto giorno, dove arriverete a fine mese a questo ritmo (`lib/utils/budgets.js`). Contano
+tutti i metodi di pagamento, anche i buoni pasto; i movimenti esclusi dalle analisi no.
+
+- **Avvisi su Telegram** all'80% e al 100%, una volta per soglia e per mese, dallo stesso cron
+  giornaliero delle scadenze (`/api/cron/promemoria`): così valgono per ogni movimento, che venga
+  dall'import, dal modulo o dal bot. Superando il 100% in un colpo solo arriva solo l'avviso del
+  100%.
+- Una spesa registrata dal bot riceve nella risposta il budget della categoria: «Carburante:
+  308,63 € di 300,00 € (103%)».
+
+La chat risponde a «come siamo messi col budget della spesa?» con lo strumento `budget_mese`.

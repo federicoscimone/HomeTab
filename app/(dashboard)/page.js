@@ -13,6 +13,7 @@ import TrendChart from '@/components/dashboard/TrendChart';
 import AdviceCard from '@/components/dashboard/AdviceCard';
 import YearProjectionCard from '@/components/dashboard/YearProjectionCard';
 import DeadlinesCard from '@/components/dashboard/DeadlinesCard';
+import BudgetCard from '@/components/dashboard/BudgetCard';
 import PaymentGroupBar from '@/components/dashboard/PaymentGroupBar';
 import { useTranslations } from 'next-intl';
 import { useApiData } from '@/lib/hooks/useApiData';
@@ -278,6 +279,9 @@ export default function DashboardPage() {
           </div>
         </>
       )}
+
+      {/* ── Budget del mese per categoria ─────────────────────────────── */}
+      <BudgetCard />
 
       {/* ── Prossime scadenze e quota da accantonare ───────────────────── */}
       <DeadlinesCard />

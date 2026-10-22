@@ -807,7 +807,8 @@
       "proiezione_anno": "year projection",
       "scadenze": "deadlines",
       "simula_scenario": "what-if simulation",
-      "spese_detraibili": "deductible expenses"
+      "spese_detraibili": "deductible expenses",
+      "budget_mese": "monthly budgets"
     },
     "unavailable": {
       "demo": "Chat is off in the public demo: anyone could use up the credit.",
@@ -1447,7 +1448,9 @@
     "confirm": "✅ Record",
     "discard": "❌ Cancel",
     "discarded": "Discarded",
-    "categoryFromAi": "{category} (suggested by AI)"
+    "categoryFromAi": "{category} (suggested by AI)",
+    "budgetLine": "📊 {category}: {spent} of {amount} this month ({pct}%)",
+    "budgetOver": "🔴 {category}: budget exceeded, {spent} of {amount} ({pct}%)"
   },
   "istat": {
     "title": "Similar households",
@@ -1815,5 +1818,25 @@
     "save": "Save",
     "saved": "Saved.",
     "failed": "Could not save"
+  },
+  "budgets": {
+    "title": "This month’s budgets",
+    "intro": "How much you spent in each category against the cap you set.",
+    "edit": "Edit",
+    "set": "Set budgets",
+    "empty": "No budgets: set one for the categories you want to keep an eye on.",
+    "spentOf": "{spent} of {amount} ({pct}%)",
+    "projectedOver": "At this pace you’ll reach {amount} by month end.",
+    "alertsNote": "Telegram sends an alert at 80% and 100%, once a month, to whoever linked the chat.",
+    "failed": "Could not save",
+    "modalTitle": "Monthly budgets",
+    "modalIntro": "A monthly cap for the categories you want to watch; empty = no budget. Next to each, the average of the last 3 months.",
+    "average": "average {amount} a month",
+    "useSuggested": "use {amount}",
+    "none": "none",
+    "telegram": {
+      "alertNear": "🟡 {category}: {spent} of {amount} this month ({pct}%).",
+      "alertOver": "🔴 {category}: budget exceeded, {spent} of {amount} ({pct}%)."
+    }
   }
 }
