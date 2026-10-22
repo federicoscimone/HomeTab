@@ -18,6 +18,13 @@ test('ricorrente: stesso esercente e importo ogni mese, attivo', () => {
   assert.equal(s.months, 6);
 });
 
+test('ricorrente: un pagamento ogni tre mesi non è mensile, uno saltato sì', () => {
+  const quarterly = ['2026-04-16', '2026-07-16', '2026-10-16'].map((d) => mov(d, 92, 'COMUNE DI MILANO'));
+  assert.deepEqual(recurringSignals(quarterly, { today: TODAY }), []);
+  const skipped = ['2026-05-10', '2026-06-10', '2026-08-10', '2026-09-10', '2026-10-10'].map((d) => mov(d, 9.99, 'SPOTIFY'));
+  assert.equal(recurringSignals(skipped, { today: TODAY }).length, 1);
+});
+
 test('ricorrente: niente spesa al supermercato, disdette, affitti', () => {
   const grocery = [];
   for (const m of ['05', '06', '07', '08', '09', '10']) for (const d of ['02', '09', '16']) grocery.push(mov(`2026-${m}-${d}`, 60, 'ESSELUNGA'));
