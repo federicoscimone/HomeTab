@@ -266,6 +266,17 @@ prices** does it on request:
 Applied prices are saved in the database (`priceOverrides`, or on the model for those added by
 hand) and take the place of the code's table; announced increases apply on their date.
 
+**New models.** The same check looks for models the app doesn't know yet. Their identifiers come
+from the provider's own list of models (a free API call with the key: Anthropic, OpenAI, Google
+and Mistral all have one), not from the page, so a proposed model really exists under that name;
+the page only gives the price, verified like the others. Old versions are never proposed: for each
+family — the name without the version, `claude-opus-5-5` and `claude-opus-4-6` are both
+"claude-opus" — only the newest counts, by release date or, where the provider gives none
+(Google), by version number, and only if the app doesn't have it already. Embedding, audio and
+image models, `-latest` aliases and dated copies are left out. A provider without a key is not
+searched, and the page says so: its models couldn't be used anyway. Models already in the list
+are never removed by the check, since one may be in use.
+
 **History.** Every change is recorded in `modelprices`: the starting price, the prices read from
 the pages, those entered by hand, and announced ones with their future date. The page shows it
 model by model, newest first, with an arrow for each rise or fall: over time it shows how
@@ -660,6 +671,18 @@ Prezzi dei modelli → Aggiorna i prezzi** lo fa su richiesta:
 
 I prezzi applicati si salvano sul database (`priceOverrides`, o sul modello per quelli aggiunti a
 mano) e prendono il posto della tabella del codice; i rincari annunciati scattano alla loro data.
+
+**Modelli nuovi.** Lo stesso controllo cerca i modelli che l'app non conosce ancora. I loro
+identificativi vengono dall'elenco dei modelli del fornitore (una chiamata gratuita con la chiave:
+Anthropic, OpenAI, Google e Mistral ce l'hanno tutti), non dalla pagina, quindi un modello proposto
+esiste davvero con quel nome; la pagina dà solo il prezzo, verificato come gli altri. Le versioni
+vecchie non si propongono mai: per ogni famiglia — il nome senza la versione, `claude-opus-5-5` e
+`claude-opus-4-6` sono entrambi «claude-opus» — conta solo il più recente, per data d'uscita o,
+dove il fornitore non la dà (Google), per numero di versione, e solo se l'app non lo ha già.
+Restano fuori i modelli per embedding, audio e immagini, gli alias `-latest` e le copie con la
+data. Un fornitore senza chiave non si cerca, e la pagina lo dice: i suoi modelli non si potrebbero
+usare comunque. Il controllo non toglie mai i modelli già nell'elenco, perché uno potrebbe essere
+in uso.
 
 **Storico.** Ogni cambiamento resta in `modelprices`: il prezzo di partenza, quelli letti dalle
 pagine, quelli scritti a mano e quelli annunciati con la loro data futura. La pagina lo mostra

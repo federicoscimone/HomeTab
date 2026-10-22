@@ -1179,9 +1179,8 @@
     "pricesCheck": "Update prices",
     "pricesChecking": "Reading the providers’ pages…",
     "pricesNeedAi": "An active import model is needed: it is the one that reads the pages.",
-    "pricesIntro": "The button downloads the official pricing pages of Anthropic, OpenAI, Google and Mistral and has the import model read them (about one cent). A price counts only if the sentence it was read from is really on the page and contains those numbers; then you see old and new and decide whether to apply. The spending cap is computed from these prices.",
+    "pricesIntro": "The button downloads the official pricing pages of Anthropic, OpenAI, Google and Mistral and has the import model read them (about one cent). It checks the prices of the models already in the list and looks for new models among those your key can use. A price counts only if the sentence it was read from is really on the page and contains those numbers; then you see old and new and decide whether to apply. The spending cap is computed from these prices.",
     "pricesNoChanges": "No changes: {n, plural, one {# model checked} other {# models checked}} on the official pages.",
-    "pricesChanges": "{n, plural, one {# price has changed} other {# prices have changed}}: check them and apply.",
     "pricesUpcoming": "from {date}: {price}",
     "pricesApply": "Apply",
     "pricesDiscard": "Discard",
@@ -1202,7 +1201,12 @@
       "table": "starting price",
       "page": "official page",
       "manual": "entered by hand"
-    }
+    },
+    "pricesNewBadge": "new",
+    "pricesNoKey": "New models not searched for {providers}: the provider’s key is needed, as it gives the list of available models.",
+    "pricesChanged": "{n, plural, one {# price has changed} other {# prices have changed}}",
+    "pricesAdded": "{n, plural, one {# new model} other {# new models}}",
+    "pricesReview": ": check them and apply."
   },
   "users": {
     "title": "Users",

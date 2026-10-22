@@ -1179,9 +1179,8 @@
     "pricesCheck": "Aggiorna i prezzi",
     "pricesChecking": "Leggo le pagine dei fornitori…",
     "pricesNeedAi": "Serve un modello per l’import attivo: è lui a leggere le pagine.",
-    "pricesIntro": "Il pulsante scarica le pagine ufficiali dei prezzi di Anthropic, OpenAI, Google e Mistral e le fa leggere al modello dell’import (circa un centesimo). Ogni prezzo vale solo se la frase da cui è stato letto è davvero sulla pagina e contiene quei numeri; poi vedete vecchio e nuovo e decidete voi se applicare. Il tetto di spesa si calcola su questi prezzi.",
+    "pricesIntro": "Il pulsante scarica le pagine ufficiali dei prezzi di Anthropic, OpenAI, Google e Mistral e le fa leggere al modello dell’import (circa un centesimo). Controlla i prezzi dei modelli già nell’elenco e cerca i modelli nuovi fra quelli che la vostra chiave può usare. Ogni prezzo vale solo se la frase da cui è stato letto è davvero sulla pagina e contiene quei numeri; poi vedete vecchio e nuovo e decidete voi se applicare. Il tetto di spesa si calcola su questi prezzi.",
     "pricesNoChanges": "Nessun cambiamento: {n, plural, one {# modello verificato} other {# modelli verificati}} sulle pagine ufficiali.",
-    "pricesChanges": "{n, plural, one {# prezzo è cambiato} other {# prezzi sono cambiati}}: controllate e applicate.",
     "pricesUpcoming": "dal {date}: {price}",
     "pricesApply": "Applica",
     "pricesDiscard": "Lascia stare",
@@ -1202,7 +1201,12 @@
       "table": "prezzo di partenza",
       "page": "pagina ufficiale",
       "manual": "inserito a mano"
-    }
+    },
+    "pricesNewBadge": "nuovo",
+    "pricesNoKey": "Modelli nuovi non cercati per {providers}: serve la chiave del fornitore, che dà l’elenco dei modelli disponibili.",
+    "pricesChanged": "{n, plural, one {# prezzo è cambiato} other {# prezzi sono cambiati}}",
+    "pricesAdded": "{n, plural, one {# modello nuovo} other {# modelli nuovi}}",
+    "pricesReview": ": controllate e applicate."
   },
   "users": {
     "title": "Utenti",

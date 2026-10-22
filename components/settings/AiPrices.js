@@ -88,10 +88,11 @@ export default function AiPrices({ data, disabled, onApplied }) {
       await jsonOrThrow(await fetch('/api/ai/prices/apply', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ checkId: result.checkId }),
       }));
-      setResult(null);
-      setMessage({ kind: 'success', text: t('pricesApplied') });
       await onApplied();
       if (history) await loadHistory();
+      // Dopo il ricaricamento: la conferma compare quando i menu mostrano già i prezzi nuovi.
+      setResult(null);
+      setMessage({ kind: 'success', text: t('pricesApplied') });
     } catch (err) {
       setMessage({ kind: 'error', text: err.message || t('pricesFailed') });
     } finally {
@@ -100,6 +101,8 @@ export default function AiPrices({ data, disabled, onApplied }) {
   };
 
   const pair = (p) => t('pricePair', { input: fmtUsd(p.input), output: fmtUsd(p.output) });
+  const providerLabel = (id) => data.catalog.find((p) => p.id === id)?.label ?? id;
+  const added = result?.changes.filter((c) => c.isNew).length ?? 0;
 
   return (
     <section className="rounded-xl border border-base-200 p-4 flex flex-col gap-3">
@@ -125,17 +128,30 @@ export default function AiPrices({ data, disabled, onApplied }) {
             ? <div className="alert alert-success py-2"><span>{t('pricesNoChanges', { n: result.unchanged.length })}</span></div>
             : (
               <>
-                <p>{t('pricesChanges', { n: result.changes.length })}</p>
+                <p>
+                  {[
+                    result.changes.length > added && t('pricesChanged', { n: result.changes.length - added }),
+                    added > 0 && t('pricesAdded', { n: added }),
+                  ].filter(Boolean).join(' · ')}
+                  {t('pricesReview')}
+                </p>
                 <div className="overflow-x-auto">
                   <table className="table table-sm">
                     <thead><tr><th>{t('priceCols.model')}</th><th>{t('priceCols.now')}</th><th>{t('priceCols.new')}</th></tr></thead>
                     <tbody>
                       {result.changes.map((c) => (
                         <tr key={c.spec}>
-                          <td className="font-mono whitespace-nowrap">
-                            {c.url ? <a className="link link-hover" href={c.url} target="_blank" rel="noreferrer">{modelName(c.spec)}</a> : modelName(c.spec)}
+                          <td className="whitespace-nowrap">
+                            <div className="font-mono">
+                              {c.url ? <a className="link link-hover" href={c.url} target="_blank" rel="noreferrer">{modelName(c.spec)}</a> : modelName(c.spec)}
+                            </div>
+                            <div className="text-xs text-base-content/60">
+                              {providerLabel(c.spec.split(':')[0])}{c.name ? ` · ${c.name}` : ''}
+                            </div>
                           </td>
-                          <td className="tabular-nums whitespace-nowrap text-base-content/60">{c.current ? pair(c.current) : '—'}</td>
+                          <td className="tabular-nums whitespace-nowrap text-base-content/60">
+                            {c.isNew ? <span className="badge badge-info badge-sm">{t('pricesNewBadge')}</span> : c.current ? pair(c.current) : '—'}
+                          </td>
                           <td className="tabular-nums">
                             <div className="whitespace-nowrap font-medium">{pair(c.found)}</div>
                             {c.upcoming && (
@@ -161,7 +177,10 @@ export default function AiPrices({ data, disabled, onApplied }) {
             <p className="text-xs text-base-content/60">{t('pricesRejected', { models: result.rejected.map((r) => modelName(r.spec)).join(', ') })}</p>
           )}
           {result.errors.length > 0 && (
-            <p className="text-xs text-warning">{t('pricesErrors', { providers: result.errors.map((e) => data.catalog.find((p) => p.id === e.provider)?.label ?? e.provider).join(', ') })}</p>
+            <p className="text-xs text-warning">{t('pricesErrors', { providers: result.errors.map((e) => providerLabel(e.provider)).join(', ') })}</p>
+          )}
+          {result.noKey.length > 0 && (
+            <p className="text-xs text-base-content/60">{t('pricesNoKey', { providers: result.noKey.map(providerLabel).join(', ') })}</p>
           )}
           <p className="text-xs text-base-content/50">{t('pricesCost', { cost: fmtUsd(result.costUsd) })}</p>
         </div>

@@ -88,3 +88,46 @@ test('prezzi letti dalla pagina: sostituiscono la tabella, con i rapporti di cac
     priceOverrides: [{ spec: 'openai:gpt-6-luna', input: 0.12, output: 0.6, cacheRead: null, updatedAt: new Date() }],
   }).input, 0.3);
 });
+
+test('modelli nuovi: dall\'elenco del fornitore solo quelli di chat, senza alias né copie con la data', async () => {
+  const { chatModelsOnly } = await import('../lib/ai/providers.js');
+  const { pricePrompt } = await import('../lib/ai/tasks/priceUpdate.js');
+  const list = [
+    { id: 'claude-haiku-4-5', created: 1 },
+    { id: 'claude-haiku-4-5-20251001', created: 2 },   // copia della versione senza data
+    { id: 'claude-opus-4-5-20251101', created: 3 },    // l'unica versione: resta
+    { id: 'claude-fable-5-1', name: 'Claude Fable 5.1', created: 9 },
+    { id: 'text-embedding-4-large', created: 8 },
+    { id: 'gpt-6-luna-realtime', created: 7 },
+    { id: 'gpt-6-luna-2026-08-14', created: 6 },
+    { id: 'gpt-6-luna', created: 5 },
+    { id: 'mistral-medium-latest', created: 4 },
+    { id: 'imagen-5', created: 4 },
+  ];
+  assert.deepEqual(chatModelsOnly(list).map((m) => m.id), ['claude-fable-5-1', 'gpt-6-luna', 'claude-opus-4-5-20251101', 'claude-haiku-4-5']);
+  const prompt = pricePrompt('anthropic', ['claude-haiku-5-5'], [{ id: 'claude-fable-5-1', name: 'Claude Fable 5.1' }], 'testo');
+  assert.ok(prompt.includes('Model ids: claude-haiku-5-5'));
+  assert.ok(prompt.includes('New candidate ids: claude-fable-5-1 (Claude Fable 5.1)'));
+  assert.ok(!pricePrompt('openai', ['gpt-6-luna'], [], 'testo').includes('candidate'));
+});
+
+test('modelli nuovi: solo il più recente di ogni famiglia, e solo se manca', async () => {
+  const { familyOf, newModelsOnly } = await import('../lib/ai/providers.js');
+  assert.equal(familyOf('claude-opus-5-5'), 'claude-opus');
+  assert.equal(familyOf('gemini-3.1-pro-preview'), 'gemini-pro');
+  assert.equal(familyOf('mistral-small-2603'), 'mistral-small');
+  const day = (d) => Date.parse(d);
+  // L'elenco vero di Anthropic del 22 ottobre 2026, in parte.
+  const anthropic = [
+    { id: 'claude-haiku-5-5', created: day('2026-10-07') }, { id: 'claude-sonnet-5-5', created: day('2026-09-28') },
+    { id: 'claude-opus-5-5', created: day('2026-09-21') }, { id: 'claude-fable-5-1', name: 'Claude Fable 5.1', created: day('2026-08-28') },
+    { id: 'claude-opus-5', created: day('2026-07-24') }, { id: 'claude-fable-5', created: day('2026-06-07') },
+    { id: 'claude-opus-4-6', created: day('2026-02-04') }, { id: 'claude-sonnet-4-5-20250929', created: day('2025-09-29') },
+  ];
+  const known = ['claude-haiku-5-5', 'claude-haiku-4-5', 'claude-sonnet-5-5', 'claude-opus-5-5'];
+  assert.deepEqual(newModelsOnly(anthropic, known).map((m) => m.id), ['claude-fable-5-1']);
+  // Senza date (Google) decide la versione; la preview conta come la stessa famiglia.
+  const google = [{ id: 'gemini-2.5-pro' }, { id: 'gemini-3.1-pro-preview' }, { id: 'gemini-3.6-flash' }, { id: 'gemini-3.8-flash' }, { id: 'gemini-3.9-flash' }];
+  assert.deepEqual(newModelsOnly(google, ['gemini-3.8-flash']).map((m) => m.id), ['gemini-3.9-flash', 'gemini-3.1-pro-preview']);
+  assert.deepEqual(newModelsOnly([{ id: 'gemini-3.6-flash' }], ['gemini-3.8-flash']), []);
+});
