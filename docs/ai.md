@@ -9,7 +9,9 @@ suggestions](#saving-suggestions-on-request) when asked. Everything here is opti
 key the AI features stay off and imports work exactly as before.
 
 Models are reached through [LangChain](https://js.langchain.com), so the app is not tied to one
-vendor. Out of the box it uses Anthropic's Claude.
+vendor: Anthropic (the default, Claude), OpenAI, Google Gemini and Mistral as paid services, or
+**local models with [Ollama](https://ollama.com)**, which run on a computer of yours: then no data
+leaves home and nothing is paid ([section 5](#5-local-models-with-ollama)).
 
 ## What it does today
 
@@ -175,27 +177,44 @@ over the cap) the card shows the three heaviest signals, unexplained.
 **Useful / not useful** is saved per signal: "not useful" hides it for six months, and the
 judgements reach the model as preferences.
 
-## 1. Get an API key with a spending limit
+## 1. Choose a provider
 
-1. On the [Claude Console](https://platform.claude.com) create a workspace for HomeTab and give
-   it a monthly [spend limit](https://platform.claude.com/docs/en/manage-claude/workspaces), the
-   same as the app's cap. It is a second safety net, in case the app's own counter were ever
-   wrong, and the only limit that covers several installations together.
-2. Create an API key **inside that workspace** and buy some credits.
+| Provider | Models in the list (price per million tokens, in / out) | Key | Notes |
+| --- | --- | --- | --- |
+| Anthropic | Haiku 5.5 ($0.10 / $0.50), Sonnet 5.5, Opus 5.5, Haiku 4.5 | [Claude Console](https://platform.claude.com/settings/keys) | Default. Only one with the web search of merchants |
+| OpenAI | gpt-6-luna ($0.10 / $0.50), gpt-6.1-sol | [platform.openai.com](https://platform.openai.com/api-keys) | |
+| Google | gemini-3.5-flash-lite, gemini-3.8-flash, gemini-4-argon | [AI Studio](https://aistudio.google.com/apikey) | Announced increases (Dec 1, 2026 and Jan 1, 2027) apply by themselves on their date |
+| Mistral | mistral-small-2603 ($0.15 / $0.60) | [console.mistral.ai](https://console.mistral.ai/api-keys) | European company |
+| Ollama | whatever is installed | none | Local: free, no cap, data stays home |
+
+Prices were checked on the providers' pages on 22 October 2026 and are in `lib/ai/pricing.js`.
+Any other paid model, or a price that changed, can be added from the settings page (**Other
+models**: provider, exact name and price) without touching the code.
+
+**For a paid provider**, create the key with a monthly spending limit where the provider allows
+it (on the [Claude Console](https://platform.claude.com) a workspace with a [spend
+limit](https://platform.claude.com/docs/en/manage-claude/workspaces), the same as the app's cap):
+it is a second safety net, in case the app's own counter were ever wrong, and the only limit that
+covers several installations together.
 
 ## 2. Configure it from Settings → AI
 
 Everything is set from the **Settings → AI** page, by an administrator, and saved in the
-database: the model, the effort, the monthly cap and the API key. Changes apply from the next
-call, with no redeploy. The page also shows the month's spending against the cap and the last
-calls.
+database: the models, the effort, the monthly cap, the providers' keys and the Ollama address.
+Changes apply from the next call, with no redeploy. The page also shows the month's spending
+against the cap and the last calls.
 
-- **The model** is picked from a list that contains only models with a known price, because the
-  spending cap needs it (the price table is in `lib/ai/pricing.js`). The default is
-  `anthropic:claude-haiku-5-5`: classification and extraction don't need more, at $0.10 / $0.50
-  per million tokens.
-- **The effort** sets how much the model reasons, and so cost and time. Default: low.
-- **The API key** is stored encrypted (AES-256-GCM, with a key derived from the server secret,
+- **The models** — one for the import (and receipts), a fallback for the rows it leaves empty,
+  one for the chat — are picked from a list grouped by provider. Paid models need a known price,
+  because the spending cap does; local ones show what they can do (images for receipts, tools for
+  the chat). The default is `anthropic:claude-haiku-5-5` for the import and
+  `anthropic:claude-sonnet-5-5` for the chat. Providers can be mixed: a local model for receipts
+  and a paid one for the chat, for instance.
+- **The effort** sets how much the model reasons, and so cost and time. It applies to Anthropic
+  and OpenAI; for local models "low" turns reasoning off. Default: low.
+- **Other models**: a paid model not in the list, with its price per million tokens as written on
+  the provider's page. With the name of a listed model, the price entered replaces the code's.
+- **Each provider's key** is stored encrypted (AES-256-GCM, with a key derived from the server secret,
   the same scheme used for the Google Drive tokens). It is never shown again nor returned by the
   server: the page shows only its last four characters, with buttons to verify (a free call that
   lists the models), replace or remove it. If you change `NEXTAUTH_SECRET`, the saved key can no
@@ -204,16 +223,30 @@ calls.
   password.
 
 **Environment variables** (`AI_MODEL_IMPORT`, `AI_MODEL_CHAT`, `AI_MONTHLY_BUDGET_USD`,
-`ANTHROPIC_API_KEY`) still work as a fallback: they apply until a value is saved from the page,
-which then takes precedence. Useful for an installation configured only from files.
+`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OLLAMA_BASE_URL`)
+still work as a fallback: they apply until a value is saved from the page, which then takes
+precedence. Useful for an installation configured only from files.
 
-**Another provider** (OpenAI, a local model through Ollama…): install its LangChain package
-(`@langchain/openai`, `@langchain/ollama`) and add an entry to `lib/ai/providers.js`; its models
-then appear in the list. A local provider costs nothing and is not counted against the cap.
+**How the providers differ, in the code.** Everything goes through LangChain's common interface
+(`withStructuredOutput`, `bindTools`, `stream`); `lib/ai/providers.js` is the only file that
+knows the providers, and records what changes between them:
+
+- *structured answers*: the native JSON schema for Anthropic, OpenAI and Ollama, Gemini's
+  `responseSchema`, a forced function call for Mistral (its LangChain package doesn't pass the
+  native schema);
+- *images*: sent as `image_url` with a data URL, the block every adapter converts to its own
+  format;
+- *prompt cache*: the `cache_control` marker on the instructions exists only on Anthropic and is
+  removed for the others (OpenAI and Gemini cache the prefix by themselves);
+- *errors*: each SDK names the HTTP status differently, and the status decides whether a failed
+  call is charged.
+
+A new provider is its LangChain package plus an entry there.
 
 ## 3. How the spending cap works
 
-The monthly cap is a hard limit, in US dollars because Anthropic bills in dollars.
+The monthly cap is a hard limit, in US dollars because the providers bill in dollars. It covers
+all paid providers together; local models are free and outside it.
 
 - **Before every call** the app reserves the most it could cost: the input estimated from above
   (a token never covers less than one byte, so the bytes sent are an upper bound) plus all of
@@ -226,8 +259,11 @@ The monthly cap is a hard limit, in US dollars because Anthropic bills in dollar
 - **Failed calls:** if the API answers with an error, nothing is charged. After a timeout or a
   dropped connection nobody knows whether the request was processed, so its reservation stays
   counted as spent.
-- **No automatic retries.** LangChain and the Anthropic SDK retry by default, and retrying a
+- **No automatic retries.** LangChain and the providers' SDKs retry by default, and retrying a
   request that timed out could pay for it twice, outside the reservation. The user retries.
+- **Images** are reserved at 4,784 tokens each with Anthropic (its documented maximum) and 8,000
+  with the others, which count them in different, not always documented ways: a generous
+  reservation only lasts for the call.
 - When the cap is reached, AI features switch off until the first of the month (UTC) and the
   import works as it does without AI.
 
@@ -283,7 +319,42 @@ three paths go through the same reduction.
 **For saving suggestions** the model receives the signals: category names, amounts already
 written, the masked merchant of recurring expenses and the name of the goal they would help.
 
+With a local model all of this stays on your network: masking still applies, but nothing reaches
+a third party.
+
 In the public demo (`DEMO_MODE=true`) the AI is always off: anyone could use up the credit.
+
+## 5. Local models with Ollama
+
+[Ollama](https://ollama.com) runs open models on a computer of yours. HomeTab talks to it like
+any other provider: the data never leaves your network, nothing is paid and the monthly cap
+doesn't apply.
+
+1. Install Ollama on the same computer as HomeTab or, better, on one with a graphics card, and
+   download the models: `ollama pull qwen3-vl:4b` (reads images and uses tools: receipts, import
+   and chat).
+2. In **Settings → AI → Local models with Ollama** enter where it answers and press *Verify*.
+   On the same machine it is `http://127.0.0.1:11434` (the default); from the Docker container,
+   `http://host.docker.internal:11434`; on another computer, its address, after starting Ollama
+   there with `OLLAMA_HOST=0.0.0.0` so it listens on the network.
+3. The installed models appear in the menus, with what each can do.
+
+Things worth knowing, all measured on 22 October 2026 with `qwen3-vl:4b` on an RTX 3060 Ti:
+
+- **Context.** Ollama uses 4,096 tokens by default and **silently cuts** the start of a longer
+  prompt: the chat, with instructions and tools, would lose them. HomeTab asks for 16,384
+  (`OLLAMA_NUM_CTX` to change it; more context, more memory) and writes a warning in the log when
+  a call fills it. The value stays fixed because changing it makes Ollama reload the model.
+- **Reasoning.** Models that reason (qwen3, deepseek-r1) spent 1,000–2,000 tokens on a receipt
+  and once ran out before answering. With effort "low" HomeTab turns it off: the receipt went
+  from 12–18 seconds to under one.
+- **Quality.** A 4B model reads merchant, date and total reliably (5 out of 5), but got the
+  payment method wrong 2 times out of 5, and in the chat it lets internal codes slip into the
+  text ("on_track"). The form is always checked before saving; for the chat a larger model
+  (14B and up) or a paid one does better. Providers can be mixed.
+- **Speed.** Receipt 3.6 s, category 0.9 s, a chat question about 26 s. Without a graphics card
+  everything is several times slower: the timeout for local models is 5 minutes
+  (`OLLAMA_TIMEOUT_MS`).
 
 ---
 
@@ -297,7 +368,10 @@ facoltativo: senza chiave le funzioni IA restano spente e l'import
 funziona esattamente come prima.
 
 I modelli passano da [LangChain](https://js.langchain.com), quindi l'app non è legata a un solo
-fornitore. Di serie usa Claude di Anthropic.
+fornitore: Anthropic (il predefinito, Claude), OpenAI, Google Gemini e Mistral come servizi a
+pagamento, oppure **modelli locali con [Ollama](https://ollama.com)**, che girano su un vostro
+computer: allora nessun dato esce di casa e non si paga nulla
+([sezione 5](#5-modelli-locali-con-ollama)).
 
 ## Cosa fa oggi
 
@@ -468,27 +542,47 @@ demo, oltre il tetto) la scheda mostra i tre segnali più pesanti, senza spiegaz
 **Utile / non utile** si salva per segnale: «non utile» lo nasconde per sei mesi, e i giudizi
 arrivano al modello come preferenze.
 
-## 1. Procurati una chiave API con un limite di spesa
+## 1. Scegli un fornitore
 
-1. Nella [Claude Console](https://platform.claude.com) crea un workspace per HomeTab e dagli un
-   [limite di spesa](https://platform.claude.com/docs/en/manage-claude/workspaces) mensile, uguale
-   al tetto dell'app. È una seconda rete di sicurezza, nel caso il contatore dell'app sbagliasse,
-   e l'unico limite che copre insieme più installazioni.
-2. Crea una chiave API **dentro quel workspace** e acquista dei crediti.
+| Fornitore | Modelli nell'elenco (prezzo per milione di token, ingresso / uscita) | Chiave | Note |
+| --- | --- | --- | --- |
+| Anthropic | Haiku 5.5 (0,10 $ / 0,50 $), Sonnet 5.5, Opus 5.5, Haiku 4.5 | [Claude Console](https://platform.claude.com/settings/keys) | Predefinito. L'unico con la ricerca web degli esercenti |
+| OpenAI | gpt-6-luna (0,10 $ / 0,50 $), gpt-6.1-sol | [platform.openai.com](https://platform.openai.com/api-keys) | |
+| Google | gemini-3.5-flash-lite, gemini-3.8-flash, gemini-4-argon | [AI Studio](https://aistudio.google.com/apikey) | I rincari annunciati (1° dicembre 2026 e 1° gennaio 2027) si applicano da soli alla loro data |
+| Mistral | mistral-small-2603 (0,15 $ / 0,60 $) | [console.mistral.ai](https://console.mistral.ai/api-keys) | Azienda europea |
+| Ollama | quelli installati | nessuna | In locale: gratis, senza tetto, i dati restano in casa |
+
+I prezzi sono verificati sulle pagine dei fornitori il 22 ottobre 2026 e stanno in
+`lib/ai/pricing.js`. Qualsiasi altro modello a pagamento, o un prezzo cambiato, si aggiunge dalla
+pagina delle impostazioni (**Altri modelli**: fornitore, nome esatto e prezzo) senza toccare il
+codice.
+
+**Per un fornitore a pagamento**, crea la chiave con un limite di spesa mensile dove il fornitore
+lo permette (nella [Claude Console](https://platform.claude.com) un workspace con un [limite di
+spesa](https://platform.claude.com/docs/en/manage-claude/workspaces), uguale al tetto dell'app):
+è una seconda rete di sicurezza, nel caso il contatore dell'app sbagliasse, e l'unico limite che
+copre insieme più installazioni.
 
 ## 2. Configura da Impostazioni → IA
 
 Tutto si imposta dalla pagina **Impostazioni → IA**, da un amministratore, e si salva sul
-database: modello, effort, tetto mensile e chiave API. Le modifiche valgono dalla chiamata
-successiva, senza ripubblicare. La pagina mostra anche la spesa del mese rispetto al tetto e le
-ultime chiamate.
+database: modelli, effort, tetto mensile, chiavi dei fornitori e indirizzo di Ollama. Le modifiche
+valgono dalla chiamata successiva, senza ripubblicare. La pagina mostra anche la spesa del mese
+rispetto al tetto e le ultime chiamate.
 
-- **Il modello** si sceglie da un elenco che contiene solo modelli con un prezzo noto, perché il
-  tetto di spesa ne ha bisogno (la tabella prezzi sta in `lib/ai/pricing.js`). Il predefinito è
-  `anthropic:claude-haiku-5-5`: per classificare ed estrarre non serve di più, a 0,10 $ / 0,50 $
-  per milione di token.
-- **L'effort** regola quanto ragiona il modello, e quindi costo e tempo. Predefinito: basso.
-- **La chiave API** è salvata cifrata (AES-256-GCM, con una chiave ricavata dal segreto del
+- **I modelli** — uno per l'import (e gli scontrini), uno di riserva per le righe che lascia
+  vuote, uno per la chat — si scelgono da un elenco raggruppato per fornitore. Quelli a pagamento
+  devono avere un prezzo noto, perché il tetto di spesa ne ha bisogno; quelli locali mostrano cosa
+  sanno fare (immagini per gli scontrini, strumenti per la chat). Il predefinito è
+  `anthropic:claude-haiku-5-5` per l'import e `anthropic:claude-sonnet-5-5` per la chat. I
+  fornitori si possono mescolare: per esempio un modello locale per gli scontrini e uno a
+  pagamento per la chat.
+- **L'effort** regola quanto ragiona il modello, e quindi costo e tempo. Vale per Anthropic e
+  OpenAI; per i modelli locali «basso» spegne il ragionamento. Predefinito: basso.
+- **Altri modelli**: un modello a pagamento che non è nell'elenco, con il prezzo per milione di
+  token come sulla pagina del fornitore. Con il nome di un modello dell'elenco, il prezzo inserito
+  prende il posto di quello del codice.
+- **La chiave di ogni fornitore** è salvata cifrata (AES-256-GCM, con una chiave ricavata dal segreto del
   server, lo stesso schema dei token di Google Drive). Non viene più mostrata né restituita dal
   server: la pagina ne mostra solo gli ultimi quattro caratteri, con i pulsanti per verificarla
   (una chiamata gratuita che elenca i modelli), sostituirla o eliminarla. Se cambi
@@ -497,17 +591,30 @@ ultime chiamate.
   password pubblica.
 
 **Le variabili d'ambiente** (`AI_MODEL_IMPORT`, `AI_MODEL_CHAT`, `AI_MONTHLY_BUDGET_USD`,
-`ANTHROPIC_API_KEY`) restano come ripiego: valgono finché dalla pagina non si salva un valore, che
-da lì ha la precedenza. Servono a un'installazione configurata solo da file.
+`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OLLAMA_BASE_URL`)
+restano come ripiego: valgono finché dalla pagina non si salva un valore, che da lì ha la
+precedenza. Servono a un'installazione configurata solo da file.
 
-**Un altro fornitore** (OpenAI, un modello locale con Ollama…): installa il suo pacchetto
-LangChain (`@langchain/openai`, `@langchain/ollama`) e aggiungi una voce in
-`lib/ai/providers.js`; i suoi modelli compaiono nell'elenco. Un fornitore locale non costa nulla
-e non pesa sul tetto.
+**Come cambiano i fornitori, nel codice.** Tutto passa dall'interfaccia comune di LangChain
+(`withStructuredOutput`, `bindTools`, `stream`); `lib/ai/providers.js` è l'unico file che conosce
+i fornitori, e registra ciò che cambia fra loro:
+
+- *risposte strutturate*: lo schema JSON nativo per Anthropic, OpenAI e Ollama, il
+  `responseSchema` di Gemini, una chiamata a funzione forzata per Mistral (il suo pacchetto
+  LangChain non passa lo schema nativo);
+- *immagini*: inviate come `image_url` con un data URL, il blocco che ogni adattatore converte
+  nel formato del suo fornitore;
+- *cache del prompt*: il segnaposto `cache_control` sulle istruzioni esiste solo su Anthropic e
+  per gli altri si toglie (OpenAI e Gemini mettono in cache il prefisso da soli);
+- *errori*: ogni SDK chiama lo stato HTTP a modo suo, e lo stato decide se una chiamata fallita
+  si paga.
+
+Un fornitore nuovo è il suo pacchetto LangChain più una voce lì.
 
 ## 3. Come funziona il tetto di spesa
 
-Il tetto mensile è un limite rigido, in dollari perché Anthropic fattura in dollari.
+Il tetto mensile è un limite rigido, in dollari perché i fornitori fatturano in dollari. Vale per
+tutti i fornitori a pagamento insieme; i modelli locali sono gratis e ne restano fuori.
 
 - **Prima di ogni chiamata** l'app prenota il massimo che potrebbe costare: l'ingresso stimato
   per eccesso (un token non copre mai meno di un byte, quindi i byte inviati sono un limite
@@ -520,9 +627,12 @@ Il tetto mensile è un limite rigido, in dollari perché Anthropic fattura in do
 - **Chiamate fallite:** se l'API risponde con un errore, non si addebita nulla. Dopo un timeout
   o una connessione caduta nessuno sa se la richiesta è stata elaborata, quindi la sua
   prenotazione resta contata come spesa.
-- **Nessuna ripetizione automatica.** LangChain e l'SDK di Anthropic ripetono di default, e
+- **Nessuna ripetizione automatica.** LangChain e gli SDK dei fornitori ripetono di default, e
   ripetere una richiesta andata in timeout potrebbe farla pagare due volte, fuori dalla
   prenotazione. Riprova l'utente.
+- **Le immagini** si prenotano a 4.784 token l'una con Anthropic (il suo massimo documentato) e a
+  8.000 con gli altri, che le contano in modi diversi e non sempre documentati: una prenotazione
+  larga dura solo il tempo della chiamata.
 - Raggiunto il tetto, le funzioni IA si spengono fino al primo del mese (UTC) e l'import
   funziona come senza IA.
 
@@ -583,5 +693,41 @@ scheda; le tre strade passano dalla stessa riduzione.
 **Per i consigli di risparmio** il modello riceve i segnali: nomi delle categorie, importi già
 scritti, l'esercente mascherato delle spese ricorrenti e il nome dell'obiettivo che aiuterebbero.
 
+Con un modello locale tutto questo resta nella vostra rete: il mascheramento si applica lo
+stesso, ma niente arriva a terzi.
+
 Nella demo pubblica (`DEMO_MODE=true`) l'IA è sempre spenta: chiunque potrebbe consumare il
 credito.
+
+## 5. Modelli locali con Ollama
+
+[Ollama](https://ollama.com) fa girare modelli aperti su un vostro computer. HomeTab ci parla come
+con ogni altro fornitore: i dati non escono dalla vostra rete, non si paga nulla e il tetto
+mensile non si applica.
+
+1. Installate Ollama sullo stesso computer di HomeTab o, meglio, su uno con una scheda video, e
+   scaricate i modelli: `ollama pull qwen3-vl:4b` (legge le immagini e usa gli strumenti:
+   scontrini, import e chat).
+2. In **Impostazioni → IA → Modelli locali con Ollama** indicate dove risponde e premete
+   *Verifica*. Sulla stessa macchina è `http://127.0.0.1:11434` (il predefinito); dal container
+   Docker, `http://host.docker.internal:11434`; su un altro computer, il suo indirizzo, dopo aver
+   avviato lì Ollama con `OLLAMA_HOST=0.0.0.0` perché ascolti in rete.
+3. I modelli installati compaiono nei menu, con ciò che sa fare ciascuno.
+
+Cose da sapere, tutte misurate il 22 ottobre 2026 con `qwen3-vl:4b` su una RTX 3060 Ti:
+
+- **Contesto.** Ollama usa di suo 4.096 token e **taglia in silenzio** l'inizio di un prompt più
+  lungo: la chat, con istruzioni e strumenti, li perderebbe. HomeTab ne chiede 16.384
+  (`OLLAMA_NUM_CTX` per cambiarlo; più contesto, più memoria) e scrive un avviso nel registro
+  quando una chiamata lo riempie. Il valore resta fisso perché cambiarlo costringe Ollama a
+  ricaricare il modello.
+- **Ragionamento.** I modelli che ragionano (qwen3, deepseek-r1) spendevano 1.000–2.000 token su
+  uno scontrino, e una volta hanno finito il limite prima di rispondere. Con effort «basso»
+  HomeTab lo spegne: lo scontrino è passato da 12–18 secondi a meno di uno.
+- **Qualità.** Un modello da 4B legge esercente, data e totale in modo affidabile (5 volte su 5),
+  ma ha sbagliato il metodo di pagamento 2 volte su 5, e nella chat lascia passare codici interni
+  nel testo («on_track»). Il modulo si controlla sempre prima di salvare; per la chat va meglio un
+  modello più grande (da 14B in su) o uno a pagamento. I fornitori si possono mescolare.
+- **Velocità.** Scontrino 3,6 s, categoria 0,9 s, una domanda alla chat circa 26 s. Senza scheda
+  video tutto è parecchie volte più lento: il tempo massimo per i modelli locali è di 5 minuti
+  (`OLLAMA_TIMEOUT_MS`).
