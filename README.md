@@ -36,13 +36,13 @@ family's data never leaves the house ([running it at home](#running-it-at-home))
   Personal data is masked before sending, and a hard monthly cap (default $3) is enforced
   atomically; a typical month costs a few cents ([docs/ai.md](docs/ai.md)). Model prices are
   re-read from the providers' official pages on request, each one checked against the page text,
-  and kept in a history. Off in the public demo.
+  and kept in a history. Off in demo mode.
 - **Chat on your data** — optional, read-only, from the pixel owl at the bottom right: "how much
   will we have saved this year at this pace?", "will we reach our goals?" are answered through
   tool calls to the same functions as the reports, so the model never does the arithmetic, and
   every answer links to the page that shows the same number. Every answer correct on a
   thirteen-question set with Sonnet 5.5, one or two cents per question
-  ([docs/ai.md](docs/ai.md#chat-on-the-data)). Off in the public demo.
+  ([docs/ai.md](docs/ai.md#chat-on-the-data)). Off in demo mode.
 - **The year at this pace** — on the dashboard, without AI: savings so far, expected at year end
   (remaining months like the same months last year, adjusted for this year's trend, so the
   December bonus counts; the trend is the median month, so a one-off income doesn't inflate the
@@ -83,7 +83,7 @@ family's data never leaves the house ([running it at home](#running-it-at-home))
   the monthly amount it needs and its estimated arrival date.
 - **Two-step verification and Telegram** — optional for each user: after the password, a
   6-digit code on Telegram or by email; a linked Telegram chat also receives password-recovery
-  codes ([docs/telegram.md](docs/telegram.md)). Off in the public demo.
+  codes ([docs/telegram.md](docs/telegram.md)). Off in demo mode.
 - **Users and roles** — viewer, editor and administrator. Role changes and password resets take
   effect immediately, also on sessions that are already open.
 - **Italian and English** — the language follows the browser, can be switched at any time and
@@ -136,7 +136,7 @@ home network: [docs/self-hosting.md](docs/self-hosting.md). AI providers and loc
 
 ## Deploying a public demo
 
-The demo can run for free on Vercel with a MongoDB Atlas M0 cluster, restored every night by a
+A demo can run for free on Vercel with a MongoDB Atlas M0 cluster, restored every night by a
 cron job: see [docs/vercel.md](docs/vercel.md).
 
 ## Local development

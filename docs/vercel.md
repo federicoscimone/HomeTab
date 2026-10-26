@@ -27,7 +27,7 @@ that the URI it creates contains a database name.
    | --- | --- |
    | `MONGODB_URI` | the connection string from step 1 |
    | `NEXTAUTH_SECRET` | a random string: `openssl rand -hex 32` |
-   | `NEXTAUTH_URL` | the public address, e.g. `https://hometab-demo.vercel.app` |
+   | `NEXTAUTH_URL` | the public address, e.g. `https://<your-project>.vercel.app` |
    | `DEMO_MODE` | `true` |
    | `CRON_SECRET` | another random string, at least 16 characters |
 
@@ -44,7 +44,7 @@ the demo account.
 To trigger it by hand:
 
 ```bash
-curl -H "Authorization: Bearer $CRON_SECRET" https://hometab-demo.vercel.app/api/demo/reset
+curl -H "Authorization: Bearer $CRON_SECRET" https://<your-project>.vercel.app/api/demo/reset
 # {"reset":true}
 ```
 
