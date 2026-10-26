@@ -3,8 +3,14 @@
 import Link from 'next/link';
 
 /**
+ * Un percorso dell'app. Non basta «comincia con /»: il browser legge «//sito» e anche «/\sito»
+ * come indirizzi di un altro dominio.
+ */
+const INTERNAL_LINK = /^\/(?![/\\])/;
+
+/**
  * Il testo della risposta con il poco Markdown che l'agente usa: paragrafi, elenchi, **grassetto**
- * e link. I link diventano cliccabili solo se interni all'app (cominciano con «/»): un link
+ * e link. I link diventano cliccabili solo se interni all'app (INTERNAL_LINK): un link
  * esterno scritto dal modello, magari suggerito da una causale costruita apposta, potrebbe
  * portare fuori i dati con un clic. Quelli esterni restano testo.
  */
@@ -17,7 +23,7 @@ function inline(text, keyBase, onLinkClick) {
   while ((m = re.exec(text))) {
     if (m.index > last) parts.push(text.slice(last, m.index));
     if (m[1] !== undefined) parts.push(<strong key={`${keyBase}-b${i}`}>{m[1]}</strong>);
-    else if (/^\/(?!\/)/.test(m[3])) parts.push(<Link key={`${keyBase}-l${i}`} href={m[3]} className="link link-primary" onClick={onLinkClick}>{m[2]}</Link>);
+    else if (INTERNAL_LINK.test(m[3])) parts.push(<Link key={`${keyBase}-l${i}`} href={m[3]} className="link link-primary" onClick={onLinkClick}>{m[2]}</Link>);
     else parts.push(`${m[2]} (${m[3]})`);
     last = re.lastIndex;
     i += 1;

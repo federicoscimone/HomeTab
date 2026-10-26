@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb';
 import AuditLog from '@/lib/models/AuditLog';
 import { logApiError } from '@/lib/logger';
 import { serverTranslator } from '@/lib/i18n/server';
+import { pagination } from '@/lib/utils/apiInput';
 
 export async function GET(req) {
   const { session, denied } = await requirePermission('settings:manage');
@@ -12,8 +13,7 @@ export async function GET(req) {
   await connectDB();
 
   const { searchParams } = new URL(req.url);
-  const page     = Math.max(1, parseInt(searchParams.get('page') || '1'));
-  const limit    = Math.min(100, parseInt(searchParams.get('limit') || '50'));
+  const { page, limit } = pagination(searchParams, 50);
   const action   = searchParams.get('action');
   const resource = searchParams.get('resource');
   const from     = searchParams.get('from');

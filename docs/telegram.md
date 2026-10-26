@@ -11,7 +11,7 @@ need only the SMTP settings.
 
 1. In Telegram, open [@BotFather](https://t.me/BotFather) and send `/newbot`.
 2. Choose a display name (e.g. `HomeTab`) and a username ending in `bot`
-   (e.g. `myfamily_hometab_bot`).
+   (e.g. `my_hometab_bot`).
 3. BotFather replies with a token like `123456789:AA…`. Treat it as a password: whoever has it
    can send messages as your bot.
 
@@ -21,7 +21,7 @@ In `.env`:
 
 ```
 TELEGRAM_BOT_TOKEN=123456789:AA…
-TELEGRAM_BOT_USERNAME=myfamily_hometab_bot
+TELEGRAM_BOT_USERNAME=my_hometab_bot
 ```
 
 The app sends the codes itself (an outgoing HTTPS call). Receiving what users send to the bot

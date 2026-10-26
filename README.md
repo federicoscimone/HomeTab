@@ -111,11 +111,12 @@ Open <http://localhost:3000> and sign in as **mario@test.it** / **Asdf_lkjH**. T
 builds the image and generates the demo data, so allow a few minutes.
 
 Demo mode (`DEMO_MODE=true`) is meant for trying the app. For real data set it to `false`
-before the first start: with no users yet, the app opens the page that creates the
-administrator account. Categories
-are created in Settings or, when running from source, with `npm run seed` (a default tree with
-keyword rules) and `node lib/seed-income.js` (income categories). Both skip a database that
-already has categories.
+before the first start, and replace every `change-me` with a random value (`npm run setup` does
+it for you): with real data the app refuses to start on the example `NEXTAUTH_SECRET`. With no
+users yet, the app opens the page that creates the administrator account. Categories are created
+in Settings or, when running from source, with `npm run seed` (a default tree with keyword rules)
+and `node lib/seed-income.js` (income categories). Both skip a database that already has
+categories.
 
 ## Running it at home
 
@@ -208,11 +209,17 @@ A few decisions worth a look in the code:
 
 - The demo users are created only with `DEMO_MODE=true`, together with the fictitious data;
   a database for real use never contains them.
+- Sign-in, codes and password recovery are rate-limited per IP, taken from the
+  `X-Forwarded-For` address written by the reverse proxy. Exposed directly to the internet,
+  without a proxy in front, that header would come from the client: outside the home network,
+  always publish HomeTab through a reverse proxy with HTTPS.
+- Passwords are hashed with bcrypt; reset links and one-time codes are stored only as hashes;
+  AI keys and Google tokens are encrypted with AES-256-GCM. Pages are served with headers that
+  forbid framing (clickjacking) and content sniffing.
 - Codes sent through Telegram are visible to Telegram: bot chats are not end-to-end encrypted.
   Email codes are the alternative ([docs/telegram.md](docs/telegram.md#limits)).
-- `npm audit` reports no vulnerabilities in production dependencies. It still lists a
-  denial-of-service issue in `braces`, reached only through the ESLint toolchain, for which no
-  fixed version exists.
+- Dependabot proposes dependency updates every week; CI runs lint, tests, the build, the Docker
+  image and a secret scan (gitleaks) over the whole history.
 
 ## License
 
