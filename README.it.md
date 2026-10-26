@@ -43,13 +43,13 @@ così i dati della famiglia non escono mai ([installarla in casa](#installarla-i
   (3 $ di default) è garantito da una prenotazione atomica; un mese tipico costa pochi centesimi
   ([docs/ai.md](docs/ai.md#import-assistito-dallia)). I prezzi dei modelli si rileggono su
   richiesta dalle pagine ufficiali dei fornitori, ognuno verificato sul testo della pagina, e
-  restano in uno storico. Spento nella demo pubblica.
+  restano in uno storico. Spento in modalità demo.
 - **Chat sui dati**: facoltativa, in sola lettura, dal gufo in basso a destra. Domande come
   «quanto avremo risparmiato quest'anno continuando così?» o «riusciremo a raggiungere gli
   obiettivi?» ricevono risposta chiamando le stesse funzioni dei report, quindi il modello non fa
   mai i conti, e ogni risposta porta il link alla pagina che mostra lo stesso numero. Tutte le
   risposte giuste su un set di tredici domande con Sonnet 5.5, uno o due centesimi a domanda
-  ([docs/ai.md](docs/ai.md#la-chat-sui-dati)). Spenta nella demo pubblica.
+  ([docs/ai.md](docs/ai.md#la-chat-sui-dati)). Spenta in modalità demo.
 - **L'anno continuando così**: nella dashboard, senza IA, il risparmio finora e quello previsto a
   fine anno (i mesi che mancano come gli stessi mesi dell'anno scorso, corretti per l'andamento di
   quest'anno, così la tredicesima conta; l'andamento è quello del mese mediano, così un'entrata
@@ -89,8 +89,8 @@ così i dati della famiglia non escono mai ([installarla in casa](#installarla-i
   per ciascuno si vedono la quota mensile che serve e la data prevista di arrivo.
 - **Verifica in due passaggi e Telegram**: facoltativa per ogni utente; dopo la password serve
   un codice di 6 cifre su Telegram o via email, e una chat Telegram collegata riceve anche i
-  codici di recupero della password ([docs/telegram.md](docs/telegram.md#telegram-e-verifica-in-due-passaggi)). Spenta
-  nella demo pubblica.
+  codici di recupero della password ([docs/telegram.md](docs/telegram.md#telegram-e-verifica-in-due-passaggi)).
+  Spenta in modalità demo.
 - **Utenti e ruoli**: lettore, collaboratore e amministratore. Un cambio di ruolo o di password
   vale subito, anche sulle sessioni già aperte.
 - **Registro delle attività**, **backup su Google Drive** (manuale o programmato), installabile
@@ -140,7 +140,7 @@ Fornitori di IA e modelli locali: [docs/ai.md](docs/ai.md#import-assistito-dalli
 
 ## Pubblicare una demo
 
-La demo può girare gratis su Vercel con un cluster MongoDB Atlas M0, ripristinata ogni notte da
+Una demo può girare gratis su Vercel con un cluster MongoDB Atlas M0, ripristinata ogni notte da
 un cron: vedi [docs/vercel.md](docs/vercel.md) (in inglese).
 
 ## Sviluppo in locale
