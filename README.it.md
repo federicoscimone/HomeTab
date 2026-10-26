@@ -115,8 +115,9 @@ Apri <http://localhost:3000> ed entra come **mario@test.it** / **Asdf_lkjH**. Il
 costruisce l'immagine e genera i dati demo: servono alcuni minuti.
 
 La modalità demo (`DEMO_MODE=true`) serve per provare l'app. Per i dati veri impostala a
-`false` prima del primo avvio: finché non esiste alcun utente, l'app apre la pagina che crea
-l'account amministratore. Le
+`false` prima del primo avvio e sostituisci ogni `change-me` con un valore casuale (lo fa
+`npm run setup`): con dati veri l'app non parte se `NEXTAUTH_SECRET` è ancora quello d'esempio.
+Finché non esiste alcun utente, l'app apre la pagina che crea l'account amministratore. Le
 categorie si creano dalle Impostazioni oppure, lanciando l'app dai sorgenti, con `npm run seed`
 (un albero predefinito con le regole a parole chiave) e `node lib/seed-income.js` (categorie delle
 entrate). Entrambi non fanno nulla se il database ha già delle categorie.
@@ -216,11 +217,18 @@ Alcune scelte che vale la pena guardare nel codice:
 
 - Gli utenti demo vengono creati solo con `DEMO_MODE=true`, insieme ai dati fittizi: un
   database per uso reale non li contiene.
+- Accesso, codici e recupero della password hanno un limite di tentativi per IP, preso
+  dall'indirizzo che il reverse proxy scrive in `X-Forwarded-For`. Esposta direttamente su
+  internet, senza un proxy davanti, quell'intestazione arriverebbe dal client: fuori dalla rete di
+  casa pubblica HomeTab sempre attraverso un reverse proxy con HTTPS.
+- Le password sono salvate con bcrypt; link di reset e codici monouso solo come hash; le chiavi
+  dell'IA e i token di Google cifrati con AES-256-GCM. Le pagine escono con intestazioni che ne
+  vietano l'inclusione in un iframe (clickjacking) e l'interpretazione di un tipo diverso.
 - I codici inviati su Telegram sono visibili a Telegram: le chat con i bot non sono cifrate
-  end-to-end. L'alternativa sono i codici via email.
-- `npm audit` non riporta vulnerabilità nelle dipendenze di produzione. Segnala ancora un
-  problema di denial of service in `braces`, raggiunto solo dagli strumenti di ESLint, per cui
-  non esiste una versione corretta.
+  end-to-end. L'alternativa sono i codici via email
+  ([docs/telegram.md](docs/telegram.md#limiti)).
+- Dependabot propone ogni settimana gli aggiornamenti delle dipendenze; la CI esegue lint, test,
+  build, immagine Docker e una ricerca di segreti (gitleaks) su tutta la history.
 
 ## Licenza
 

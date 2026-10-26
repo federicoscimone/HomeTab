@@ -76,8 +76,8 @@ used: with the dynamic-filtering version the searches are billed but the model n
 results (tried on 2026-10-20). On the demo data: 15 rows, 11 searches, 7 categories found (most
 of them uncertain), $0.1256. It can be switched off in Settings → AI.
 
-**Known limit.** Card payments to sole traders often carry the owner's name ("GUIZZARDI DAVIDE",
-"LUMA SAS DI MARCO B."): they are merchants, not transfers, so masking leaves them as they are,
+**Known limit.** Card payments to sole traders often carry the owner's name ("FERRARI PAOLO",
+"ALBA SAS DI LUCA R."): they are merchants, not transfers, so masking leaves them as they are,
 and the web search would look them up. Check them with the preview before searching.
 
 **Movements without a category.** On the Movements page, **Complete the categories** opens the
@@ -498,7 +498,7 @@ demo: 15 righe, 11 ricerche, 7 categorie trovate (quasi tutte incerte), 0,1256 $
 Impostazioni → IA.
 
 **Limite noto.** I pagamenti con carta alle ditte individuali riportano spesso il nome del titolare
-(«GUIZZARDI DAVIDE», «LUMA SAS DI MARCO B.»): sono esercenti, non trasferimenti, quindi il
+(«FERRARI PAOLO», «ALBA SAS DI LUCA R.»): sono esercenti, non trasferimenti, quindi il
 mascheramento li lascia come sono, e la ricerca web li cercherebbe. Controllali con l'anteprima
 prima di cercare.
 
