@@ -13,6 +13,7 @@ import { serverTranslator } from '@/lib/i18n/server';
 import logger, { logApiError } from '@/lib/logger';
 import { writeAudit } from '@/lib/utils/audit';
 import { buildMovementFilter } from '@/lib/utils/movementFilter';
+import { pagination } from '@/lib/utils/apiInput';
 
 export async function GET(req) {
   const { session, denied } = await requirePermission('data:read');
@@ -21,8 +22,7 @@ export async function GET(req) {
   await connectDB();
 
   const { searchParams } = new URL(req.url);
-  const page      = Math.max(1, parseInt(searchParams.get('page') || '1'));
-  const limit     = Math.min(100, parseInt(searchParams.get('limit') || '20'));
+  const { page, limit } = pagination(searchParams, 20);
   const SORT_FIELDS = { date: 'date', payee: 'payee', amount: 'amount' };
   const sortField = SORT_FIELDS[searchParams.get('sort')] || 'date';
   const sortDir   = searchParams.get('sortDir') === 'asc' ? 1 : -1;

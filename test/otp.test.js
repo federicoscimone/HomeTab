@@ -42,8 +42,9 @@ test('con la 2FA attiva la password da sola non basta, tranne nella demo', () =>
   assert.equal(passwordAloneAllowed({ twoFactorEnabled: true }, true), true);
 });
 
-test('l\'IP del client arriva dal primo indirizzo di X-Forwarded-For', () => {
-  assert.equal(clientIp(new Headers({ 'x-forwarded-for': '203.0.113.7, 10.0.0.2' })), '203.0.113.7');
+test('l\'IP del client è l\'ultimo indirizzo di X-Forwarded-For, quello scritto dal proxy', () => {
+  // Il client manda un indirizzo falso, nginx aggiunge in coda quello vero: vale il secondo.
+  assert.equal(clientIp(new Headers({ 'x-forwarded-for': '1.2.3.4, 203.0.113.7' })), '203.0.113.7');
   assert.equal(clientIp({ 'x-forwarded-for': '198.51.100.1' }), '198.51.100.1');
   assert.equal(clientIp({ 'x-real-ip': '198.51.100.2' }), '198.51.100.2');
   assert.equal(clientIp(undefined), 'unknown');
