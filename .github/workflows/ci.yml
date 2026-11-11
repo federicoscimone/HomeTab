@@ -36,6 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: docker build --tag hometab:ci .
+      - run: docker build --tag hometab-mongodb:ci deploy/mongo
 
   secrets:
     name: Secret scan

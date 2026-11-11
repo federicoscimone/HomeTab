@@ -6,7 +6,10 @@ name: ${INSTANCE:-hometab}
 
 services:
   mongodb:
-    image: mongo:7
+    # mongo:7 con lo script di init incluso (deploy/mongo/Dockerfile): niente bind mount relativi,
+    # che gli stack Git di Portainer CE non montano.
+    build:
+      context: deploy/mongo
     container_name: ${INSTANCE:-hometab}-mongodb
     restart: unless-stopped
     command: ["--bind_ip_all"]
@@ -19,7 +22,6 @@ services:
       MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD}
     volumes:
       - mongo_data:/data/db
-      - ./deploy/mongo/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test:
         [
@@ -99,6 +101,8 @@ services:
       - "traefik.enable=${TRAEFIK_ENABLE:-false}"
       - "traefik.docker.network=${PUBLIC_NETWORK:-hometab_public}"
       - "traefik.http.routers.${INSTANCE:-hometab}.rule=Host(`${APP_HOST:-localhost}`)"
+      # Solo HTTPS: la porta 80 di Traefik fa già il redirect verso websecure.
+      - "traefik.http.routers.${INSTANCE:-hometab}.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
       - "traefik.http.services.${INSTANCE:-hometab}.loadbalancer.server.port=3000"
 
   # Bot Telegram in polling: riceve i messaggi e li consegna all'app (vedi workers/telegram.js). Stessa immagine
