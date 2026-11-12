@@ -1,0 +1,24 @@
+# Costruisce le immagini dai sorgenti invece di scaricarle da GHCR: per lo sviluppo, o per chi
+# vuole compilare da sé. Si aggiunge al file principale:
+#
+#   docker compose -f docker-compose.yml -f compose.build.yml up -d --build
+#
+# oppure, per non ripeterlo, nel .env: COMPOSE_FILE=docker-compose.yml:compose.build.yml
+# I nomi ":local" evitano che un'immagine costruita qui si confonda con quelle di GHCR.
+services:
+  mongodb:
+    image: hometab-mongodb:local
+    build:
+      context: deploy/mongo
+
+  app:
+    image: hometab-app:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+  telegram:
+    image: hometab-app:local
+    build:
+      context: .
+      dockerfile: Dockerfile

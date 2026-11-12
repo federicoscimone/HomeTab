@@ -46,7 +46,7 @@ export async function POST(req) {
       await PasswordResetToken.create({ email: user.email, tokenHash: hashToken(token), expiresAt: tokenExpiry(60) });
 
       // Stessa base del resto dell'app (vedi lib/services/googleDrive.js): così basta NEXTAUTH_URL, anche su Vercel.
-      const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
       await sendPasswordResetEmail({ to: user.email, name: user.name, resetUrl: `${appUrl}/reset-password?token=${token}`, locale: user.locale })
         .catch((err) => logger.error('Email di reset non inviata', { error: err.message }));
     }

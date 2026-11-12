@@ -46,7 +46,7 @@ the `telegram` service of `docker-compose.yml`, under the profile of the same na
 recreate the stack:
 
 ```
-COMPOSE_PROFILES=telegram docker compose up -d --build
+COMPOSE_PROFILES=telegram docker compose up -d
 ```
 
 (or put `COMPOSE_PROFILES=telegram` in `.env`). It uses
@@ -167,7 +167,7 @@ processo è il servizio `telegram` di `docker-compose.yml`, sotto il profilo con
 Attivalo e ricrea lo stack:
 
 ```
-COMPOSE_PROFILES=telegram docker compose up -d --build
+COMPOSE_PROFILES=telegram docker compose up -d
 ```
 
 (oppure metti `COMPOSE_PROFILES=telegram` nel `.env`). Usa il

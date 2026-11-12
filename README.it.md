@@ -112,7 +112,8 @@ docker compose up -d
 ```
 
 Apri <http://localhost:3000> ed entra come **mario@test.it** / **Asdf_lkjH**. Il primo avvio
-costruisce l'immagine e genera i dati demo: servono alcuni minuti.
+scarica le immagini da GHCR e genera i dati demo: servono alcuni minuti. Per costruire le immagini
+dai sorgenti: `docker compose -f docker-compose.yml -f compose.build.yml up -d --build`.
 
 La modalità demo (`DEMO_MODE=true`) serve per provare l'app. Per i dati veri impostala a
 `false` prima del primo avvio e sostituisci ogni `change-me` con un valore casuale (lo fa

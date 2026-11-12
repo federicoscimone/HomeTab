@@ -108,7 +108,8 @@ docker compose up -d
 ```
 
 Open <http://localhost:3000> and sign in as **mario@test.it** / **Asdf_lkjH**. The first start
-builds the image and generates the demo data, so allow a few minutes.
+downloads the images from GHCR and generates the demo data, so allow a few minutes. To build the
+images from source instead: `docker compose -f docker-compose.yml -f compose.build.yml up -d --build`.
 
 Demo mode (`DEMO_MODE=true`) is meant for trying the app. For real data set it to `false`
 before the first start, and replace every `change-me` with a random value (`npm run setup` does

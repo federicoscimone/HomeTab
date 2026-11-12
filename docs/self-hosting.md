@@ -43,8 +43,8 @@ compose file has the Traefik labels ready), or use Tailscale's HTTPS addresses.
 
 ## Raspberry Pi
 
-HomeTab runs on a **Raspberry Pi 5**. The image is built on the Pi itself from the same
-`docker compose up -d`, because all the base images exist for 64-bit ARM. The conditions come
+HomeTab runs on a **Raspberry Pi 5**. The same `docker compose up -d` downloads the 64-bit ARM
+images, published together with the x86 ones. The conditions come
 from MongoDB and from memory:
 
 | | |
@@ -53,7 +53,7 @@ from MongoDB and from memory:
 | **System** | 64-bit Raspberry Pi OS (Lite is enough), with Docker. |
 | **Disk** | An SSD (NVMe with the M.2 HAT, or USB 3) rather than the microSD: MongoDB writes its journal all the time, which wears a card out and is slow on it. |
 | **MongoDB** | Stay on `mongo:7`, as the compose file does: 8.0.5 and later crash-loop on arm64 on the Pi 5 ([docker-library/mongo#762](https://github.com/docker-library/mongo/issues/762)). |
-| **First start** | The app is compiled on the Pi: allow several minutes and about 2 GB of free memory. With 4 GB, add swap first, or build the image on a PC with `docker buildx build --platform linux/arm64` and copy it over. |
+| **Building from source** | Not needed. If you do (`compose.build.yml`), allow several minutes and about 2 GB of free memory; with 4 GB add swap first. |
 
 **Memory.** MongoDB takes half of (RAM − 1 GB) for its cache by default: 1.5 GB on a 4 GB Pi,
 far more than a family's data needs. Cap it with a `docker-compose.override.yml` next to
@@ -126,8 +126,8 @@ indirizzi HTTPS di Tailscale.
 
 ## Raspberry Pi
 
-HomeTab gira su un **Raspberry Pi 5**. L'immagine si costruisce sul Pi stesso con lo stesso
-`docker compose up -d`, perché tutte le immagini di partenza esistono per ARM a 64 bit. Le
+HomeTab gira su un **Raspberry Pi 5**. Lo stesso `docker compose up -d` scarica le immagini per
+ARM a 64 bit, pubblicate insieme a quelle x86. Le
 condizioni vengono da MongoDB e dalla memoria:
 
 | | |
@@ -136,7 +136,7 @@ condizioni vengono da MongoDB e dalla memoria:
 | **Sistema** | Raspberry Pi OS a 64 bit (basta la Lite), con Docker. |
 | **Disco** | Un SSD (NVMe con l'HAT M.2, o USB 3) invece della microSD: MongoDB scrive di continuo il suo journal, che consuma la scheda ed è lento su di essa. |
 | **MongoDB** | Restate su `mongo:7`, come fa il file compose: dalla 8.0.5 in poi su arm64 il Pi 5 va in crash a ripetizione ([docker-library/mongo#762](https://github.com/docker-library/mongo/issues/762)). |
-| **Primo avvio** | L'app si compila sul Pi: contate parecchi minuti e circa 2 GB di memoria libera. Con 4 GB aggiungete prima dello swap, oppure costruite l'immagine su un PC con `docker buildx build --platform linux/arm64` e copiatela. |
+| **Build dai sorgenti** | Non serve. Se la fate (`compose.build.yml`), contate parecchi minuti e circa 2 GB di memoria libera; con 4 GB aggiungete prima dello swap. |
 
 **Memoria.** MongoDB prende di suo per la cache metà di (RAM − 1 GB): 1,5 GB su un Pi da 4 GB,
 molto più di quanto servano i dati di una famiglia. Si limita con un `docker-compose.override.yml`
