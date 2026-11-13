@@ -129,6 +129,25 @@ services:
     networks:
       - internal
 
+  # Reset notturno della vetrina (DEMO_MODE=true) su un server proprio: su Vercel lo fa vercel.json.
+  # Stessa immagine dell'app, altro comando (workers/demo-reset.js). Parte solo con il profilo
+  # "demo" (COMPOSE_PROFILES=demo) e richiede CRON_SECRET. Ora in UTC: DEMO_RESET_HOUR_UTC (default 3).
+  demo-reset:
+    image: ghcr.io/federicoscimone/hometab-app:${HOMETAB_IMAGE_TAG:-main}
+    container_name: ${INSTANCE:-hometab}-demo-reset
+    profiles: ["demo"]
+    restart: unless-stopped
+    command: ["node", "workers/demo-reset.js"]
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      CRON_SECRET: ${CRON_SECRET:-}
+      DEMO_RESET_URL: http://app:3000/api/demo/reset
+      DEMO_RESET_HOUR_UTC: ${DEMO_RESET_HOUR_UTC:-3}
+    networks:
+      - internal
+
 volumes:
   mongo_data:
 

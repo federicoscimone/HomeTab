@@ -22,3 +22,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+
+  demo-reset:
+    image: hometab-app:local
+    build:
+      context: .
+      dockerfile: Dockerfile
