@@ -50,36 +50,95 @@ jobs:
 
   # Images on GHCR, so a server pulls them instead of building them (Portainer cannot build
   # through its agent). Only on main, and only after every check above has passed.
+  # amd64 and arm64 (the Raspberry Pi 5, docs/self-hosting.md) are built in parallel, each on a
+  # native runner: no QEMU emulation, which made the arm64 build of the app several times slower.
+  # Each build is pushed by digest only; the "manifest" job then tags both as one image.
   publish:
-    name: Publish ${{ matrix.image }}
+    name: Build ${{ matrix.image }} (${{ matrix.arch }})
     needs: [check, docker, secrets]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
     # Two quick pushes: the newer run cancels the older one, so "main" never goes back in time.
     concurrency:
-      group: publish-${{ matrix.image }}
+      group: publish-${{ matrix.image }}-${{ matrix.arch }}
       cancel-in-progress: true
     strategy:
       matrix:
+        image: [hometab-app, hometab-mongodb]
+        arch: [amd64, arm64]
         include:
           - image: hometab-app
             context: .
           - image: hometab-mongodb
             context: deploy/mongo
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm # free on public repositories
     steps:
       - uses: actions/checkout@v7
-      # arm64 too, for the Raspberry Pi 5 (docs/self-hosting.md).
-      - uses: docker/setup-qemu-action@v4
       - uses: docker/setup-buildx-action@v4
       - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # Tags: "main" (latest build of the branch) and the full commit SHA (a fixed version).
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+      - id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          platforms: linux/${{ matrix.arch }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.image }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}-${{ matrix.arch }}
+      - name: Save the digest for the manifest job
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          touch "$RUNNER_TEMP/digests/${DIGEST#sha256:}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: digest-${{ matrix.image }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # One multi-arch image from the two builds, tagged "main" (latest build of the branch) and with
+  # the full commit SHA (a fixed version). Only when both architectures of the image are pushed.
+  manifest:
+    name: Publish ${{ matrix.image }}
+    needs: [publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    concurrency:
+      group: manifest-${{ matrix.image }}
+      cancel-in-progress: true
+    strategy:
+      matrix:
+        image: [hometab-app, hometab-mongodb]
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: digest-${{ matrix.image }}-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/digests
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - id: meta
         uses: docker/metadata-action@v6
         with:
@@ -87,22 +146,29 @@ jobs:
           tags: |
             type=raw,value=main
             type=sha,format=long,prefix=
-      - uses: docker/build-push-action@v7
-        with:
-          context: ${{ matrix.context }}
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ matrix.image }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+      - name: Create and push the multi-arch tags
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+        run: |
+          test "$(ls | wc -l)" -eq 2 # one digest per architecture
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<<"$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf "$IMAGE@sha256:%s " *)
+      - name: Check both architectures
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ github.sha }}
+        run: |
+          docker buildx imagetools inspect "$IMAGE"
+          docker buildx imagetools inspect --raw "$IMAGE" |
+            jq -e '[.manifests[].platform.architecture] | (index("amd64") and index("arm64"))'
 
   # Local production follows the "deploy" branch (Portainer polls it): a release is written there
   # only after both images of this commit are on GHCR, so a redeploy never pulls a missing tag.
   # One plain commit per release, never a force push (see deploy/release-lab-int.sh).
   release:
     name: Release to lab-int
-    needs: [publish]
+    needs: [manifest]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
