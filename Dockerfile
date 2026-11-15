@@ -36,6 +36,14 @@ COPY --from=builder --chown=nextjs:nodejs /app/workers ./workers
 COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
 COPY --from=builder --chown=nextjs:nodejs /app/messages ./messages
 
+# Versione della build (lib/buildInfo.js), passata dalla CI: commit e data. Qui in fondo, così
+# un valore nuovo a ogni build non invalida la cache degli stage precedenti. Senza build arg
+# (build locale) restano vuote e l'app si presenta come "-dev".
+ARG BUILD_SHA=""
+ARG BUILD_DATE=""
+ENV BUILD_SHA=$BUILD_SHA \
+    BUILD_DATE=$BUILD_DATE
+
 USER nextjs
 EXPOSE 3000
 

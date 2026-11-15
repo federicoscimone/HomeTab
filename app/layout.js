@@ -8,6 +8,9 @@ import SessionProvider from '@/components/layout/SessionProvider';
 import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistration';
 import DemoBanner from '@/components/layout/DemoBanner';
 import { isDemoMode } from '@/lib/demoAccounts';
+import BuildInfoProvider from '@/components/layout/BuildInfoProvider';
+import { buildInfo } from '@/lib/buildInfo';
+import packageJson from '@/package.json';
 
 export async function generateMetadata() {
   const t = await getTranslations('meta');
@@ -63,9 +66,12 @@ export default async function RootLayout({ children }) {
         {/* Senza props: dalla versione 4 il provider riceve lingua e messaggi da i18n/request.js. */}
         <NextIntlClientProvider>
           <SessionProvider session={session}>
-            {isDemoMode() && <DemoBanner />}
-            {children}
-            <ServiceWorkerRegistration />
+            {/* Versione, commit, data di build e ambiente, letti qui lato server (lib/buildInfo.js). */}
+            <BuildInfoProvider value={buildInfo(packageJson.version)}>
+              {isDemoMode() && <DemoBanner />}
+              {children}
+              <ServiceWorkerRegistration />
+            </BuildInfoProvider>
           </SessionProvider>
         </NextIntlClientProvider>
       </body>

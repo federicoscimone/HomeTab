@@ -20,6 +20,11 @@ const SELF_AUTHENTICATED_API = [
   '/api/cron/promemoria',
   '/api/telegram/webhook',
 ];
+/**
+ * Rotte API pubbliche per scelta: rispondono a chiunque e non contengono dati dell'utente né
+ * segreti. /api/version serve anche ai monitor (Uptime Kuma), che non hanno una sessione.
+ */
+const PUBLIC_API = ['/api/version'];
 const SESSION_COOKIES = ['next-auth.session-token', '__Secure-next-auth.session-token'];
 
 /**
@@ -40,7 +45,7 @@ export async function proxy(req) {
     // l'amministratore. Dopo, /setup non serve più e rimanda al login.
     if (pathname === '/login' && !(await hasUsers())) return redirect('/setup');
     if (pathname === '/setup' && (await hasUsers())) return redirect('/login');
-    if (isPublic || SELF_AUTHENTICATED_API.includes(pathname)) return NextResponse.next();
+    if (isPublic || SELF_AUTHENTICATED_API.includes(pathname) || PUBLIC_API.includes(pathname)) return NextResponse.next();
     return redirect('/login');
   }
   if (pathname.startsWith('/api/')) return NextResponse.next();

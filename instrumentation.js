@@ -20,6 +20,19 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
   if (process.env.NEXT_PHASE === 'phase-production-build') return;
 
+  // Prima riga del log: quale build parte e dove, per legare ogni log successivo a una versione.
+  const [{ buildInfo }, { default: packageJson }, { default: startLogger }] = await Promise.all([
+    import('./lib/buildInfo.js'),
+    import('./package.json'),
+    import('./lib/logger.js'),
+  ]);
+  const build = buildInfo(packageJson.version);
+  startLogger.info(`HomeTab ${build.version} avviato`, {
+    commit: build.commit,
+    buildDate: build.buildDate,
+    environment: build.environment,
+  });
+
   // NEXTAUTH_SECRET firma i cookie di sessione e cifra le chiavi salvate nel database. Con il
   // valore d'esempio di .env.example, scritto in un repository pubblico, chiunque potrebbe
   // firmarsi una sessione: con dati veri l'app non parte. La demo sì, i dati sono fittizi.

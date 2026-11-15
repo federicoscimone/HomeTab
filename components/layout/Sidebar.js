@@ -9,10 +9,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { useTranslations } from 'next-intl';
-import packageJson from '@/package.json';
+import { useLocale, useTranslations } from 'next-intl';
 import useCan from '@/lib/auth/useCan';
 import LocaleSwitcher from '@/components/layout/LocaleSwitcher';
+import { useBuildInfo } from '@/components/layout/BuildInfoProvider';
 
 /**
  * @typedef {Object} NavChild
@@ -142,6 +142,8 @@ export default function Sidebar({ onNavigate }) {
   const t                  = useTranslations('nav');
   const tRoles             = useTranslations('roles');
   const tCommon            = useTranslations('common');
+  const locale             = useLocale();
+  const build              = useBuildInfo();
   const navItems           = NAV_ITEMS.filter((item) => !item.permission || canDo(item.permission));
   // Scelte esplicite dell'utente sui gruppi richiudibili; finché non tocca nulla, un gruppo è
   // aperto solo se contiene la pagina corrente (così la voce attiva non resta nascosta).
@@ -332,10 +334,29 @@ export default function Sidebar({ onNavigate }) {
           </button>
         </div>
         <div className="flex items-center justify-between gap-2 mt-1 px-2">
-          <p className="text-[11px] text-base-content/40">{tCommon('version', { version: packageJson.version })}</p>
+          <BuildLabel build={build} locale={locale} t={tCommon} />
           <LocaleSwitcher saveToAccount />
         </div>
       </div>
     </aside>
+  );
+}
+
+/**
+ * Versione dell'istanza in fondo alla sidebar: versione (con lo SHA breve), ambiente e data di
+ * build. Il commit completo è nel tooltip e in /api/version. Data in UTC e senza ora: server e
+ * browser la scrivono uguale, niente differenze all'idratazione.
+ */
+function BuildLabel({ build, locale, t }) {
+  if (!build) return null;
+  const date = build.buildDate
+    ? new Date(build.buildDate).toLocaleDateString(locale, { dateStyle: 'short', timeZone: 'UTC' })
+    : null;
+  const details = [build.environment, date && t('builtOn', { date })].filter(Boolean).join(' · ');
+  return (
+    <div className="min-w-0 text-[11px] leading-tight text-base-content/40" title={build.commit ?? undefined}>
+      <p className="truncate">{t('version', { version: build.version })}</p>
+      {details && <p className="truncate">{details}</p>}
+    </div>
   );
 }
