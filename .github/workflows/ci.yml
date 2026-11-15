@@ -96,3 +96,29 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+  # Local production follows the "deploy" branch (Portainer polls it): a release is written there
+  # only after both images of this commit are on GHCR, so a redeploy never pulls a missing tag.
+  # One plain commit per release, never a force push (see deploy/release-lab-int.sh).
+  release:
+    name: Release to lab-int
+    needs: [publish]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # the only job that can push, and only to "deploy" through the script
+    # Releases one at a time, never cancelled halfway; the script also refuses to go back in time.
+    concurrency:
+      group: release-lab-int
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # main's history, to tell whether this commit is newer than the release
+      - name: Write the release on the deploy branch
+        env:
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: deploy/release-lab-int.sh "$GITHUB_SHA"
