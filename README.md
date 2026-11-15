@@ -140,6 +140,29 @@ home network: [docs/self-hosting.md](docs/self-hosting.md). AI providers and loc
 A demo can run for free on Vercel with a MongoDB Atlas M0 cluster, restored every night by a
 cron job: see [docs/vercel.md](docs/vercel.md).
 
+## Images and automatic updates
+
+On every push to `main` that passes the checks (lint, tests, build, secret scan) the CI publishes
+two images to GHCR, `hometab-app` and `hometab-mongodb`, each for amd64 and arm64 (built on native
+runners). Tags: `main` (latest build) and the full commit SHA (a fixed version, to pin with
+`HOMETAB_IMAGE_TAG`).
+
+Then the CI writes a release on the **`deploy` branch**: a history of its own, one plain commit
+per release (never a force push), containing `main`'s `docker-compose.yml` with the image tag
+pinned to the SHA, and a `RELEASE` file with the SHA. A release is written only after both images
+are on GHCR, and never for a commit older than the current release
+([`deploy/release-lab-int.sh`](deploy/release-lab-int.sh)).
+
+A self-hosted instance can follow it with any tool that polls a Git branch. With a Portainer Git
+stack: repository reference `refs/heads/deploy`, compose path `docker-compose.yml`, polling
+enabled on the source (for example every 5 minutes), and no `HOMETAB_IMAGE_TAG` in the stack's
+variables. When the branch gets a new commit, Portainer redeploys with the new images; everything
+else (secrets, host names, profiles) stays in the stack's variables.
+
+To roll back, `git revert` the release commit on `deploy` (the instance redeploys the previous
+version). The next push to `main` releases again, so revert the change on `main` too if it must
+not come back.
+
 ## Local development
 
 Requirements: Node.js 22 and a MongoDB 7 instance.

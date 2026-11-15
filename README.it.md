@@ -144,6 +144,30 @@ Fornitori di IA e modelli locali: [docs/ai.md](docs/ai.md#import-assistito-dalli
 Una demo può girare gratis su Vercel con un cluster MongoDB Atlas M0, ripristinata ogni notte da
 un cron: vedi [docs/vercel.md](docs/vercel.md) (in inglese).
 
+## Immagini e aggiornamento automatico
+
+A ogni push su `main` che supera i controlli (lint, test, build, ricerca di segreti) la CI
+pubblica su GHCR due immagini, `hometab-app` e `hometab-mongodb`, ciascuna per amd64 e arm64
+(costruite su runner nativi). Tag: `main` (l'ultima build) e lo SHA completo del commit (una
+versione fissa, da indicare in `HOMETAB_IMAGE_TAG`).
+
+Poi la CI scrive un rilascio sul **ramo `deploy`**: una storia a sé, un commit normale per
+rilascio (mai un force-push), con il `docker-compose.yml` di `main` in cui il tag delle immagini è
+fissato allo SHA e un file `RELEASE` con lo SHA. Il rilascio si scrive solo dopo che entrambe le
+immagini sono su GHCR, e mai per un commit più vecchio di quello in uso
+([`deploy/release-lab-int.sh`](deploy/release-lab-int.sh)).
+
+Un'istanza in casa può seguirlo con qualsiasi strumento che controlla periodicamente un ramo Git.
+Con uno stack Git di Portainer: riferimento `refs/heads/deploy`, compose path
+`docker-compose.yml`, polling attivo sulla sorgente (per esempio ogni 5 minuti) e nessuna
+`HOMETAB_IMAGE_TAG` fra le variabili dello stack. Quando il ramo riceve un commit nuovo, Portainer
+ridistribuisce con le immagini nuove; tutto il resto (segreti, nomi host, profili) resta nelle
+variabili dello stack.
+
+Per tornare indietro: `git revert` del commit di rilascio sul ramo `deploy` (l'istanza torna alla
+versione precedente). Il push successivo su `main` rilascia di nuovo: se la modifica non deve
+tornare, va annullata anche su `main`.
+
 ## Sviluppo in locale
 
 Servono Node.js 22 e un'istanza di MongoDB 7.
