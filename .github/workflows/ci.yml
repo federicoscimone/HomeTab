@@ -86,16 +86,26 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # Version of the build, as the app shows it (lib/buildInfo.js): package.json's version with
+      # the short commit SHA as build metadata, e.g. 1.4.2+059b385.
+      - id: version
+        run: echo "version=$(jq -r .version package.json)+${GITHUB_SHA::7}" >>"$GITHUB_OUTPUT"
       - id: meta
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
       - id: build
         uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
           platforms: linux/${{ matrix.arch }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Read at runtime by the app (Dockerfile, runner stage); the Mongo image ignores them.
+          build-args: |
+            BUILD_SHA=${{ github.sha }}
+            BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
           outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ matrix.image }}-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}-${{ matrix.arch }}
