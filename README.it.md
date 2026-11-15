@@ -168,6 +168,8 @@ Per tornare indietro: `git revert` del commit di rilascio sul ramo `deploy` (l'i
 versione precedente). Il push successivo su `main` rilascia di nuovo: se la modifica non deve
 tornare, va annullata anche su `main`.
 
+Versioni, l'endpoint `/api/version` e come si fa un rilascio: [docs/releasing.md](docs/releasing.md) (in inglese).
+
 ## Sviluppo in locale
 
 Servono Node.js 22 e un'istanza di MongoDB 7.

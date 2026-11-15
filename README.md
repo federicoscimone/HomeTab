@@ -163,6 +163,8 @@ To roll back, `git revert` the release commit on `deploy` (the instance redeploy
 version). The next push to `main` releases again, so revert the change on `main` too if it must
 not come back.
 
+Versions, the `/api/version` endpoint and how a release is made: [docs/releasing.md](docs/releasing.md).
+
 ## Local development
 
 Requirements: Node.js 22 and a MongoDB 7 instance.
