@@ -113,6 +113,7 @@ const NAV_ITEMS = [
       { href: '/impostazioni/template-import',   label: 'importTemplates' },
       { href: '/impostazioni/keyword-mapping',   label: 'keywordMapping' },
       { href: '/impostazioni/ia',                label: 'ai' },
+      { href: '/impostazioni/telegram',          label: 'telegram' },
       { href: '/impostazioni/audit-log',         label: 'auditLog' },
     ],
   },

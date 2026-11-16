@@ -17,54 +17,54 @@ need only the SMTP settings.
 
 ## 2. Configure the app
 
-In `.env`:
+As an administrator, open **Settings → Telegram**, paste the token and save. The app checks it
+with Telegram (which also gives the bot's name, so you don't type it) and stores it **encrypted**
+in the database, like the AI keys: afterwards only its last 4 characters are shown. The page
+also shows whether the app is receiving messages and when it last talked to Telegram, and sends
+you a test message once your own chat is linked.
 
-```
-TELEGRAM_BOT_TOKEN=123456789:AA…
-TELEGRAM_BOT_USERNAME=my_hometab_bot
-```
-
-The app sends the codes itself (an outgoing HTTPS call). Receiving what users send to the bot
-(that's how a chat gets linked to an account) works in one of two ways.
+The app sends messages by itself (an outgoing HTTPS call). Receiving what users send to the bot
+(that's how a chat gets linked to an account) works in one of two ways, chosen on the same page.
 
 ## 3. Choose how the bot receives messages
 
-**Public HTTPS deploy (Vercel, or a server reachable from the internet): webhook.** Add a random
-secret and redeploy:
+**Polling, for a server reachable only in the home network (the default).** The app asks
+Telegram for new messages with [long polling (`getUpdates`)](https://core.telegram.org/bots/api#getupdates):
+the request stays open and Telegram answers the moment a message arrives, so there is no delay,
+and only outgoing connections are needed — no port to open, it works behind NAT. The offset is
+stored in MongoDB, so a restart does not reprocess old messages. Every update is handed to the
+app's `/api/telegram/webhook` route, authenticated with a token derived from `NEXTAUTH_SECRET`,
+so the logic is the same as with the webhook.
 
-```
-TELEGRAM_WEBHOOK_SECRET=<e.g. the output of: openssl rand -hex 32>
-```
+**Webhook, for a public HTTPS deploy.** Telegram sends every message to
+`https://<your domain>/api/telegram/webhook` (the base is `APP_URL` or `NEXTAUTH_URL`). The app
+generates the secret Telegram puts in a header, stores it encrypted and registers the webhook by
+itself. On Vercel, where functions don't stay running, this is the only option.
 
-At startup the app registers `https://<your domain>/api/telegram/webhook` with Telegram, only if
-it isn't registered already (changing the secret registers it again). Telegram then sends every
-message there, with the secret in a header the route checks. No extra process is needed.
+Receiving runs inside the app and follows the settings within a few seconds: no restart and no
+extra container. Only one process receives at a time (a lock in MongoDB), because Telegram
+refuses two `getUpdates` on the same bot. The `telegram` service of `docker-compose.yml` (profile
+of the same name) is no longer needed; if it is still running it uses the same code and the same
+lock, so it does no harm, and you can drop `COMPOSE_PROFILES=telegram`.
 
-**Server reachable only in the LAN: polling.** Telegram can't reach the app, so a separate
-process asks Telegram for new messages. Leave `TELEGRAM_WEBHOOK_SECRET` empty; the process is
-the `telegram` service of `docker-compose.yml`, under the profile of the same name. Enable it and
-recreate the stack:
-
-```
-COMPOSE_PROFILES=telegram docker compose up -d
-```
-
-(or put `COMPOSE_PROFILES=telegram` in `.env`). It uses
-[long polling (`getUpdates`)](https://core.telegram.org/bots/api#getupdates), so it works behind
-NAT, and stores the update offset in MongoDB, so a restart does not reprocess old messages. The
-process doesn't answer by itself: it hands every update to the app at `/api/telegram/webhook`,
-authenticated with a token derived from `NEXTAUTH_SECRET` (the compose passes it already), so
-the logic is the same as with the webhook. If the app is down the update stays queued on
-Telegram and is delivered later.
+**Environment variables still work** when nothing is saved on the page: `TELEGRAM_BOT_TOKEN` and
+`TELEGRAM_BOT_USERNAME`, plus `TELEGRAM_WEBHOOK_SECRET` (a random value: letters, digits, `_` and
+`-`) for the webhook. A configuration saved on the page takes precedence; removing it goes back
+to the variables.
 
 **One bot per installation.** Linked chats live in each installation's database, and Telegram
-doesn't allow a webhook and polling on the same bot. Two installations (say, production on Vercel
-and a test copy at home) need two bots.
+delivers a bot's messages to one place only. Two installations (say, production in the cloud
+and a copy at home) need two bots. **Changing bot:** Telegram doesn't let a bot write to someone
+who hasn't pressed Start on it, so after a change every user links again from the Account page
+(**Link again**); the settings page tells you how many users that is, and how many use Telegram
+for two-step verification — move those to email first, or they get no codes until they link again.
 
 ## 4. Link an account and turn on two-step verification
 
 1. Account page → **Connect Telegram** → **Open @your_bot** → press **Start** in Telegram. The
    link is valid for 10 minutes and works once; the page updates by itself when the bot confirms.
+   **Send a test message** checks that the bot can write to you; **Link again** redoes the link,
+   for example after the bot has changed.
 2. Under **Two-step verification**, choose Telegram or email and enter the code you receive.
    It is turned on only after a code has arrived, so a broken channel can't lock you out.
 
@@ -137,56 +137,57 @@ come prima, e i codici via email richiedono solo la configurazione SMTP.
 
 ## 2. Configura l'app
 
-Nel file `.env`:
+Da amministratore apri **Impostazioni → Telegram**, incolla il token e salva. L'app lo verifica
+con Telegram (che le dà anche il nome del bot, quindi non va scritto) e lo salva **cifrato** nel
+database, come le chiavi dell'IA: dopo se ne vedono solo le ultime 4 cifre. La pagina mostra
+anche se l'app sta ricevendo i messaggi e quando ha parlato con Telegram l'ultima volta, e ti
+manda un messaggio di prova quando la tua chat è collegata.
 
-```
-TELEGRAM_BOT_TOKEN=123456789:AA…
-TELEGRAM_BOT_USERNAME=lamiafamiglia_hometab_bot
-```
-
-L'app invia i codici da sola (una chiamata HTTPS in uscita). Ricevere ciò che gli utenti
-mandano al bot (è così che una chat viene collegata a un account) funziona in uno di due modi.
+L'app invia i messaggi da sola (una chiamata HTTPS in uscita). Ricevere ciò che gli utenti
+mandano al bot (è così che una chat viene collegata a un account) funziona in uno di due modi,
+da scegliere nella stessa pagina.
 
 ## 3. Scegli come il bot riceve i messaggi
 
-**Deploy pubblico in HTTPS (Vercel, o un server raggiungibile da internet): webhook.** Aggiungi
-un segreto casuale e ripubblica:
+**Polling, per un server raggiungibile solo nella rete di casa (il modo predefinito).** L'app
+chiede a Telegram i messaggi nuovi con il
+[long polling (`getUpdates`)](https://core.telegram.org/bots/api#getupdates): la richiesta resta
+aperta e Telegram risponde nell'istante in cui arriva un messaggio, quindi non c'è ritardo, e
+servono solo connessioni in uscita: nessuna porta da aprire, funziona dietro NAT. L'offset è
+salvato su MongoDB, così un riavvio non rielabora i vecchi messaggi. Ogni update va alla rotta
+`/api/telegram/webhook` dell'app, con un token ricavato da `NEXTAUTH_SECRET`, così la logica è
+la stessa del webhook.
 
-```
-TELEGRAM_WEBHOOK_SECRET=<es. il risultato di: openssl rand -hex 32>
-```
+**Webhook, per un deploy pubblico in HTTPS.** Telegram manda ogni messaggio a
+`https://<il tuo dominio>/api/telegram/webhook` (la base è `APP_URL` o `NEXTAUTH_URL`). Il
+segreto che Telegram mette in un header lo genera l'app, lo salva cifrato e registra il webhook
+da sola. Su Vercel, dove le funzioni non restano accese, è l'unica possibilità.
 
-All'avvio l'app registra presso Telegram `https://<il tuo dominio>/api/telegram/webhook`, solo
-se non è già registrato (cambiando il segreto lo registra di nuovo). Da lì Telegram invia ogni
-messaggio a quell'indirizzo, con il segreto in un header che la route controlla. Non serve
-nessun processo in più.
+La ricezione gira dentro l'app e segue le impostazioni in pochi secondi: niente riavvii e niente
+container in più. Riceve un solo processo alla volta (un lucchetto su MongoDB), perché Telegram
+rifiuta due `getUpdates` sullo stesso bot. Il servizio `telegram` di `docker-compose.yml`
+(profilo omonimo) non serve più; se è ancora acceso usa lo stesso codice e lo stesso lucchetto,
+quindi non fa danni, e si può togliere `COMPOSE_PROFILES=telegram`.
 
-**Server raggiungibile solo in LAN: polling.** Telegram non può raggiungere l'app, quindi un
-processo separato gli chiede i messaggi nuovi. Lascia vuoto `TELEGRAM_WEBHOOK_SECRET`; il
-processo è il servizio `telegram` di `docker-compose.yml`, sotto il profilo con lo stesso nome.
-Attivalo e ricrea lo stack:
-
-```
-COMPOSE_PROFILES=telegram docker compose up -d
-```
-
-(oppure metti `COMPOSE_PROFILES=telegram` nel `.env`). Usa il
-[long polling (`getUpdates`)](https://core.telegram.org/bots/api#getupdates), quindi funziona
-anche dietro NAT, e salva su MongoDB l'offset degli aggiornamenti, così un riavvio non
-rielabora i vecchi messaggi. Il
-processo non risponde da sé: consegna ogni update all'app su `/api/telegram/webhook`, con un
-token ricavato da `NEXTAUTH_SECRET` (il compose glielo passa già), così la logica è la stessa
-del webhook. Se l'app è giù l'update resta in coda su Telegram e arriva dopo.
+**Le variabili d'ambiente funzionano ancora** quando nella pagina non è salvato nulla:
+`TELEGRAM_BOT_TOKEN` e `TELEGRAM_BOT_USERNAME`, più `TELEGRAM_WEBHOOK_SECRET` (un valore casuale:
+lettere, cifre, `_` e `-`) per il webhook. La configurazione salvata nella pagina ha la
+precedenza; togliendola si torna alle variabili.
 
 **Un bot per installazione.** Le chat collegate stanno nel database di ogni installazione, e
-Telegram non ammette webhook e polling sullo stesso bot. Due installazioni (per esempio la
-produzione su Vercel e una copia di prova a casa) richiedono due bot.
+Telegram consegna i messaggi di un bot in un solo posto. Due installazioni (per esempio la
+produzione nel cloud e una copia a casa) richiedono due bot. **Cambio di bot:** Telegram non
+lascia scrivere un bot a chi non gli ha premuto Start, quindi dopo un cambio ogni utente si
+ricollega dalla pagina Account (**Collega di nuovo**); la pagina delle impostazioni dice quanti
+sono, e quanti usano Telegram per la verifica in due passaggi: spostali prima sull'email, o non
+riceveranno codici finché non si ricollegano.
 
 ## 4. Collega un account e attiva la verifica in due passaggi
 
 1. Pagina **Il mio account** → **Collega Telegram** → **Apri @il_tuo_bot** → premi **Start** in
    Telegram. Il link vale 10 minuti e funziona una sola volta; la pagina si aggiorna da sola
-   quando il bot conferma.
+   quando il bot conferma. **Invia messaggio di prova** controlla che il bot riesca a scriverti;
+   **Collega di nuovo** rifà il collegamento, per esempio dopo un cambio di bot.
 2. In **Verifica in due passaggi** scegli Telegram o l'email e inserisci il codice che ricevi.
    Si attiva solo dopo che un codice è arrivato, così un canale che non funziona non può
    chiuderti fuori.

@@ -68,7 +68,8 @@
     "similarHouseholds": "Famiglie simili",
     "deadlines": "Scadenze",
     "simulator": "E se…?",
-    "deductions": "Spese detraibili"
+    "deductions": "Spese detraibili",
+    "telegram": "Telegram"
   },
   "roles": {
     "viewer": {
@@ -117,7 +118,7 @@
       "demo": "Nella demo Telegram e la verifica in due passaggi sono disattivati: gli account sono condivisi e le credenziali pubbliche.",
       "telegram": {
         "title": "Telegram",
-        "notConfigured": "Telegram non è configurato su questa installazione: l'amministratore può attivarlo seguendo docs/telegram.md.",
+        "notConfigured": "Telegram non è configurato su questa installazione.",
         "intro": "Collega Telegram per ricevere lì i codici di accesso e di recupero della password.",
         "link": "Collega Telegram",
         "openHint": "Apri il bot e premi Start: il link vale {minutes} minuti.",
@@ -126,7 +127,11 @@
         "linkedNow": "Telegram collegato.",
         "linked": "Collegato",
         "since": "dal {date}",
-        "unlink": "Scollega"
+        "unlink": "Scollega",
+        "configure": "Configuralo dalle impostazioni.",
+        "test": "Invia messaggio di prova",
+        "testSent": "Messaggio di prova inviato: controlla Telegram.",
+        "relink": "Collega di nuovo"
       },
       "twoFactor": {
         "title": "Verifica in due passaggi",
@@ -272,7 +277,14 @@
     "priceCheckExpired": "Questo controllo dei prezzi non c’è più o è già stato applicato: rilancia «Aggiorna i prezzi».",
     "invalidSplit": "Divisione del movimento non valida.",
     "splitSumMismatch": "Le parti di un movimento diviso devono sommare all’importo originale.",
-    "movementChanged": "Il movimento è stato modificato nel frattempo: ricarica la pagina e riprova."
+    "movementChanged": "Il movimento è stato modificato nel frattempo: ricarica la pagina e riprova.",
+    "invalidTelegramSettings": "Impostazioni di Telegram non valide.",
+    "telegramTokenRequired": "Inserisci il token del bot.",
+    "telegramTokenInvalid": "Token non valido: Telegram non lo riconosce. Copialo di nuovo da @BotFather.",
+    "telegramWebhookNeedsHttps": "Il webhook richiede un indirizzo pubblico HTTPS (APP_URL o NEXTAUTH_URL): in rete di casa usa il polling.",
+    "telegramNotLinked": "Collega prima la tua chat Telegram dalla pagina Account.",
+    "telegramTestBlocked": "Il bot @{bot} non può scriverti: apri il bot e premi Start, oppure usa «Collega di nuovo» nella pagina Account.",
+    "telegramTestFailed": "Messaggio non inviato: {reason}"
   },
   "auth": {
     "email": "Email",
@@ -1545,7 +1557,8 @@
     "discarded": "Scartato",
     "categoryFromAi": "{category} (proposta dall’IA)",
     "budgetLine": "📊 {category}: {spent} di {amount} questo mese ({pct}%)",
-    "budgetOver": "🔴 {category}: budget superato, {spent} di {amount} ({pct}%)"
+    "budgetOver": "🔴 {category}: budget superato, {spent} di {amount} ({pct}%)",
+    "test": "✅ Messaggio di prova da HomeTab {version} ({environment}). Ciao {name}: Telegram funziona."
   },
   "istat": {
     "title": "Famiglie simili",
@@ -1968,5 +1981,45 @@
     "cameraCancel": "Annulla",
     "cameraDenied": "Il permesso per la webcam è stato negato: concedetelo dalle impostazioni del browser, o scegliete una foto.",
     "cameraUnavailable": "Nessuna webcam disponibile: scegliete una foto da una cartella."
+  },
+  "settingsTelegram": {
+    "pageTitle": "Telegram",
+    "loadFailed": "Impostazioni di Telegram non disponibili.",
+    "demo": "Nella demo pubblica il bot non si configura.",
+    "statusTitle": "Stato",
+    "configuration": "Configurazione",
+    "sourceDb": "Da questa pagina",
+    "sourceEnv": "Dalle variabili d’ambiente",
+    "sourceNone": "Nessun bot configurato",
+    "bot": "Bot",
+    "tokenHint": "token …{hint}",
+    "receiving": "Ricezione",
+    "receiverActive": "Attiva",
+    "receiverIdle": "In attesa",
+    "lastContact": "ultimo contatto con Telegram {date}",
+    "lastError": "Ultimo errore",
+    "unreadable": "Il token salvato non si può leggere: il segreto del server è cambiato. Inseriscilo di nuovo.",
+    "test": "Invia messaggio di prova",
+    "testSent": "Messaggio di prova inviato: controlla Telegram.",
+    "testNeedsLink": "Per il messaggio di prova <link>collega la tua chat dalla pagina Account</link>.",
+    "configTitle": "Configurazione",
+    "botFatherHint": "Crea il bot con <link>@BotFather</link> (comando /newbot) e incolla qui il token che ti dà. Il nome del bot lo legge l’app dal token.",
+    "token": "Token del bot",
+    "tokenReplace": "Nuovo token (lascia vuoto per tenere quello attuale)",
+    "tokenStored": "Viene verificato con Telegram e salvato cifrato: dopo il salvataggio se ne vedono solo le ultime 4 cifre.",
+    "modeTitle": "Come riceve i messaggi",
+    "modePolling": "Polling (consigliato in rete di casa)",
+    "modePollingHint": "L’app chiede i messaggi a Telegram e li riceve all’istante. Nessuna porta da aprire.",
+    "modeWebhook": "Webhook (istanza pubblica)",
+    "modeWebhookHint": "Telegram manda i messaggi a {base}. Il segreto lo genera l’app.",
+    "modeWebhookNeedsHttps": "Serve un indirizzo pubblico HTTPS (APP_URL o NEXTAUTH_URL).",
+    "changeBotWarning": "{count, plural, one {# utente ha collegato Telegram} other {# utenti hanno collegato Telegram}}: se cambi bot, dovranno ricollegarsi dalla pagina Account (Telegram non lascia scrivere un bot a chi non gli ha premuto Start).",
+    "changeBotTwoFactor": "{count, plural, one {# di loro usa Telegram} other {# di loro usano Telegram}} per la verifica in due passaggi: senza ricollegarsi non riceverebbe i codici.",
+    "save": "Salva",
+    "savedNotice": "Salvato. La ricezione si adegua entro pochi secondi.",
+    "remove": "Togli la configurazione",
+    "removeToEnv": "Torna alle variabili d’ambiente",
+    "removeConfirm": "Togliere il bot salvato? Telegram smetterà di funzionare finché non ne configuri un altro.",
+    "removedNotice": "Configurazione tolta."
   }
 }

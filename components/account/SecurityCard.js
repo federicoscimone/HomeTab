@@ -10,7 +10,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import { useFormat } from '@/lib/hooks/useFormat';
+import useCan from '@/lib/auth/useCan';
 
 /** Ogni quanto si ricontrolla lo stato mentre si aspetta che l'utente prema Start nel bot. */
 const LINK_POLL_MS = 3000;
@@ -30,6 +32,7 @@ export default function SecurityCard() {
   const t = useTranslations('account.security');
   const tCommon = useTranslations('common');
   const { fmtDateTime } = useFormat();
+  const canDo = useCan();
   const [state, setState] = useState(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -49,7 +52,9 @@ export default function SecurityCard() {
     const timer = setInterval(() => {
       api('/api/account/security').then((s) => {
         setState(s);
-        if (s.telegram.linked) {
+        // Il collegamento è fatto quando cambia la data: per chi ricollega la chat (per esempio a
+        // un bot nuovo) "linked" era già vero prima di premere Start.
+        if (s.telegram.linked && s.telegram.linkedAt !== link.since) {
           setLink(null);
           setNotice(t('telegram.linkedNow'));
         }
@@ -90,20 +95,12 @@ export default function SecurityCard() {
       <section className="flex flex-col gap-2">
         <h3 className="font-semibold">{t('telegram.title')}</h3>
         {!telegram.configured ? (
-          <p className="text-sm text-base-content/60">{t('telegram.notConfigured')}</p>
-        ) : telegram.linked ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="badge badge-success">{t('telegram.linked')}</span>
-            {telegram.linkedAt && (
-              <span className="text-xs text-base-content/60">{t('telegram.since', { date: fmtDateTime(telegram.linkedAt) })}</span>
+          <p className="text-sm text-base-content/60">
+            {t('telegram.notConfigured')}
+            {canDo('settings:manage') && (
+              <>{' '}<Link href="/impostazioni/telegram" className="link link-primary">{t('telegram.configure')}</Link></>
             )}
-            <button
-              type="button" className="btn btn-ghost btn-xs text-error" disabled={busy}
-              onClick={() => act(async () => { await api('/api/account/telegram', 'DELETE'); await load(); })}
-            >
-              {t('telegram.unlink')}
-            </button>
-          </div>
+          </p>
         ) : link ? (
           <div className="flex flex-col gap-2">
             <p className="text-sm">{t('telegram.openHint', { minutes: link.minutes })}</p>
@@ -115,12 +112,38 @@ export default function SecurityCard() {
               <span className="text-xs text-base-content/60">{t('telegram.waiting')}</span>
             </div>
           </div>
+        ) : telegram.linked ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="badge badge-success">{t('telegram.linked')}</span>
+            {telegram.linkedAt && (
+              <span className="text-xs text-base-content/60">{t('telegram.since', { date: fmtDateTime(telegram.linkedAt) })}</span>
+            )}
+            <button
+              type="button" className="btn btn-outline btn-xs" disabled={busy}
+              onClick={() => act(async () => { await api('/api/account/telegram/test', 'POST'); setNotice(t('telegram.testSent')); })}
+            >
+              {t('telegram.test')}
+            </button>
+            {/* Dopo un cambio di bot il collegamento va rifatto: il bot nuovo non può scriverti finché non premi Start. */}
+            <button
+              type="button" className="btn btn-ghost btn-xs" disabled={busy}
+              onClick={() => act(async () => setLink({ ...(await api('/api/account/telegram', 'POST')), since: telegram.linkedAt ?? null }))}
+            >
+              {t('telegram.relink')}
+            </button>
+            <button
+              type="button" className="btn btn-ghost btn-xs text-error" disabled={busy}
+              onClick={() => act(async () => { await api('/api/account/telegram', 'DELETE'); await load(); })}
+            >
+              {t('telegram.unlink')}
+            </button>
+          </div>
         ) : (
           <div className="flex flex-col gap-2">
             <p className="text-sm text-base-content/60">{t('telegram.intro')}</p>
             <button
               type="button" className="btn btn-outline btn-sm w-fit" disabled={busy}
-              onClick={() => act(async () => setLink(await api('/api/account/telegram', 'POST')))}
+              onClick={() => act(async () => setLink({ ...(await api('/api/account/telegram', 'POST')), since: telegram.linkedAt ?? null }))}
             >
               {t('telegram.link')}
             </button>

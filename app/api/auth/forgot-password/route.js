@@ -18,6 +18,7 @@ import { issueChallenge } from '@/lib/services/otp';
 import { allowAttempt, clientIp } from '@/lib/rateLimit';
 import { serverTranslator } from '@/lib/i18n/server';
 import logger from '@/lib/logger';
+import { loadTelegramSettings } from '@/lib/services/telegramSettings';
 
 export async function POST(req) {
   try {
@@ -31,6 +32,7 @@ export async function POST(req) {
     }
 
     await connectDB();
+    await loadTelegramSettings();
     if (!(await allowAttempt('send', clientIp(req.headers)))) {
       return NextResponse.json({ error: (await serverTranslator('errors'))('tooManyAttempts') }, { status: 429 });
     }

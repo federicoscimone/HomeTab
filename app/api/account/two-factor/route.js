@@ -16,6 +16,7 @@ import { securityOverview } from '@/lib/services/accountSecurity';
 import { allowAttempt, clientIp } from '@/lib/rateLimit';
 import { writeAudit } from '@/lib/utils/audit';
 import { serverTranslator } from '@/lib/i18n/server';
+import { loadTelegramSettings } from '@/lib/services/telegramSettings';
 
 async function context(req) {
   const { session, denied } = await requirePermission('data:read');
@@ -25,6 +26,7 @@ async function context(req) {
   if (isDemoMode()) return { denied: fail('demoUnavailable', 403) };
   if (!(await allowAttempt('code', clientIp(req.headers)))) return { denied: fail('tooManyAttempts', 429) };
   await connectDB();
+  await loadTelegramSettings();
   return { session, fail, user: await User.findById(session.user.id) };
 }
 

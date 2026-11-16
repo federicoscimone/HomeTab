@@ -20,6 +20,7 @@ import { availableChannels, sendCode } from '@/lib/notify';
 import { allowAttempt, clientIp } from '@/lib/rateLimit';
 import { serverTranslator } from '@/lib/i18n/server';
 import logger from '@/lib/logger';
+import { loadTelegramSettings } from '@/lib/services/telegramSettings';
 
 export async function POST(req) {
   const t = await serverTranslator('errors');
@@ -32,6 +33,7 @@ export async function POST(req) {
   }
 
   await connectDB();
+  await loadTelegramSettings();
   if (!(await allowAttempt('login', ip))) return fail('tooManyAttempts', 429);
 
   const user = await User.findOne({ email: email.toLowerCase() });

@@ -15,6 +15,7 @@ import { issueChallenge } from '@/lib/services/otp';
 import { allowAttempt, clientIp } from '@/lib/rateLimit';
 import { serverTranslator } from '@/lib/i18n/server';
 import logger from '@/lib/logger';
+import { loadTelegramSettings } from '@/lib/services/telegramSettings';
 
 export async function POST(req) {
   const { session, denied } = await requirePermission('data:read');
@@ -25,6 +26,7 @@ export async function POST(req) {
 
   const { channel } = (await req.json().catch(() => null)) ?? {};
   await connectDB();
+  await loadTelegramSettings();
   const user = await User.findById(session.user.id);
   if (!availableChannels(user).includes(channel)) return fail('channelUnavailable', 400);
   if (!(await allowAttempt('send', clientIp(req.headers)))) return fail('tooManyAttempts', 429);

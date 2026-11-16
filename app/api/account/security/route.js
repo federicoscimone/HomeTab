@@ -7,12 +7,14 @@ import { requirePermission } from '@/lib/auth/guard';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import { securityOverview } from '@/lib/services/accountSecurity';
+import { loadTelegramSettings } from '@/lib/services/telegramSettings';
 
 export async function GET() {
   const { session, denied } = await requirePermission('data:read');
   if (denied) return denied;
 
   await connectDB();
+  await loadTelegramSettings();
   const user = await User.findById(session.user.id).lean();
   return NextResponse.json(securityOverview(user));
 }

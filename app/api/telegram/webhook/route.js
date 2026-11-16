@@ -13,7 +13,8 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import { telegramConfigured } from '@/lib/notify/telegram';
-import { handleUpdate, relayToken, webhookMode } from '@/lib/telegramBot';
+import { handleUpdate, relayToken, webhookMode, webhookSecret } from '@/lib/telegramBot';
+import { loadTelegramSettings } from '@/lib/services/telegramSettings';
 import { secretMatches } from '@/lib/utils/secrets';
 import { isLocale, DEFAULT_LOCALE } from '@/lib/i18n/locale';
 import { serverTranslator } from '@/lib/i18n/server';
@@ -24,15 +25,16 @@ const text = async (locale, key, vars) =>
   (await serverTranslator('telegramBot', isLocale(locale) ? locale : DEFAULT_LOCALE))(key, vars);
 
 export async function POST(req) {
+  await connectDB();
+  await loadTelegramSettings();
   if (!telegramConfigured()) return new NextResponse(null, { status: 404 });
   const authorized = webhookMode()
-    ? secretMatches(req.headers.get('x-telegram-bot-api-secret-token'), process.env.TELEGRAM_WEBHOOK_SECRET)
+    ? secretMatches(req.headers.get('x-telegram-bot-api-secret-token'), webhookSecret())
     : secretMatches(req.headers.get('x-hometab-relay'), relayToken());
   if (!authorized) return new NextResponse(null, { status: 401 });
 
   const update = await req.json().catch(() => null);
   try {
-    await connectDB();
     await handleUpdate(update, text);
   } catch (err) {
     logger.error('Update Telegram non elaborato', { updateId: update?.update_id, error: err.message });

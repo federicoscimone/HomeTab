@@ -107,9 +107,9 @@ services:
       - "traefik.http.routers.${INSTANCE:-hometab}.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
       - "traefik.http.services.${INSTANCE:-hometab}.loadbalancer.server.port=3000"
 
-  # Bot Telegram in polling: riceve i messaggi e li consegna all'app (vedi workers/telegram.js). Stessa immagine
-  # dell'app, altro comando. Parte solo con il profilo "telegram" (COMPOSE_PROFILES=telegram),
-  # così chi clona il progetto non deve configurare un bot. Una sola istanza per bot.
+  # Bot Telegram: NON SERVE PIÙ. L'app riceve da sé i messaggi del bot, configurato da Impostazioni →
+  # Telegram (docs/telegram.md). Resta per chi ha ancora COMPOSE_PROFILES=telegram: usa lo stesso
+  # codice e lo stesso lucchetto dell'app, quindi riceve uno solo dei due. Si può togliere il profilo.
   telegram:
     image: ghcr.io/federicoscimone/hometab-app:${HOMETAB_IMAGE_TAG:-main}
     container_name: ${INSTANCE:-hometab}-telegram

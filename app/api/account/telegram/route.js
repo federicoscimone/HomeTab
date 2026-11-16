@@ -16,6 +16,7 @@ import { botUsername, telegramConfigured } from '@/lib/notify';
 import { hashToken, tokenExpiry } from '@/lib/utils/tokens';
 import { writeAudit } from '@/lib/utils/audit';
 import { serverTranslator } from '@/lib/i18n/server';
+import { loadTelegramSettings } from '@/lib/services/telegramSettings';
 
 const LINK_MINUTES = 10;
 
@@ -26,9 +27,10 @@ export async function POST() {
   const { session, denied } = await requirePermission('data:read');
   if (denied) return denied;
   if (isDemoMode()) return fail('demoUnavailable', 403);
-  if (!telegramConfigured()) return fail('telegramNotConfigured', 503);
 
   await connectDB();
+  await loadTelegramSettings();
+  if (!telegramConfigured()) return fail('telegramNotConfigured', 503);
   // 32 byte in base64url: 43 caratteri, dentro il limite di 64 del parametro start di Telegram.
   const token = crypto.randomBytes(32).toString('base64url');
   await TelegramLink.deleteMany({ userId: session.user.id });
@@ -43,6 +45,7 @@ export async function DELETE(req) {
   if (isDemoMode()) return fail('demoUnavailable', 403);
 
   await connectDB();
+  await loadTelegramSettings();
   const user = await User.findById(session.user.id);
   if (user.twoFactorEnabled && user.twoFactorChannel === 'telegram') return fail('twoFactorUsesTelegram', 409);
 

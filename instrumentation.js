@@ -40,19 +40,14 @@ export async function register() {
     throw new Error('NEXTAUTH_SECRET è ancora il valore d\'esempio: generane uno con `openssl rand -hex 32` o `npm run setup`');
   }
 
-  // Webhook di Telegram: si registra da solo, solo se manca o è cambiato (lib/telegramBot.js).
-  // Senza await: una risposta lenta di Telegram non deve ritardare l'avvio dell'app.
-  if (process.env.TELEGRAM_WEBHOOK_SECRET && process.env.TELEGRAM_BOT_TOKEN) {
-    Promise.all([import('./lib/telegramBot.js'), import('./lib/logger.js')])
-      .then(async ([{ ensureWebhook }, { default: logger }]) => {
-        try {
-          const result = await ensureWebhook();
-          if (result === 'set') logger.info('Webhook di Telegram registrato');
-        } catch (err) {
-          logger.error('Registrazione del webhook di Telegram non riuscita', { error: err.message });
-        }
-      });
-  }
+  // Bot Telegram: la configurazione viene da Impostazioni → Telegram o dalle variabili d'ambiente.
+  // Su un server l'app riceve da sé i messaggi (lib/telegramPolling.js): long polling nella rete di
+  // casa, registrazione del webhook su un'istanza pubblica, e si adegua quando la configurazione
+  // cambia. Su Vercel le funzioni non restano accese: lì solo il webhook, registrato all'avvio.
+  // Senza await: Telegram non deve ritardare l'avvio dell'app.
+  import('./lib/telegramStart.js')
+    .then(({ startTelegram }) => startTelegram(startLogger))
+    .catch((err) => startLogger.error('Avvio del bot Telegram non riuscito', { error: err.message }));
 
   if (process.env.DEMO_MODE !== 'true') return;
 
@@ -74,3 +69,4 @@ export async function register() {
     logger.error('Seed della demo all\'avvio non riuscito', { error: err.message });
   }
 }
+

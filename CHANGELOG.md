@@ -11,6 +11,10 @@ All notable changes to HomeTab are documented here. The format is based on
 - Split a movement in two, both while reviewing an import and when editing a movement: each
   part becomes a movement of its own, with its own category. The parts remember the original
   bank row, so importing the same statement again still recognises it as a duplicate.
+- Settings → Telegram: set up the bot from the interface (token checked with Telegram and stored
+  encrypted, polling or webhook), with the receiving status. The app receives the bot's messages
+  by itself: the separate `telegram` container is no longer needed.
+- Account page: "Send a test message" and "Link again" for Telegram.
 
 ### Fixed
 
