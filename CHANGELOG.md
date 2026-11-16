@@ -6,6 +6,8 @@ All notable changes to HomeTab are documented here. The format is based on
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-16
+
 ### Added
 
 - Split a movement in two, both while reviewing an import and when editing a movement: each
@@ -82,5 +84,6 @@ a version that was never tagged.
   are validated and fully audited.
 - Security review before the repository went public (#53).
 
-[Unreleased]: https://github.com/federicoscimone/HomeTab/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/federicoscimone/HomeTab/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/federicoscimone/HomeTab/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/federicoscimone/HomeTab/releases/tag/v1.2.0
