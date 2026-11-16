@@ -54,9 +54,12 @@ export async function proxy(req) {
   // così un cambio fatto da un admin vale subito e non alla scadenza del JWT (30 giorni).
   const user = await loadSessionUser(token.id, token.sv);
   if (!user) {
-    // Sessione revocata: si cancella il cookie, altrimenti /login rimanderebbe di nuovo a /.
-    const res = redirect('/login');
-    for (const name of SESSION_COOKIES) res.cookies.delete(name);
+    // Sessione revocata (utente eliminato o disattivato, password cambiata, dati della demo
+    // rigenerati): si cancella il cookie, altrimenti /login rimanderebbe di nuovo a /.
+    // Su una pagina pubblica nessun redirect: se il browser non cancellasse il cookie, /login
+    // rimanderebbe a /login all'infinito (ERR_TOO_MANY_REDIRECTS).
+    const res = isPublic ? NextResponse.next() : redirect('/login');
+    clearSessionCookies(res);
     return res;
   }
 
@@ -73,6 +76,17 @@ export async function proxy(req) {
     res.cookies.set(LOCALE_COOKIE, user.locale, { path: '/', maxAge: 31536000, sameSite: 'lax' });
   }
   return res;
+}
+
+/**
+ * Cancella i cookie di sessione. Un cookie con il prefisso __Secure- (next-auth lo usa in HTTPS)
+ * si può sovrascrivere solo con l'attributo Secure: cookies.delete() non lo mette, e il browser
+ * ignorava la cancellazione, lasciando la sessione revocata nel browser.
+ */
+function clearSessionCookies(res) {
+  for (const name of SESSION_COOKIES) {
+    res.cookies.set(name, '', { path: '/', maxAge: 0, httpOnly: true, sameSite: 'lax', secure: name.startsWith('__Secure-') });
+  }
 }
 
 export const config = {

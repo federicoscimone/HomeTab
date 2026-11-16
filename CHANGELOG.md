@@ -17,6 +17,9 @@ All notable changes to HomeTab are documented here. The format is based on
 - Import: two identical rows in the same statement (two coffees on the same day) are both saved;
   duplicates are now decided against the movements that existed before the import.
 - Import: "exclude from analysis" set during the review is saved.
+- A revoked session (user removed or disabled, password changed, demo data regenerated) no
+  longer makes the login page redirect to itself forever over HTTPS: the session cookie is now
+  actually deleted.
 
 ## [1.2.0] - 2026-11-15
 
