@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { PAYMENT_METHODS } from '@/lib/utils/payments';
 import MappingModal from '@/components/shared/MappingModal';
 import useCan from '@/lib/auth/useCan';
 import { useFormat } from '@/lib/hooks/useFormat';
 import AiPreviewModal from '@/components/import/AiPreviewModal';
 import { needsSuggestion, toAiRow } from '@/components/import/aiRows';
+import { halves, newGroupId, setPartAmount, splitInfo } from '@/lib/utils/split';
 
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -150,7 +151,49 @@ export default function StepReview({
   const undetectedMethod = missingMethod;
 
   const toggleAll = (val) => setRows(rs => rs.map(r => ({ ...r, selected: val })));
-  const toggleRow = (i) => setRows(rs => rs.map((r, idx) => idx === i ? { ...r, selected: !r.selected } : r));
+  // Le parti di un movimento diviso si importano tutte o nessuna: la spunta vale per il gruppo.
+  const toggleRow = (i) => setRows(rs => {
+    const groupId = rs[i].split?.groupId;
+    const selected = !rs[i].selected;
+    return rs.map((r, idx) => (idx === i || (groupId && r.split?.groupId === groupId) ? { ...r, selected } : r));
+  });
+
+  // Divide la riga in due parti con lo stesso originale (lib/utils/split.js): la seconda parte
+  // senza categoria, da scegliere. Una parte si può dividere di nuovo.
+  const splitRow = (i) => {
+    setEditingRow(null);
+    setRows(rs => {
+      const row = rs[i];
+      const [first, second] = halves(row.amount);
+      const split = splitInfo(row, newGroupId());
+      const part2 = {
+        ...row, amount: second, split,
+        categoryId: null, subCategory1Id: null,
+        _autocat: false, _histCat: false, _bankCat: false, _aiCat: false, _aiHint: null, _catManual: true,
+      };
+      return [...rs.slice(0, i), { ...row, amount: first, split }, part2, ...rs.slice(i + 1)];
+    });
+  };
+
+  // Rimette insieme le parti nella riga originale, con la categoria della prima parte.
+  const mergeSplit = (groupId) => {
+    setEditingRow(null);
+    setRows(rs => {
+      const first = rs.findIndex(r => r.split?.groupId === groupId);
+      if (first < 0) return rs;
+      const { split, ...row } = rs[first];
+      const merged = { ...row, amount: split.originalAmount };
+      return rs.flatMap((r, idx) => (idx === first ? [merged] : r.split?.groupId === groupId ? [] : [r]));
+    });
+  };
+
+  /** @returns {boolean} false se l'importo non è valido (zero, o non lascia nulla alle altre parti). */
+  const changePartAmount = (i, value) => {
+    const next = setPartAmount(rows, i, value);
+    if (!next) return false;
+    setRows(next);
+    return true;
+  };
 
   const updateRow = (i, field, value) =>
     setRows(rs => rs.map((r, idx) => idx === i ? { ...r, [field]: value } : r));
@@ -242,6 +285,7 @@ export default function StepReview({
       subCategory2Id:      null,
       excludeFromAnalysis: !!r.excludeFromAnalysis,
       importMethod:        r.importMethod || null,
+      split:               r.split ?? null,
     }));
 
     // Prima un errore del server fermava lo spinner e basta: nessun messaggio, nessun risultato.
@@ -458,6 +502,12 @@ export default function StepReview({
                           {row._isDuplicate && (
                             <span className="badge badge-warning badge-xs shrink-0" title={t('duplicateTitle')}>{t('duplicateBadge')}</span>
                           )}
+                          {row.split && (
+                            <span className="badge badge-accent badge-outline badge-xs shrink-0"
+                              title={t('splitTitle', { amount: fmtFull(row.split.originalAmount) })}>
+                              {t('splitBadge')}
+                            </span>
+                          )}
                           {/* Il mapping è un'impostazione: lo crea solo un amministratore. */}
                           {!row._autocat && canDo('settings:manage') && (
                             <button
@@ -558,7 +608,11 @@ export default function StepReview({
                         </div>
                       </td>
                       <td className={`text-right font-semibold whitespace-nowrap ${row.type === 'income' ? 'text-success' : 'text-error'}`}>
-                        {row.type === 'income' ? '+' : '-'}{fmtFull(row.amount)}
+                        {row.split
+                          ? <PartAmount key={`${row.split.groupId}-${row.amount}`} amount={row.amount} sign={row.type === 'income' ? '+' : '-'}
+                              label={t('partAmount')} invalidLabel={t('partAmountInvalid')}
+                              onCommit={(value) => changePartAmount(i, value)} />
+                          : <>{row.type === 'income' ? '+' : '-'}{fmtFull(row.amount)}</>}
                       </td>
                       <td className="text-center hidden sm:table-cell">
                         <input
@@ -569,7 +623,21 @@ export default function StepReview({
                           title={t('excludeTitle')}
                         />
                       </td>
-                      <td>
+                      <td className="whitespace-nowrap">
+                        <button className="btn btn-ghost btn-xs" title={t('splitRow')} aria-label={t('splitRow')}
+                          onClick={() => splitRow(i)}>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 4v5a3 3 0 003 3h6a3 3 0 003-3V4M12 12v8" />
+                          </svg>
+                        </button>
+                        {row.split && rows.findIndex(r => r.split?.groupId === row.split.groupId) === i && (
+                          <button className="btn btn-ghost btn-xs" title={t('mergeSplit')} aria-label={t('mergeSplit')}
+                            onClick={() => mergeSplit(row.split.groupId)}>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 20v-5a3 3 0 013-3h6a3 3 0 013 3v5M12 12V4" />
+                            </svg>
+                          </button>
+                        )}
                         <button className="btn btn-ghost btn-xs" title={t('editDetails')}
                           onClick={() => setEditingRow(i)}>
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -628,8 +696,10 @@ function EditRow({ row, index, level1, level2of, onSave, onClose }) {
           </label>
           <label className="form-control">
             <div className="label py-0"><span className="label-text text-xs">{t('amount')}</span></div>
+            {/* Su una parte l'importo si cambia nella tabella, dove l'altra parte si adegua. */}
             <input type="number" step="0.01" className="input input-bordered input-xs"
-              value={local.amount} onChange={e => commit('amount', parseFloat(e.target.value))} />
+              value={local.amount} disabled={!!row.split}
+              onChange={e => commit('amount', parseFloat(e.target.value))} />
           </label>
           <label className="form-control">
             <div className="label py-0"><span className="label-text text-xs">{tForm('payee')}</span></div>
@@ -657,5 +727,40 @@ function EditRow({ row, index, level1, level2of, onSave, onClose }) {
         </div>
       </td>
     </tr>
+  );
+}
+
+// ── Importo di una parte di un movimento diviso ──────────────────────────────
+
+/**
+ * Campo dell'importo di una parte: si conferma all'uscita dal campo o con Invio. Un importo che
+ * lascerebbe a zero l'altra parte non passa: il campo resta rosso e l'importo torna com'era.
+ */
+function PartAmount({ amount, sign, label, invalidLabel, onCommit }) {
+  const locale = useLocale();
+  // Due decimali con il separatore della lingua (12,40), senza separatore delle migliaia: in
+  // ingresso si accettano sia la virgola sia il punto.
+  const shown = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).format(amount);
+  const [text, setText] = useState(shown);
+  const [invalid, setInvalid] = useState(false);
+  const commit = () => {
+    const value = Number(text.trim().replace(',', '.'));
+    if (Math.round(value * 100) === Math.round(amount * 100)) { setText(shown); return; }
+    if (onCommit(value)) { setInvalid(false); return; }
+    setInvalid(true);
+    setText(shown);
+  };
+  return (
+    <span className="inline-flex items-center gap-0.5">
+      {sign}
+      <input
+        type="text" inputMode="decimal" aria-label={label} title={invalid ? invalidLabel : label}
+        className={`input input-xs input-bordered w-24 text-right ${invalid ? 'input-error' : ''}`}
+        value={text}
+        onChange={e => { setText(e.target.value); setInvalid(false); }}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+      />
+    </span>
   );
 }

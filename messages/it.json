@@ -269,7 +269,10 @@
     "aiBudget": "Il tetto di spesa per l’IA di questo mese è raggiunto.",
     "invalidCustomModel": "Modello non valido: servono fornitore, nome e prezzi per milione di token (fra 0 e 1.000 $).",
     "invalidOllamaUrl": "Indirizzo di Ollama non valido: serve un indirizzo http o https, come http://192.168.1.20:11434.",
-    "priceCheckExpired": "Questo controllo dei prezzi non c’è più o è già stato applicato: rilancia «Aggiorna i prezzi»."
+    "priceCheckExpired": "Questo controllo dei prezzi non c’è più o è già stato applicato: rilancia «Aggiorna i prezzi».",
+    "invalidSplit": "Divisione del movimento non valida.",
+    "splitSumMismatch": "Le parti di un movimento diviso devono sommare all’importo originale.",
+    "movementChanged": "Il movimento è stato modificato nel frattempo: ricarica la pagina e riprova."
   },
   "auth": {
     "email": "Email",
@@ -602,7 +605,9 @@
     "completeCategories": "Completa le categorie ({count})",
     "categoriesApplied": "{count, plural, =0 {Nessuna categoria applicata.} one {Categoria applicata a # movimento.} other {Categorie applicate a # movimenti.}}",
     "sums": "uscite {expense} · entrate {income}",
-    "inAnalysisNote": "Solo i movimenti che entrano nelle analisi, come nei report."
+    "inAnalysisNote": "Solo i movimenti che entrano nelle analisi, come nei report.",
+    "splitBadge": "diviso",
+    "splitTitle": "Parte di un movimento da {amount}"
   },
   "incompleteReview": {
     "title": "Completa le categorie",
@@ -665,7 +670,18 @@
     "saveChanges": "Salva modifiche",
     "add": "Aggiungi movimento",
     "goalItem": "Voce del progetto",
-    "noGoalItem": "Nessuna voce"
+    "noGoalItem": "Nessuna voce",
+    "splitButton": "Dividi in due",
+    "splitHint": "Per esempio uno scontrino con spese di categorie diverse: la seconda parte diventa un movimento a sé, con la stessa data, lo stesso metodo e lo stesso esercente.",
+    "splitPartTitle": "Seconda parte",
+    "splitCancel": "Annulla la divisione",
+    "splitTotal": "Importo totale",
+    "splitFirst": "Questo movimento: {amount}",
+    "splitPartAmount": "Importo della seconda parte",
+    "splitHalf": "Metà",
+    "splitInvalid": "La seconda parte deve essere maggiore di zero e minore del totale.",
+    "splitSave": "Dividi e salva",
+    "splitPartOf": "Parte di un movimento diviso da {amount}"
   },
   "mapping": {
     "title": "Nuovo mapping keyword → categoria",
@@ -732,7 +748,13 @@
     "autoBadge": "auto",
     "excludeTitle": "Escludi dalle analisi mensili",
     "editDetails": "Modifica dettagli",
-    "amount": "Importo (€)"
+    "amount": "Importo (€)",
+    "splitRow": "Dividi in due",
+    "mergeSplit": "Unisci le parti",
+    "splitBadge": "diviso",
+    "splitTitle": "Parte di un movimento da {amount}",
+    "partAmount": "Importo della parte",
+    "partAmountInvalid": "Importo non valido: ogni parte deve essere maggiore di zero e il totale resta quello della banca."
   },
   "importAi": {
     "loading": "L’IA sta suggerendo le categorie per {count, plural, one {# riga} other {# righe}}…",

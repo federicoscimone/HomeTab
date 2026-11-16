@@ -6,6 +6,18 @@ All notable changes to HomeTab are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- Split a movement in two, both while reviewing an import and when editing a movement: each
+  part becomes a movement of its own, with its own category. The parts remember the original
+  bank row, so importing the same statement again still recognises it as a duplicate.
+
+### Fixed
+
+- Import: two identical rows in the same statement (two coffees on the same day) are both saved;
+  duplicates are now decided against the movements that existed before the import.
+- Import: "exclude from analysis" set during the review is saved.
+
 ## [1.2.0] - 2026-11-15
 
 The first tagged release. It covers everything since `package.json` was set to 1.1.0 (May 2026),

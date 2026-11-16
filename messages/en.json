@@ -269,7 +269,10 @@
     "aiBudget": "This month’s AI spending cap has been reached.",
     "invalidCustomModel": "Invalid model: provider, name and prices per million tokens (between $0 and $1,000) are required.",
     "invalidOllamaUrl": "Invalid Ollama address: it must be an http or https address, such as http://192.168.1.20:11434.",
-    "priceCheckExpired": "This price check is gone or already applied: run “Update prices” again."
+    "priceCheckExpired": "This price check is gone or already applied: run “Update prices” again.",
+    "invalidSplit": "Invalid split of the movement.",
+    "splitSumMismatch": "The parts of a split movement must add up to the original amount.",
+    "movementChanged": "The movement was changed in the meantime: reload the page and try again."
   },
   "auth": {
     "email": "Email",
@@ -602,7 +605,9 @@
     "completeCategories": "Complete the categories ({count})",
     "categoriesApplied": "{count, plural, =0 {No category applied.} one {Category applied to # movement.} other {Categories applied to # movements.}}",
     "sums": "outflows {expense} · inflows {income}",
-    "inAnalysisNote": "Only movements included in the analyses, as in the reports."
+    "inAnalysisNote": "Only movements included in the analyses, as in the reports.",
+    "splitBadge": "split",
+    "splitTitle": "Part of a movement of {amount}"
   },
   "incompleteReview": {
     "title": "Complete the categories",
@@ -665,7 +670,18 @@
     "saveChanges": "Save changes",
     "add": "Add transaction",
     "goalItem": "Project item",
-    "noGoalItem": "No item"
+    "noGoalItem": "No item",
+    "splitButton": "Split in two",
+    "splitHint": "For example a receipt with expenses of different categories: the second part becomes a movement of its own, with the same date, method and payee.",
+    "splitPartTitle": "Second part",
+    "splitCancel": "Cancel the split",
+    "splitTotal": "Total amount",
+    "splitFirst": "This movement: {amount}",
+    "splitPartAmount": "Amount of the second part",
+    "splitHalf": "Half",
+    "splitInvalid": "The second part must be above zero and below the total.",
+    "splitSave": "Split and save",
+    "splitPartOf": "Part of a split movement of {amount}"
   },
   "mapping": {
     "title": "New keyword → category mapping",
@@ -732,7 +748,13 @@
     "autoBadge": "auto",
     "excludeTitle": "Exclude from monthly analysis",
     "editDetails": "Edit details",
-    "amount": "Amount (€)"
+    "amount": "Amount (€)",
+    "splitRow": "Split in two",
+    "mergeSplit": "Merge the parts",
+    "splitBadge": "split",
+    "splitTitle": "Part of a movement of {amount}",
+    "partAmount": "Amount of the part",
+    "partAmountInvalid": "Invalid amount: each part must be above zero and the total stays the bank’s."
   },
   "importAi": {
     "loading": "AI is suggesting categories for {count, plural, one {# row} other {# rows}}…",

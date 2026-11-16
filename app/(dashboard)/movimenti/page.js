@@ -623,6 +623,9 @@ export default function SpesePage() {
                         {exp.excludeFromAnalysis && (
                           <span className="badge badge-ghost badge-xs flex-shrink-0" title={t('excludedTitle')}>{t('excludedBadge')}</span>
                         )}
+                        {exp.split && (
+                          <span className="badge badge-accent badge-outline badge-xs flex-shrink-0" title={t('splitTitle', { amount: fmtFull(exp.split.originalAmount) })}>{t('splitBadge')}</span>
+                        )}
                         {!exp.categoryId && canDo('settings:manage') && (
                           <button
                             className="btn btn-ghost btn-xs p-0 h-4 min-h-0 w-4 opacity-30 hover:opacity-80 flex-shrink-0"
@@ -717,6 +720,9 @@ export default function SpesePage() {
                           <p className="font-medium text-sm truncate">{exp.payee || exp.description || '—'}</p>
                           {exp.excludeFromAnalysis && (
                             <span className="badge badge-ghost badge-xs flex-shrink-0" title={t('excludedTitle')}>{t('excludedBadge')}</span>
+                          )}
+                          {exp.split && (
+                            <span className="badge badge-accent badge-outline badge-xs flex-shrink-0" title={t('splitTitle', { amount: fmtFull(exp.split.originalAmount) })}>{t('splitBadge')}</span>
                           )}
                           {!exp.categoryId && canDo('settings:manage') && (
                             <button

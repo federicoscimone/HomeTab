@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { PAYMENT_METHODS, getPaymentGroup } from '@/lib/utils/payments';
 import { todayString } from '@/lib/utils/comparePeriods';
+import { halves, otherPart } from '@/lib/utils/split';
+import { useFormat } from '@/lib/hooks/useFormat';
 
 const EMPTY_FORM = {
   type: 'expense',
@@ -23,6 +25,8 @@ const EMPTY_FORM = {
   goalId: '',
   goalItemId: '',
 };
+
+const EMPTY_PART = { amount: '', categoryId: '', subCategory1Id: '', subCategory2Id: '', description: '', notes: '' };
 
 /** Parte tra parentesi di un'etichetta, es. "(opzionale)". */
 const muted = (chunks) => <span className="text-base-content/40">{chunks}</span>;
@@ -53,6 +57,18 @@ export default function MovementForm({ initial = null, expenseId = null }) {
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+  const { fmtFull } = useFormat();
+  // Divisione in due (solo in modifica): l'importo del modulo diventa il totale, la prima parte è
+  // il totale meno la seconda. Si salva tutto insieme con POST /api/movimenti/[id]/split.
+  const [part, setPart] = useState(null);
+  const setPartField = (field, value) => setPart((p) => ({ ...p, [field]: value }));
+  const firstAmount = part ? otherPart(parseFloat(form.amount), parseFloat(part.amount)) : null;
+  const partLevel2 = part ? categories.filter((c) => c.level === 2 && c.parentId?.toString() === part.categoryId) : [];
+  const partLevel3 = part ? categories.filter((c) => c.level === 3 && c.parentId?.toString() === part.subCategory1Id) : [];
+  const startSplit = () => {
+    const total = parseFloat(form.amount);
+    setPart({ ...EMPTY_PART, description: form.description, amount: total > 0 ? String(halves(total)[1]) : '' });
+  };
 
   // Categorie per livello
   const level1 = categories.filter((c) => c.level === 1);
@@ -103,11 +119,35 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       goalItemId: canLinkGoal && form.goalId ? form.goalItemId || null : null,
     };
 
+    if (part && firstAmount === null) {
+      setError(t('splitInvalid'));
+      setStatus('error');
+      return;
+    }
+    const request = part
+      ? {
+        url: `/api/movimenti/${expenseId}/split`,
+        method: 'POST',
+        body: {
+          movement: { ...payload, amount: firstAmount },
+          part: {
+            amount: parseFloat(part.amount),
+            categoryId: part.categoryId || null,
+            subCategory1Id: part.subCategory1Id || null,
+            subCategory2Id: part.subCategory2Id || null,
+            description: part.description,
+            notes: part.notes,
+          },
+          updatedAt: initial?.updatedAt,
+        },
+      }
+      : { url: expenseId ? `/api/movimenti/${expenseId}` : '/api/movimenti', method: expenseId ? 'PUT' : 'POST', body: payload };
+
     try {
-      const res = await fetch(expenseId ? `/api/movimenti/${expenseId}` : '/api/movimenti', {
-        method: expenseId ? 'PUT' : 'POST',
+      const res = await fetch(request.url, {
+        method: request.method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(request.body),
       });
       const data = await res.json();
 
@@ -151,6 +191,12 @@ export default function MovementForm({ initial = null, expenseId = null }) {
         </div>
       )}
 
+      {initial?.split?.originalAmount > 0 && (
+        <p className="text-xs text-base-content/50 -mb-2">
+          {t('splitPartOf', { amount: fmtFull(initial.split.originalAmount) })}
+        </p>
+      )}
+
       {/* Tipo: Uscita / Entrata */}
       <div className="flex gap-2">
         <button
@@ -172,7 +218,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       {/* Riga 1: importo + metodo pagamento */}
       <div className="grid grid-cols-2 gap-4">
         <label className="form-control">
-          <div className="label"><span className="label-text font-medium">{t('amount')}</span></div>
+          <div className="label"><span className="label-text font-medium">{part ? t('splitTotal') : t('amount')}</span></div>
           <input
             type="number"
             step="0.01"
@@ -328,6 +374,80 @@ export default function MovementForm({ initial = null, expenseId = null }) {
         </label>
       </div>
 
+      {/* Divisione in due parti, solo in modifica */}
+      {expenseId && !part && (
+        <div>
+          <button type="button" className="btn btn-outline btn-sm" onClick={startSplit}>{t('splitButton')}</button>
+          <p className="text-xs text-base-content/50 mt-1">{t('splitHint')}</p>
+        </div>
+      )}
+      {part && (
+        <section aria-label={t('splitPartTitle')} className="flex flex-col gap-4 p-4 rounded-lg border border-accent/40 bg-accent/5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-medium">{t('splitPartTitle')}</p>
+            <button type="button" className="btn btn-ghost btn-xs" onClick={() => setPart(null)}>{t('splitCancel')}</button>
+          </div>
+          <p className="text-sm">
+            {firstAmount !== null
+              ? t('splitFirst', { amount: fmtFull(firstAmount) })
+              : <span className="text-error">{t('splitInvalid')}</span>}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <label className="form-control">
+              <div className="label"><span className="label-text font-medium">{t('splitPartAmount')}</span></div>
+              <div className="join w-full">
+                <input
+                  type="number" step="0.01" min="0" className="input input-bordered join-item w-full"
+                  value={part.amount} onChange={(e) => setPartField('amount', e.target.value)} required
+                />
+                <button type="button" className="btn join-item"
+                  onClick={() => parseFloat(form.amount) > 0 && setPartField('amount', String(halves(parseFloat(form.amount))[1]))}>
+                  {t('splitHalf')}
+                </button>
+              </div>
+            </label>
+            <label className="form-control">
+              <div className="label"><span className="label-text font-medium">{t('description')}</span></div>
+              <input type="text" className="input input-bordered" value={part.description}
+                onChange={(e) => setPartField('description', e.target.value)} />
+            </label>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <label className="form-control">
+              <div className="label"><span className="label-text font-medium">{tCommon('category')}</span></div>
+              <select className="select select-bordered" value={part.categoryId}
+                onChange={(e) => setPart((p) => ({ ...p, categoryId: e.target.value, subCategory1Id: '', subCategory2Id: '' }))}>
+                <option value="">{tCommon('none')}</option>
+                {level1.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+              </select>
+            </label>
+            <label className="form-control">
+              <div className="label"><span className="label-text">{t.rich('subCategory1', { muted })}</span></div>
+              <select className="select select-bordered" value={part.subCategory1Id}
+                disabled={!part.categoryId || partLevel2.length === 0}
+                onChange={(e) => setPart((p) => ({ ...p, subCategory1Id: e.target.value, subCategory2Id: '' }))}>
+                <option value="">{tCommon('none')}</option>
+                {partLevel2.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+              </select>
+            </label>
+            <label className="form-control">
+              <div className="label"><span className="label-text">{t.rich('subCategory2', { muted })}</span></div>
+              <select className="select select-bordered" value={part.subCategory2Id}
+                disabled={!part.subCategory1Id || partLevel3.length === 0}
+                onChange={(e) => setPartField('subCategory2Id', e.target.value)}>
+                <option value="">{tCommon('none')}</option>
+                {partLevel3.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+              </select>
+            </label>
+          </div>
+          <label className="form-control flex flex-col">
+            <div className="label"><span className="label-text">{t.rich('notes', { muted })}</span></div>
+            <input type="text" className="input input-bordered" value={part.notes}
+              onChange={(e) => setPartField('notes', e.target.value)} />
+          </label>
+        </section>
+      )}
+
       {/* Obiettivo pagato con questa spesa */}
       {canLinkGoal && goalOptions.length > 0 && (
         // Fuori dalle griglie: form-control non esiste più in daisyUI 5, la colonna la dà flex.
@@ -377,7 +497,7 @@ export default function MovementForm({ initial = null, expenseId = null }) {
       <div className="flex gap-3 pt-2">
         <button type="submit" className="btn btn-primary" disabled={status === 'loading'}>
           {status === 'loading' && <span className="loading loading-spinner loading-sm" />}
-          {status === 'loading' ? tCommon('saving') : expenseId ? t('saveChanges') : t('add')}
+          {status === 'loading' ? tCommon('saving') : part ? t('splitSave') : expenseId ? t('saveChanges') : t('add')}
         </button>
         <button type="button" className="btn btn-ghost" onClick={() => router.back()}>
           {tCommon('cancel')}
